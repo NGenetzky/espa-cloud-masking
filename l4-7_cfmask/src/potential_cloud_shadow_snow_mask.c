@@ -893,18 +893,117 @@ bool potential_cloud_shadow_snow_mask
         free(nir);
         free(swir);
 
-        /* Loop through each line in the image */
-        for (row = 0; row < nrows; row++)
+        /* Open the intermediate file for writing */
+        FILE *fd;
+        fd = fopen("b4.bin", "wb"); 
+        if (fd == NULL)
         {
-            for (col = 0; col < ncols; col++)
-            {
-                if (mask[row][col] == 0)
-                {
-                    new_nir[row][col] = (int16)backg_b4;
-                    new_swir[row][col] = (int16)backg_b5;
-                }
-            }
+            sprintf (errstr, "Opening file: b4.bin\n");
+            ERROR (errstr, "pcloud");
         }
+
+        /* Write out the intermediate file */
+        status = fwrite(&new_nir[0][0], sizeof(int16), input->size.l *
+                 input->size.s, fd);
+        if (status != input->size.l * input->size.s)
+        {
+            sprintf (errstr, "Writing file: b4.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        /* Close the intermediate file */
+        status = fclose(fd);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: b4.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+        fd = fopen("b5.bin", "wb"); 
+        if (fd == NULL)
+        {
+            sprintf (errstr, "Opening file: b5.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        /* Write out the intermediate file */
+        status = fwrite(&new_swir[0][0], sizeof(int16), input->size.l *
+                 input->size.s, fd);
+        if (status != input->size.l * input->size.s)
+        {
+            sprintf (errstr, "Writing file: b5.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        /* Close the intermediate file */
+        status = fclose(fd);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: b5.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+        fd = fopen("b4_b5.txt", "w"); 
+        if (fd == NULL)
+        {
+            sprintf (errstr, "Opening file: b4_b5.txt\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        /* Write out the intermediate file */
+        fprintf(fd, "%f\n", backg_b4);
+        fprintf(fd, "%f\n", backg_b5);
+        fprintf(fd, "%d\n", input->size.l);
+        fprintf(fd, "%d\n", input->size.s);
+
+        /* Close the intermediate file */
+        status = fclose(fd);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: b4_b5.txt\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        system("python run_fillminima.py");
+
+        /* Open the intermediate file for reading */
+        fd = fopen("filled_b4.bin", "rb"); 
+        if (fd == NULL)
+        {
+            sprintf (errstr, "Opening file: filled_b4.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        /* Read out the intermediate file */
+        fread(&new_nir[0][0], sizeof(int16), input->size.l *
+                 input->size.s, fd);
+
+        /* Close the intermediate file */
+        status = fclose(fd);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: filled_b4.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+        fd = fopen("filled_b5.bin", "rb"); 
+        if (fd == NULL)
+        {
+            sprintf (errstr, "Opening file: filled_b5.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        /* Read out the intermediate file */
+        fread(&new_swir[0][0], sizeof(int16), input->size.l *
+                 input->size.s, fd);
+
+        /* Close the intermediate file */
+        status = fclose(fd);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: filled_b5.bin\n");
+            ERROR (errstr, "pcloud");
+        }
+
+        system("rm b4_b5.txt");
+        system("rm *.bin");
 
         if (verbose)
             printf("The fifth pass\n");
@@ -939,22 +1038,6 @@ bool potential_cloud_shadow_snow_mask
                     input->buf[3][col] = input->meta.satu_value_max[3]; 
                 if (input->buf[4][col] == 20000)
                     input->buf[4][col] = input->meta.satu_value_max[4]; 
-
-                /* Now filling the pixels lower than lower boundary cloud
-                   pixel level with higher boundary cloud level pixels, this
-                   will label all cloud shadow and water pixels as potential
-                   cloud shadow pixels. The final shadow pixels will be 
-                   determined by the cloud/sadow geometric matching code, here 
-                   as long as all shadow pixels are labeled as potential shadow
-                   pixels, that should be good enough, it doesn't matter 
-                   non-shadow pixels are labeled as potential cloud shadow 
-                   pixels */
-                if ((input->buf[3][col] < (int16)(1.0*backg_b4)) &&
-                (input->buf[4][col] < (int16)(1.2*backg_b5)))
-                {
-                    new_nir[row][col] = (int16)(bound_b4);
-                    new_swir[row][col] = (int16)(bound_b5);
-                }
 
                 if (mask[row][col] == 1)
                 { 

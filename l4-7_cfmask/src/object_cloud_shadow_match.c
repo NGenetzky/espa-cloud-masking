@@ -969,9 +969,8 @@ int object_cloud_shadow_match
             ERROR (errstr, "cloud/shadow match");
        }
  
-       int dilation_type = 1;
        IplConvKernel* element = cvCreateStructuringElementEx( 
-              2*cldpix + 1, 2*cldpix + 1, cldpix, cldpix, dilation_type, 0);
+              2*cldpix + 1, 2*cldpix + 1, cldpix, cldpix, CV_SHAPE_RECT, 0);
  
        for (row = 0; row < nrows; row++)
        {
@@ -991,7 +990,7 @@ int object_cloud_shadow_match
        }
 
        element = cvCreateStructuringElementEx( 
-              2*sdpix + 1, 2*sdpix + 1, sdpix, sdpix, dilation_type, 0);
+              2*sdpix + 1, 2*sdpix + 1, sdpix, sdpix, CV_SHAPE_RECT, 0);
 
        for (row = 0; row < nrows; row++)
        {
