@@ -41,7 +41,7 @@ install:
 	cp $(EXE) $(BIN)
 
 clean:
-	$(RM) *.o
+	$(RM) *.o $(EXE)
 
 $(OBJ): $(INC)
 
