@@ -883,11 +883,8 @@ bool potential_cloud_shadow_snow_mask
         majority_filter(cloud_mask, nrows, ncols);
 
         /* Estimating background (land) Band 4 Ref */
-        float bound_b4, bound_b5;
         prctile(nir, index + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
         prctile(swir, index2 + 1, swir_min, swir_max, 100.0*l_pt, &backg_b5);
-        prctile(nir, index + 1, nir_min, nir_max, 100.0*h_pt, &bound_b4);
-        prctile(swir, index2 + 1, swir_min, swir_max, 100.0*h_pt, &bound_b5);
 
         /* Release the memory */
         free(nir);
