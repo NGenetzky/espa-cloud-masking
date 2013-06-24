@@ -74,15 +74,12 @@ fill_pixel: 255
 
 potential_cloud_shadow_snow_mask.c: A rewrite of the matlab plcloud.m code. It 
 labels cloud pixels, snow pixels, water pixels, and potential shadow pixels.
-The potential shadow pixels are a combination of shadow pixels, water pixels 
-and clear land pixels and maybe even some cloud pixels. But as they are just
-potential shadow pixels, they will be eventually identified as shadow pixels
-when object_cloud_shadow_match routine is run. Therefore, the identification 
-of potential shadow pixels is not critical as long as all real shadow pixels 
-are labeled as part of the potetal shadow pixels. This is why a simple 
-replacement of all pixels whose values are lower than the lower (17.5%) 
-threshhold of cloud pixels with higher (82.5%) threshhold values are good
-enough to make the trick for image fill in matlab code. 
+The potential shadow pixels are lebeled using the Australian Python code:
+fillminima.py in which the algorithm is based on paper:
+Soille, P., and Gratin, C. (1994). An efficient algorithm for drainage network
+        extraction on DEMs. J. Visual Communication and Image Representation. 
+        5(2). 181-189. 
+
 
 object_cloud_shadow_match.c: A rewrite of the matlab fcssm.m code. It segments
 the cloud pixels (labeling each cloud pixel with a number to make pixels within

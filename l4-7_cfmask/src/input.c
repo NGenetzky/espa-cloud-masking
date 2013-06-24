@@ -372,8 +372,8 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name)
   }
 
   /* Open file for SD access */
-  this->sds_sr_file_id = SDstart((char *)lndth_name, DFACC_RDONLY);
-  if (this->sds_sr_file_id == HDF_ERROR) {
+  this->sds_th_file_id = SDstart((char *)lndth_name, DFACC_RDONLY);
+  if (this->sds_th_file_id == HDF_ERROR) {
     free(this->lndth_name);
     free(this->lndcal_name);
     free(this);  
@@ -494,7 +494,7 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name)
   if (this->therm_sds.name == NULL)
     error_string = "setting thermal SDS name";
 
-  if (!GetSDSInfo(this->sds_sr_file_id, &this->therm_sds))
+  if (!GetSDSInfo(this->sds_th_file_id, &this->therm_sds))
     error_string = "getting thermal sds info";
 
 
@@ -593,7 +593,7 @@ bool CloseInput(Input_t *this)
     RETURN_ERROR("ending thermal sds access", "CloseInput", false);
 
   /* Close the HDF file itself */
-  SDend(this->sds_sr_file_id);
+  SDend(this->sds_th_file_id);
   SDend(this->sds_cal_file_id);
   this->open = false;
 
@@ -788,25 +788,25 @@ bool GetInputMeta(Input_t *this)
   attr.type = DFNT_CHAR8;
   attr.nval = MAX_STR_LEN;
   attr.name = INPUT_PROVIDER;
-  if (!GetAttrString(this->sds_sr_file_id, &attr, this->meta.provider))
+  if (!GetAttrString(this->sds_th_file_id, &attr, this->meta.provider))
     RETURN_ERROR("reading attribute (data provider)", "GetInputMeta", false);
 
   attr.type = DFNT_CHAR8;
   attr.nval = MAX_STR_LEN;
   attr.name = INPUT_SAT;
-  if (!GetAttrString(this->sds_sr_file_id, &attr, this->meta.sat))
+  if (!GetAttrString(this->sds_th_file_id, &attr, this->meta.sat))
     RETURN_ERROR("reading attribute (instrument)", "GetInputMeta", false);
 
   attr.type = DFNT_CHAR8;
   attr.nval = MAX_STR_LEN;
   attr.name = INPUT_INST;
-  if (!GetAttrString(this->sds_sr_file_id, &attr, this->meta.inst))
+  if (!GetAttrString(this->sds_th_file_id, &attr, this->meta.inst))
     RETURN_ERROR("reading attribute (instrument)", "GetInputMeta", false);
 
   attr.type = DFNT_CHAR8;
   attr.nval = MAX_DATE_LEN;
   attr.name = INPUT_ACQ_DATE;
-  if (!GetAttrString(this->sds_sr_file_id, &attr, date))
+  if (!GetAttrString(this->sds_th_file_id, &attr, date))
     RETURN_ERROR("reading attribute (acquisition date)", "GetInputMeta", false);
   if (!DateInit(&meta->acq_date, date, DATE_FORMAT_DATEA_TIME))
     RETURN_ERROR("converting acquisition date", "GetInputMeta", false);
@@ -822,7 +822,7 @@ bool GetInputMeta(Input_t *this)
   attr.type = DFNT_FLOAT32;
   attr.nval = 1;
   attr.name = INPUT_SUN_ZEN;
-  if (!GetAttrDouble(this->sds_sr_file_id, &attr, dval))
+  if (!GetAttrDouble(this->sds_th_file_id, &attr, dval))
     RETURN_ERROR("reading attribute (solar zenith)", "GetInputMeta", false);
   if (attr.nval != 1) 
     RETURN_ERROR("invalid number of values (solar zenith)", 
@@ -834,7 +834,7 @@ bool GetInputMeta(Input_t *this)
   attr.type = DFNT_FLOAT32;
   attr.nval = 1;
   attr.name = INPUT_SUN_AZ;
-  if (!GetAttrDouble(this->sds_sr_file_id, &attr, dval))
+  if (!GetAttrDouble(this->sds_th_file_id, &attr, dval))
     RETURN_ERROR("reading attribute (solar azimuth)", "GetInputMeta", false);
   if (attr.nval != 1) 
     RETURN_ERROR("invalid number of values (solar azimuth)", 
@@ -846,13 +846,13 @@ bool GetInputMeta(Input_t *this)
   attr.type = DFNT_CHAR8;
   attr.nval = MAX_STR_LEN;
   attr.name = INPUT_WRS_SYS;
-  if (!GetAttrString(this->sds_sr_file_id, &attr, this->meta.wrs_sys))
+  if (!GetAttrString(this->sds_th_file_id, &attr, this->meta.wrs_sys))
     RETURN_ERROR("reading attribute (WRS system)", "GetInputMeta", false);
 
   attr.type = DFNT_INT16;
   attr.nval = 1;
   attr.name = INPUT_WRS_PATH;
-  if (!GetAttrDouble(this->sds_sr_file_id, &attr, dval))
+  if (!GetAttrDouble(this->sds_th_file_id, &attr, dval))
     RETURN_ERROR("reading attribute (WRS path)", "GetInputMeta", false);
   if (attr.nval != 1) 
     RETURN_ERROR("invalid number of values (WRS path)", "GetInputMeta", false);
@@ -863,7 +863,7 @@ bool GetInputMeta(Input_t *this)
   attr.type = DFNT_INT16;
   attr.nval = 1;
   attr.name = INPUT_WRS_ROW;
-  if (!GetAttrDouble(this->sds_sr_file_id, &attr, dval))
+  if (!GetAttrDouble(this->sds_th_file_id, &attr, dval))
     RETURN_ERROR("reading attribute (WRS row)", "GetInputMeta", false);
   if (attr.nval != 1) 
     RETURN_ERROR("invalid number of values (WRS row)", "GetInputMeta", false);
@@ -876,7 +876,7 @@ bool GetInputMeta(Input_t *this)
     attr.type = DFNT_FLOAT32;
     attr.nval = 2;
     attr.name = INPUT_UL_LAT_LONG;
-    if (GetAttrDouble(this->sds_sr_file_id, &attr, dval) != SUCCESS)
+    if (GetAttrDouble(this->sds_cal_file_id, &attr, dval) != SUCCESS)
     {
         strcpy (errmsg, "Unable to read the UL lat/long coordinates.  ");
         error_handler (false, FUNC_NAME, errmsg);
@@ -894,7 +894,7 @@ bool GetInputMeta(Input_t *this)
     attr.type = DFNT_FLOAT32;
     attr.nval = 2;
     attr.name = INPUT_LR_LAT_LONG;
-    if (GetAttrDouble(this->sds_sr_file_id, &attr, dval) != SUCCESS)
+    if (GetAttrDouble(this->sds_cal_file_id, &attr, dval) != SUCCESS)
     {
         strcpy (errmsg, "Unable to read the LR lat/long coordinates.  ");
         error_handler (false, FUNC_NAME, errmsg);

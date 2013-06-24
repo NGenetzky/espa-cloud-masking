@@ -85,8 +85,8 @@ typedef struct {
   int nband;               /* Number of input image bands */
   Img_coord_int_t size;    /* Input file size */
   Img_coord_int_t toa_size;   /* Input file size */
-  int32 sds_sr_file_id;       /* SDS file id */
-  int32 sds_cal_file_id;       /* SDS file id */
+  int32 sds_th_file_id;       /* SDS file id */
+  int32 sds_cal_file_id;      /* SDS file id */
   Myhdf_sds_t sds[NBAND_REFL_MAX];
                            /* SDS data structures for TOA image data */
   int16 *buf[NBAND_REFL_MAX];

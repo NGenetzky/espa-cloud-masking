@@ -39,7 +39,8 @@ Example: fmask --metadata= --metadata=/home/sguo/LEDAPS/ledaps-read-only/ledapsS
 
 5. Dependencies
    HDF4 libraries
-   OpenCV libraries 
+   OpenCV libraries
+   Puthon 2.7 and associated Scipy 
 
 6. Associated use of newly updated ESUN, K1/K2 and earth_sun_distance in
 the digital number (DN) to TOA reflectance and brightness temperature (BT)

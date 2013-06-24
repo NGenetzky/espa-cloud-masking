@@ -19,23 +19,16 @@ used in the matlab code is recoded in C by the author as below:
    then if 3 out of 6 pixels are labeled as cloud pixel, then the 
    boundary line pixel is labeled as cloud pixel.
 
-2. The matlab imfill routine is coded by replacing the pixel valuess lower than
-the lower boundary cloud pixel level with higher boundary cloud level pixel 
-vslues, this results in all cloud shadow and water pixels are labeled as 
-the potential cloud shadow pixels. The final shadow pixels will be determined
-by the cloud/sadow geometric matching code, here as long as all shadow pixels 
-are labeled as potential shadow pixels, that should be good enough, it doesn't 
-matter non-shadow pixels are labeled as potential cloud shadow pixels.
+2. The matlab imfill routine is simulated using the Australian Python code:
+fillminima.py in which the algorithm is based on paper:
+Soille, P., and Gratin, C. (1994). An efficient algorithm for drainage network
+        extraction on DEMs. J. Visual Communication and Image Representation. 
+        5(2). 181-189. 
 
 3. The segmentation of each cloud part in fcssm.m file with serial of matlab
 image processing routines used (e.g. bwlabel, regionprops, ismember, find) are
 coded as a subroutine named "label" in "object_cloud_shadow_match.c" by using 
-the tree node. Right now the Fmask code processing speed is quite slow, the
-main reason is that the BT for each cloud pixels before it's doing 
-"object_cloud_shadow_match" are found by looping through the number of lines
-and number of samples. If all cloud pixels in each cloud can be traced by 
-either linked-list node or child node in the tree structure, then the Fmask
-processing speed can be greatly improved.
+the tree node with linked_list. 
 
 - Right now, the Fmask code uses LEDAPS output files (metadata file and lndcal
 and lndth files), it uses LEDAPS output metadata file as command line input
