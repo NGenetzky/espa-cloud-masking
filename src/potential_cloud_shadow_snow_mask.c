@@ -1000,7 +1000,10 @@ bool potential_cloud_shadow_snow_mask
         }
 
         system("rm b4_b5.txt");
-        system("rm *.bin");
+        system("rm b4.bin");
+        system("rm b5.bin");
+        system("rm filled_b4.bin");
+        system("rm filled_b5.bin");
 
         if (verbose)
             printf("The fifth pass\n");
