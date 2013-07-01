@@ -1,4 +1,4 @@
-#!/usr/local/bin/env python
+#! /usr/bin/env python
 
 #############################################################################
 # Created on January 25, 2013 by Song Guo, USGS/EROS
@@ -12,7 +12,7 @@ import sys
 import numpy as np
 import fillminima
 import os.path
-from numpy import zeros , int16 , int32 
+from numpy import zeros , int16 , int32
 ERROR = 1
 SUCCESS = 0
 

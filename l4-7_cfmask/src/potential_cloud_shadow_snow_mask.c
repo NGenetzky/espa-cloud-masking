@@ -959,7 +959,7 @@ bool potential_cloud_shadow_snow_mask
             ERROR (errstr, "pcloud");
         }
 
-        system("python run_fillminima.py");
+        system("run_fillminima.py");
 
         /* Open the intermediate file for reading */
         fd = fopen("filled_b4.bin", "rb"); 
