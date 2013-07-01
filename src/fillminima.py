@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """
 Module to implement filling of local minima in a raster surface. 
 
