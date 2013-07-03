@@ -300,8 +300,7 @@ int getMeta(char meta_filename[], Input_t *this)
     if (path == NULL)
     {
         error_string = "ESUN environment variable is not set";
-        RETURN_ERROR(error_string, "GetMeta", false);
-        return -1;      
+        ERROR(error_string, "GetMeta");
     }
 
     sprintf(full_path,"%s/%s",path,"EarthSunDistance.txt");
@@ -309,8 +308,7 @@ int getMeta(char meta_filename[], Input_t *this)
     if (in == NULL)
     {
         error_string = "Can't open EarthSunDistance.txt file";
-        RETURN_ERROR(error_string, "GetMeta", false);
-        return -1;      
+        ERROR(error_string, "GetMeta");
     }
 
     for (i = 0; i < 366; i++)
@@ -1028,15 +1026,15 @@ bool GetInputMeta2(Input_t *this)
   attr.nval = MAX_STR_LEN;
   attr.name = INPUT_UNITS;
   if (!GetAttrString(this->sds[0].id, &attr, this->meta.unit_ref))
-    RETURN_ERROR("reading attribute (unit ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (unit ref)", "GetInputMeta2", false);
 
   attr.type = DFNT_INT16;
   attr.nval = 2;
   attr.name = INPUT_VALID_RANGE;
   if (!GetAttrDouble(this->sds[0].id, &attr, dval))
-    RETURN_ERROR("reading attribute (valid range ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (valid range ref)", "GetInputMeta2", false);
   if (attr.nval != 2) 
-    RETURN_ERROR("invalid number of values (valid range ref)", "GetInputMeta", false);
+    RETURN_ERROR("invalid number of values (valid range ref)", "GetInputMeta2", false);
   this->meta.valid_range_ref[0] = (float)dval[0];
   this->meta.valid_range_ref[1] = (float)dval[1];
 
@@ -1045,11 +1043,11 @@ bool GetInputMeta2(Input_t *this)
       attr.nval = 1;
       attr.name = INPUT_SATU_VALUE;
       if (!GetAttrDouble(this->sds[ib].id, &attr, dval))
-         RETURN_ERROR("reading attribute (saturate value ref)", "GetInputMeta",
+         RETURN_ERROR("reading attribute (saturate value ref)", "GetInputMeta2",
                      false);
       if (attr.nval != 1) 
          RETURN_ERROR("invalid number of values (saturate value ref)", 
-              "GetInputMeta", false);
+              "GetInputMeta2", false);
        this->meta.satu_value_ref[ib] = (int)dval[0];
   }
 
@@ -1057,45 +1055,45 @@ bool GetInputMeta2(Input_t *this)
   attr.nval = 1;
   attr.name = INPUT_SCALE_FACTOR;
   if (!GetAttrDouble(this->sds[0].id, &attr, dval))
-    RETURN_ERROR("reading attribute (scale factor ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (scale factor ref)", "GetInputMeta2", false);
   if (attr.nval != 1) 
-    RETURN_ERROR("invalid number of values (scale factor ref)", "GetInputMeta", false);
+    RETURN_ERROR("invalid number of values (scale factor ref)", "GetInputMeta2", false);
   this->meta.scale_factor_ref = (float)dval[0];
 
   attr.type = DFNT_FLOAT64;
   attr.nval = 1;
   attr.name = INPUT_ADD_OFFSET;
   if (!GetAttrDouble(this->sds[0].id, &attr, dval))
-    RETURN_ERROR("reading attribute (add offset ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (add offset ref)", "GetInputMeta2", false);
   if (attr.nval != 1) 
-    RETURN_ERROR("invalid number of values (add offset ref)", "GetInputMeta", false);
+    RETURN_ERROR("invalid number of values (add offset ref)", "GetInputMeta2", false);
   this->meta.add_offset_ref = (float)dval[0];
 
   attr.type = DFNT_FLOAT64;
   attr.nval = 1;
   attr.name = INPUT_SCALE_FACTOR_ERR;
   if (!GetAttrDouble(this->sds[0].id, &attr, dval))
-    RETURN_ERROR("reading attribute (scale factor err  ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (scale factor err  ref)", "GetInputMeta2", false);
   if (attr.nval != 1) 
-    RETURN_ERROR("invalid number of values (scale factor err ref)", "GetInputMeta", false);
+    RETURN_ERROR("invalid number of values (scale factor err ref)", "GetInputMeta2", false);
   this->meta.scale_factor_err_ref = (float)dval[0];
 
   attr.type = DFNT_FLOAT64;
   attr.nval = 1;
   attr.name = INPUT_ADD_OFFSET_ERR;
   if (!GetAttrDouble(this->sds[0].id, &attr, dval))
-    RETURN_ERROR("reading attribute (add offset err ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (add offset err ref)", "GetInputMeta2", false);
   if (attr.nval != 1) 
-    RETURN_ERROR("invalid number of values (add offset err ref)", "GetInputMeta", false);
+    RETURN_ERROR("invalid number of values (add offset err ref)", "GetInputMeta2", false);
   this->meta.add_offset_err_ref = (float)dval[0];
 
   attr.type = DFNT_FLOAT32;
   attr.nval = 1;
   attr.name = INPUT_CALIBRATED_NT;
   if (!GetAttrDouble(this->sds[0].id, &attr, dval))
-    RETURN_ERROR("reading attribute (calibrated NT ref)", "GetInputMeta", false);
+    RETURN_ERROR("reading attribute (calibrated NT ref)", "GetInputMeta2", false);
   if (attr.nval != 1) 
-    RETURN_ERROR("invalid number of values (calibrated NT ref)", "GetInputMeta", false);
+    RETURN_ERROR("invalid number of values (calibrated NT ref)", "GetInputMeta2", false);
   this->meta.calibrated_nt_ref = (float)dval[0];
 
   return true;

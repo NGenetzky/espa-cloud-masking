@@ -535,31 +535,6 @@ bool PutMetadata(Output_t *this, Input_t *input)
                          "PutMetadata", false);
     }  /* if geographic bounds are not fill */
 
-    attr.type = DFNT_INT16;
-    attr.nval = 1;
-    attr.name = OUTPUT_FILL_VALUE;
-    dval[0] = (double)255;
-    if (!PutAttrDouble(this->sds_file_id, &attr, dval))
-      RETURN_ERROR("writing attribute (valid range ref)","PutMetadata",false);
-
-  attr.type = DFNT_CHAR8;
-  attr.nval = strlen(FMASK_BAND);
-  attr.name = OUTPUT_DATA_FIELD_NAME;
-  if (!PutAttrString(this->sds_file_id, &attr, FMASK_BAND))
-    RETURN_ERROR("writing attribute (long name)", "PutMetadata", false);
-
-  attr.type = DFNT_CHAR8;
-  attr.nval = strlen(DATA_TYPE);
-  attr.name = OUTPUT_DATA_TYPE;
-  if (!PutAttrString(this->sds_file_id, &attr, DATA_TYPE))
-    RETURN_ERROR("writing attribute (long name)", "PutMetadata", false);
-
-  attr.type = DFNT_CHAR8;
-  attr.nval = strlen(DIM_LIST);
-  attr.name = OUTPUT_DIM_LIST;
-  if (!PutAttrString(this->sds_file_id, &attr, DIM_LIST))
-    RETURN_ERROR("writing attribute (long name)", "PutMetadata", false);
-
   /* now write out the fmask band attributes */
   for (ib = 0; ib < this->nband; ib++)
   {
