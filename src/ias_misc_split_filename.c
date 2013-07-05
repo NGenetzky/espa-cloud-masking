@@ -9,12 +9,7 @@ extension.  The last character of the directory path will be a '/'.
 #include <limits.h>         /* For PATH_MAX */
 #include "error.h"
 #include "input.h"
-
-#ifndef ERROR
-#define ERROR -1
-#endif
-
-#define SUCCESS 0
+#include "ias_const.h"
 
 void ias_misc_split_filename 
 (

@@ -9,9 +9,18 @@
 #define FALSE 0
 #endif
 
+#ifndef SUCCESS
 #define SUCCESS  0
-#define ERROR   -1
-#define WARNING -2
+#endif
+#ifndef ERROR
+#define ERROR   1
+#endif
+#ifndef FAILURE
+#define FAILURE 1
+#endif
+#ifndef WARNING
+#define WARNING 2
+#endif
 
 /* Put IAS-specific constants here. */
 #define IAS_DAYS_IN_YEAR        365

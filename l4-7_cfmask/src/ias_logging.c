@@ -14,17 +14,9 @@ PURPOSE: Implements the standard message logging interface
 
 #define LOGGING_C
 #include "ias_logging.h"
+#include "ias_const.h"
 
-#define ERROR -1
-#define SUCCESS 0
 #define CHANNELS_LENGTH 500 
-#ifndef TRUE
-#define TRUE  1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 /*************************************************************************/
 enum IAS_LOG_MESSAGE_LEVEL ias_log_message_level; /* Log meeasge level value */

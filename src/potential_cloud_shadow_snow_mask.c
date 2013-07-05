@@ -215,8 +215,8 @@ MODULE:  potential_cloud_shadow_snow_mask
 PURPOSE: Identify the cloud pixels, snow pixels, water pixels, clear land 
          pixels, and potential shadow pixels
 
-RETURN: 0 on success
-        -1 on error
+RETURN: SUCCESS
+        ERROR
 
 HISTORY:
 Date        Programmer       Reason
@@ -1082,7 +1082,7 @@ bool potential_cloud_shadow_snow_mask
     }
     status = ias_misc_free_2d_array((void **)mask);
 
-    return 0;
+    return SUCCESS;
     
 }
 

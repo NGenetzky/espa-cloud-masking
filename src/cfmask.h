@@ -13,7 +13,7 @@
 #include "myhdf.h"
 
 /* Type definitions */
-typedef enum {FAILURE = 0, SUCCESS = 1} Status_t;
+typedef enum {FAILURE = 1, SUCCESS = 0} Status_t;
 
 /* There are currently a maximum of 6 reflective bands in the output surface
    reflectance product */

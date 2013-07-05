@@ -12,9 +12,7 @@ RETURNS: A pointer to a 2D array, or NULL if the routine fails. A pointer
 #include <stdlib.h>
 #include "ias_logging.h"
 #include "ias_misc_2d_array.h"
-
-#define ERROR -1
-#define SUCCESS 0
+#include "ias_const.h"
 
 /* The IAS_2D_ARRAY maintains a 2D array that can be sized at run-time. */
 typedef struct ias_2d_array

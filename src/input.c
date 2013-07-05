@@ -3,6 +3,7 @@
 *****************************************************************************/
 
 #include "input.h"
+#include "ias_const.h"
 
 #define SDS_PREFIX ("band")
 
@@ -186,8 +187,8 @@ MODULE:  getMeta
 
 PURPOSE: Get needed metadata from the LEDAPS generated metadata file
 
-RETURN: 0 on success
-        -1 on error
+RETURN: SUCCESS
+        FAILURE
 HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
@@ -213,8 +214,7 @@ int getMeta(char meta_filename[], Input_t *this)
     if (in == NULL)
     {
         error_string = "Can't open metadata file";
-        RETURN_ERROR(error_string, "GetMeta", false);
-        return -1;
+        ERROR(error_string, "GetMeta");
     }
 
     /* process line by line */
@@ -320,7 +320,7 @@ int getMeta(char meta_filename[], Input_t *this)
     /* Calculate maximum BT values and put them in metadata */
     dn_to_bt(this);
 
-    return 0;
+    return SUCCESS;
 }
 
 
@@ -552,7 +552,7 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name)
         RETURN_ERROR(error_string, "OpenInput", NULL);
     }
 
-  return this;
+    return this;
 }
 
 

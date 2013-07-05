@@ -177,7 +177,7 @@ cloud_node* Find_child(cloud_node* node) {
     cloud_node* root = node;
     if (node->child == node)
     {
-     return node;
+        return node;
     }
 
     while (root->child != root) {
@@ -212,7 +212,7 @@ void find_min(int *array, int nums, int *min, int *index)
      }
 }
 
-int label(unsigned char **cloud_mask, int nrows, int ncols, 
+void label(unsigned char **cloud_mask, int nrows, int ncols, 
           cloud_node **cloud, int *obj_num, int **first_cloud_node)
 { 
     int row, col;
@@ -415,7 +415,6 @@ int label(unsigned char **cloud_mask, int nrows, int ncols,
        }
     }
 
-    return 0;
 }      
 
 /******************************************************************************
@@ -424,8 +423,8 @@ MODULE:  object_cloud_shadow_match
 PURPOSE: Identify the final shadow pixels by doing a geometric cloud and shadow
          matching which ends in with the maximum cloud and shadow similarity
 
-RETURN: 0 on success
-        -1 on error
+RETURN: SUCCESS
+        FAILURE
 
 HISTORY:
 Date        Programmer       Reason
@@ -639,7 +638,7 @@ int object_cloud_shadow_match
         {
             sprintf (errstr, "Allocating memory");
             ERROR (errstr, "cloud/shadow match");
-            return -1;        
+            return FAILURE;        
         }
 
         /* Initialize the cloud nodes */
@@ -1076,5 +1075,5 @@ int object_cloud_shadow_match
           printf("The cloud and shadow percentage is %f\n", cloud_shadow_percent);
       }
   
-      return 0;
+      return SUCCESS;
 }
