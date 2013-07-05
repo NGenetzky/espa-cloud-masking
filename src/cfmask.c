@@ -172,7 +172,7 @@ int main (int argc, char *argv[])
     status = potential_cloud_shadow_snow_mask(input, cloud_prob, &ptm,
              &t_templ, &t_temph, cloud_mask, shadow_mask, snow_mask, 
              water_mask, final_mask, verbose);
-    if (status != 0)
+    if (status != SUCCESS)
     {
         sprintf (errstr, "calling potential_cloud_shadow_snow_mask");
         ERROR (errstr, "main");
@@ -186,7 +186,7 @@ int main (int argc, char *argv[])
     status = object_cloud_shadow_match(input, ptm, t_templ, t_temph,
              cldpix, sdpix, cloud_mask, shadow_mask, snow_mask, water_mask,
              final_mask, verbose);
-    if (status != 0)
+    if (status != SUCCESS)
     {
         sprintf (errstr, "calling object_cloud_and_shadow_match");
         ERROR (errstr, "main");
@@ -227,7 +227,7 @@ int main (int argc, char *argv[])
     status = ias_misc_free_2d_array((void **)snow_mask);
     status = ias_misc_free_2d_array((void **)water_mask);
     status = ias_misc_free_2d_array((void **)cloud_mask);
-    if (status != 0)
+    if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
@@ -247,7 +247,7 @@ int main (int argc, char *argv[])
     /* Get the projection and spatial information from the input TOA
        reflectance product */
     status = get_space_def_hdf (&space_def, lndcal_name, hdf_grid_name);
-    if (status != 0)
+    if (status != SUCCESS)
     {
         IAS_LOG_ERROR("Reading spatial metadata from the HDF file: "
                       "%s", lndcal_name);
@@ -258,7 +258,7 @@ int main (int argc, char *argv[])
     {
         /* Create an ENVI header file for the binary fmask */
         status = write_envi_hdr(fmask_header, input, &space_def);
-        if (status != 0)
+        if (status != SUCCESS)
         {
             IAS_LOG_ERROR("Creating ENVI header for binary fmask");
             exit(EXIT_FAILURE);
@@ -339,7 +339,7 @@ int main (int argc, char *argv[])
 
     /* Free the final_mask buffer */
     status = ias_misc_free_2d_array((void **)final_mask);
-    if (status != 0)
+    if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing cloud mask memory");
         ERROR (errstr, "main");
@@ -367,7 +367,7 @@ void usage ()
     printf ("Fmask identify the cloud, shadow, snow, water and clear pixels using "
             "the input Landsat scene (top of atmosphere (TOA)reflection and "
             "brightness temperature (BT) for bamd 6) output from LEDAPS\n\n");
-    printf ("usage: cfmask "
+    printf ("usage: ./cfmask "
             "--metadata=input_metadata_filename_with_full_path "
             "--prob=input_cloud_probability_value "
             "--cldpix=input_cloud_pixel_buffer "
@@ -389,8 +389,8 @@ void usage ()
             "\n");
     printf ("    -verbose: should intermediate messages be printed? (default "
             "is false)\n");
-    printf ("\nfmask --help will print the usage statement\n");
-    printf ("\nExample: cfmask "
+    printf ("\n./fmask --help will print the usage statement\n");
+    printf ("\nExample: ./cfmask "
             "--metadata=/home/sguo/LEDAPS/ledaps-read-only/"
             "ledapsSrc/src/fmask2/L5010054_05420110312.metadata.txt "
             "--prob=22.5 "

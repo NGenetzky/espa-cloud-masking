@@ -7,11 +7,11 @@
 #define MINSIGMA 1e-5
  
 /******************************************************************************
-MODULE:  
+MODULE:  prctile
 
-PURPOSE:  
+PURPOSE: Calculate Percentile of an integer array 
 
-RETURN: 
+RETURN: None
 
 HISTORY:
 Date        Programmer       Reason
@@ -55,11 +55,11 @@ void prctile(int16 *array, int nums, int16 min, int16 max, float prct,
 }
 
 /******************************************************************************
-MODULE:  
+MODULE:  prctile2
 
-PURPOSE:  
+PURPOSE:  Calculate Percentile of a floating point array
 
-RETURN: 
+RETURN: None
 
 HISTORY:
 Date        Programmer       Reason
@@ -116,9 +116,9 @@ RETURN VALUE:
 Type = int
 Value           Description
 -----           -----------
--1              Error getting the command-line arguments or a command-line
+FAILURE         Error getting the command-line arguments or a command-line
                 argument and associated value were not specified
-0               No errors encountered
+SUCCESS         No errors encountered
 
 PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
 at the USGS EROS
@@ -196,7 +196,7 @@ int get_args
      
             case 'h':  /* help */
                 usage();
-                return -1;
+                return FAILURE;
                 break;
 
             case 'm':  /* toa infile */
@@ -220,7 +220,7 @@ int get_args
                 sprintf (errmsg, "Unknown option %s", argv[optind-1]);
                 error_handler (true, FUNC_NAME, errmsg);
                 usage ();
-                return -1;
+                return FAILURE;
                 break;
         }
     }
@@ -231,7 +231,7 @@ int get_args
         sprintf (errmsg, "Metadata input file is a required argument");
         error_handler (true, FUNC_NAME, errmsg);
         usage();
-        return -1;
+        return FAILURE;
     }
 
     /* Check the write HDF flag */
@@ -261,7 +261,8 @@ int get_args
         printf("write_binary = %d\n", *write_binary);
         printf("verbose = %d\n", *verbose);
     }
-    return 0;
+
+    return SUCCESS;
 }
 
 /******************************************************************************
