@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <math.h>
 #include <getopt.h>
+#include <ias_const.h>
+#include <ias_logging.h>
 
 #define MINSIGMA 1e-5
  
@@ -11,7 +13,8 @@ MODULE:  prctile
 
 PURPOSE: Calculate Percentile of an integer array 
 
-RETURN: None
+RETURN: SUCCESS
+        FAILURE
 
 HISTORY:
 Date        Programmer       Reason
@@ -20,7 +23,7 @@ Date        Programmer       Reason
 
 NOTES: 
 ******************************************************************************/
-void prctile(int16 *array, int nums, int16 min, int16 max, float prct, 
+int prctile(int16 *array, int nums, int16 min, int16 max, float prct, 
                    float *result) 
 {
     int *interval; 
@@ -31,6 +34,11 @@ void prctile(int16 *array, int nums, int16 min, int16 max, float prct,
     loops = max - min +1;
 
     interval = calloc(loops, sizeof(int));
+    if (interval == NULL)
+    {
+        IAS_LOG_ERROR("Invalid memory allocation");
+        return FAILURE;
+    }
 
     for (i = 0; i < nums; i++)
     {
@@ -52,6 +60,8 @@ void prctile(int16 *array, int nums, int16 min, int16 max, float prct,
          }
     }
     free(interval);
+
+    return SUCCESS;
 }
 
 /******************************************************************************
@@ -68,7 +78,7 @@ Date        Programmer       Reason
 
 NOTES: 
 ******************************************************************************/
-void prctile2(float *array, int nums, float min, float max, float prct, 
+int prctile2(float *array, int nums, float min, float max, float prct, 
                    float *result) 
 {
     int *interval; 
@@ -83,6 +93,11 @@ void prctile2(float *array, int nums, float min, float max, float prct,
     loops = end - start + 1;
 
     interval = calloc(loops, sizeof(int));
+    if (interval == NULL)
+    {
+        IAS_LOG_ERROR("Invalid memory allocation");
+        return FAILURE;
+    }
 
     for (i = 0; i < nums; i++)
     {
@@ -104,6 +119,8 @@ void prctile2(float *array, int nums, float min, float max, float prct,
          }
     }
     free(interval);
+
+    return SUCCESS;
 }
 
 /******************************************************************************

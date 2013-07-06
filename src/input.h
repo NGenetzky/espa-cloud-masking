@@ -152,10 +152,10 @@ void ias_misc_split_filename
     char *root,                 /* O: Root portion of the file name */
     char *extension             /* O: Extension portion of the file name */
 );
-void prctile(int16 *array, int nums, int16 min, int16 max, float prct, 
+int prctile(int16 *array, int nums, int16 min, int16 max, float prct, 
                  float *result); 
 
-void prctile2(float *array, int nums, float min, float max, float prct, 
+int prctile2(float *array, int nums, float min, float max, float prct, 
                  float *result); 
 
 int get_args

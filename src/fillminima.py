@@ -16,6 +16,8 @@ This implementation is done with weave, because it was quick to get going, but I
 think I ought to make something which is compiled once, e.g. using f2py, or 
 even Cython, as this might be more robust in some situations. 
 
+Song Guo: Modified support C code for checking memory allocation changed
+          all exit(1) to exit(EXIT_FAILURE) 
 """
 import numpy
 from scipy import weave
@@ -85,12 +87,17 @@ supportCcode = """
         PQel *p;
         
         p = (PQel *)calloc(1, sizeof(PQel));
+        if (p == NULL)
+        {
+            printf("Error allocating memory for p in fillminima.py\n");
+            exit(EXIT_FAILURE);
+        }
         p->i = i;
         p->j = j;
         p->next = NULL;
         if (i>10000) {
             printf("i=%d\\n", i);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         return p;
     }
@@ -101,10 +108,20 @@ supportCcode = """
         int numLevels, i;
         
         pixQ = (PixelQueue *)calloc(1, sizeof(PixelQueue));
+        if (pixQ == NULL)
+        {
+            printf("Error allocating memory for pixQ in fillminima.py\n");
+            exit(EXIT_FAILURE);
+        }
         numLevels = hMax - hMin + 1;
         pixQ->hMin = hMin;
         pixQ->numLevels = numLevels;
         pixQ->q = (PQhdr *)calloc(numLevels, sizeof(PQhdr));
+        if (pixQ->q == NULL)
+        {
+            printf("Error allocating memory for pixQ->q in fillminima.py\n");
+            exit(EXIT_FAILURE);
+        }
         for (i=0; i<numLevels; i++) {
             pixQ->q[i].first = NULL;
             pixQ->q[i].last = NULL;
@@ -125,7 +142,7 @@ supportCcode = """
         ndx = h - pixQ->hMin;
         if (ndx > pixQ->numLevels) {
             printf("Level h=%d too large. ndx=%d, numLevels=%d\\n", h, ndx, pixQ->numLevels);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         thisQ = &(pixQ->q[ndx]);
         /* Add to end of queue at this level */
@@ -152,7 +169,7 @@ supportCcode = """
         empty = (current == NULL);
         if (empty && (n != 0)) {
             printf("Empty, but n=%d\\n", n);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if ((n == 0) && (! empty)) {
             printf("n=0, but not empty\\n");
@@ -160,7 +177,7 @@ supportCcode = """
                 printf("    h=%d i=%d j=%d\\n", h, current->i, current->j);
                 current = current->next;
             }
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         return empty;
     }
@@ -184,7 +201,7 @@ supportCcode = """
             thisQ->n--;
             if (thisQ->n < 0) {
                 printf("n=%d in PQ_first()\\n", thisQ->n);
-                exit(1);
+                exit(EXIT_FAILURE);
             } else if (thisQ->n == 0) {
                 if (thisQ->first != NULL) {
                     printf("n=0, but 'first' != NULL. first(i,j) = %d,%d\\n", 

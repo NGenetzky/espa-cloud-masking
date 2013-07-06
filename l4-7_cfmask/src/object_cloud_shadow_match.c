@@ -810,8 +810,13 @@ int object_cloud_shadow_match
                 if ((pct_obj-1.0) >= MINSIGMA)
                     pct_obj = 1.0;/* pct of edge pixel should be less than 1 */
 
-                prctile(temp_obj, obj_num[cloud_type],temp_obj_min,
+                status= prctile(temp_obj, obj_num[cloud_type],temp_obj_min,
                         temp_obj_max, 100.0 * pct_obj, &t_obj);
+                if (status != SUCCESS)
+                {
+                    sprintf (errstr, "Error calling prctile");
+                    ERROR (errstr, "cloud/shadow match");
+                }
 
                 /* refine cloud height range (m) */
                 min_height = (int)rint(10.0*(t_templ-t_obj)/rate_dlapse);
