@@ -329,8 +329,8 @@ bool potential_cloud_shadow_snow_mask
 	/* Read the input thermal band -- data is read into input->therm_buf */
 	if (!GetInputThermLine(input, row))
         {
-	  sprintf (errstr, "Reading input thermal data for line %d", row);
-	  ERROR (errstr, "pcloud");
+	    sprintf (errstr, "Reading input thermal data for line %d", row);
+	    ERROR (errstr, "pcloud");
 	}
 
         for (col = 0; col < ncols; col++)
@@ -578,11 +578,28 @@ bool potential_cloud_shadow_snow_mask
          l_pt = 0.175;
          h_pt = 1.0 - l_pt;
          /* 0.175 percentile background temperature (low) */
-         prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*l_pt, t_templ);
+         status = prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*l_pt, 
+                          t_templ);
+         if (status != SUCCESS)
+         {
+	     sprintf (errstr, "Error calling prctile routine");
+	     ERROR (errstr, "pcloud");
+         }
          /* 0.825 percentile background temperature (high) */
-         prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*h_pt, t_temph);
-         prctile(f_wtemp, index2, f_wtemp_min, f_wtemp_max, 100.0*h_pt, 
-                 &t_wtemp);
+         status = prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*h_pt, 
+                          t_temph);
+         if (status != SUCCESS)
+         {
+	     sprintf (errstr, "Error calling prctile routine");
+	     ERROR (errstr, "pcloud");
+         }
+         status = prctile(f_wtemp, index2, f_wtemp_min, f_wtemp_max, 
+                          100.0*h_pt, &t_wtemp);
+         if (status != SUCCESS)
+         {
+	     sprintf (errstr, "Error calling prctile routine");
+	     ERROR (errstr, "pcloud");
+         }
 
          /* Temperature test */
          t_buffer = 4*100;    
@@ -756,8 +773,14 @@ bool potential_cloud_shadow_snow_mask
         }
 
         /*Dynamic threshold for land */
-        prctile2(prob, index3, prob_min, prob_max, 100.0*h_pt, &clr_mask);
+        status = prctile2(prob, index3, prob_min, prob_max, 100.0*h_pt, 
+                          &clr_mask);
         clr_mask += cloud_prob_threshold;
+        if (status != SUCCESS)
+        {
+	    sprintf (errstr, "Error calling prctile2 routine");
+	    ERROR (errstr, "pcloud");
+        }
 
         /* Relase memory for prob */
         free(prob);
