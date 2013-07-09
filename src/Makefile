@@ -39,6 +39,8 @@ cfmask: $(OBJ) $(INC)
 
 install:
 	cp $(EXE) $(BIN)
+	cp ../scripts/run_fillminima.py $(BIN)
+	cp ../scripts/fillminima.py $(BIN)
 
 clean:
 	$(RM) *.o $(EXE)
