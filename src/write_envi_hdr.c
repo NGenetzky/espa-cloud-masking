@@ -31,6 +31,8 @@ Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 2/8/2013    Gail Schmidt     Original Development
 5/14/2013   Song Guo         Modified to support CFmask
+7/15/2013   Song Guo         Added to support HDF hdr file which
+                             includes map info
 
 NOTES:
   1. It's assumed the header file will be for unsigned byte products and
@@ -38,9 +40,9 @@ NOTES:
 ******************************************************************************/
 int write_envi_hdr
 (
-    char *hdr_file,     /* I: name of header file to be generated */
-    Input_t *toa_input, /* I: input structure for both the TOA reflectance
-                              and brightness temperature products */
+    char *hdr_file,        /* I: name of header file to be generated */
+    File_type ftype,       /* I: HDF or Binary header is needed */
+    Input_t *input,        /* I: input structure for cfmask products */
     Space_def_t *space_def /* I: spatial definition information */
 )
 {
@@ -81,17 +83,34 @@ int write_envi_hdr
     strncpy (&bin_file[strlen(hdr_file)-3], "bin", 3);
 
     /* Write the header to the file */
-    fprintf (hdr_fptr,
-        "ENVI\n"
-        "description = {%s}\n"
-        "samples = %d\n"
-        "lines   = %d\n"
-        "bands   = 1\n"
-        "header offset = 0\n"
-        "file type = ENVI Standard\n"
-        "data type = 1\n"
-        "interleave = bsq\n"
-        "byte order = 0\n", bin_file, toa_input->size.s, toa_input->size.l);
+    if (ftype == HDF_FILE)
+    {
+        fprintf (hdr_fptr,
+            "ENVI\n"
+            "description = {%s}\n"
+            "samples = %d\n"
+            "lines   = %d\n"
+            "bands   = 1\n"
+            "header offset = 0\n"
+            "file type = HDF Scientific Data\n"
+            "data type = 1\n"
+            "interleave = bsq\n"
+            "byte order = 0\n", hdr_file, input->size.s, input->size.l);
+    }
+    else 
+    {
+        fprintf (hdr_fptr,
+            "ENVI\n"
+            "description = {%s}\n"
+            "samples = %d\n"
+            "lines   = %d\n"
+            "bands   = 1\n"
+            "header offset = 0\n"
+            "file type = ENVI Standard\n"
+            "data type = 1\n"
+            "interleave = bsq\n"
+            "byte order = 0\n", bin_file, input->size.s, input->size.l);
+    }
    
     if (space_def->proj_num == GCTP_UTM_PROJ)
     {
@@ -122,13 +141,11 @@ int write_envi_hdr
             space_def->proj_param[6], space_def->proj_param[7]);
     }
 
-    fprintf (hdr_fptr, "band names = {Band 1}\n");
-
     /* Close the header file and free pointers */
     fclose (hdr_fptr);
     if (bin_file)
         free (bin_file);
 
     /* Successful completion */
-    return (0);
+    return SUCCESS;
 }
