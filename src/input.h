@@ -96,6 +96,12 @@ typedef struct {
   float dsun_doy[366];
 } Input_t;
 
+typedef enum
+{
+    HDF_FILE = 0,
+    BINARY_FILE
+}File_type;
+
 /* Prototypes */
 Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name);
 bool GetInputLine(Input_t *this, int iband, int iline);
@@ -139,9 +145,9 @@ int object_cloud_shadow_match
 
 int write_envi_hdr
 (
-    char *hdr_file,     /* I: name of header file to be generated */
-    Input_t *toa_input, /* I: input structure for both the TOA reflectance
-                              and brightness temperature products */
+    char *hdr_file,        /* I: name of header file to be generated */
+    File_type ftype,       /* I: HDF or Binary header is needed */
+    Input_t *input,        /* I: input structure for cfmask products */
     Space_def_t *space_def /* I: spatial definition information */
 );
 

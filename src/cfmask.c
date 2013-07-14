@@ -258,7 +258,7 @@ int main (int argc, char *argv[])
     if (write_binary)
     {
         /* Create an ENVI header file for the binary fmask */
-        status = write_envi_hdr(fmask_header, input, &space_def);
+     status = write_envi_hdr(fmask_header, BINARY_FILE, input, &space_def);
         if (status != SUCCESS)
         {
             IAS_LOG_ERROR("Creating ENVI header for binary fmask");
@@ -335,7 +335,7 @@ int main (int argc, char *argv[])
 
         /* Write CFmask HDF header to add in envi map info */
         sprintf (fmask_hdf_hdr, "%s.hdr", fmask_hdf_name);
-        if (write_envi_hdr (fmask_hdf_hdr, input, &space_def) != SUCCESS)
+        if (write_envi_hdr (fmask_hdf_hdr, HDF_FILE, input, &space_def) != SUCCESS)
         {
             IAS_LOG_ERROR("Error writing the ENVI header for CFmask HDF hdr");
             exit(EXIT_FAILURE);
