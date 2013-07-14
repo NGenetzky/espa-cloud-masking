@@ -30,6 +30,7 @@ int main (int argc, char *argv[])
     char fmask_name[MAX_STR_LEN];
     char fmask_header[MAX_STR_LEN];
     char fmask_hdf_name[MAX_STR_LEN];
+    char fmask_hdf_hdr[MAX_STR_LEN];
     char *lndmeta_name = NULL;          /* input lndmeta data filename */
     char directory[MAX_STR_LEN];
     char extension[MAX_STR_LEN];
@@ -325,10 +326,18 @@ int main (int argc, char *argv[])
         /* Write the spatial information, after the file has been closed */
         out_sds_types[0] = DFNT_UINT8;
         if (put_space_def_hdf (&space_def, fmask_hdf_name, NUM_OUT_SDS, 
-            out_sds_names, out_sds_types, hdf_grid_name) != 0)
+            out_sds_names, out_sds_types, hdf_grid_name) != SUCCESS)
         {
             IAS_LOG_ERROR("Putting spatial metadata to the HDF file: "
             "%s", lndcal_name);
+            exit(EXIT_FAILURE);
+        }
+
+        /* Write CFmask HDF header to add in envi map info */
+        sprintf (fmask_hdf_hdr, "%s.hdr", fmask_hdf_name);
+        if (write_envi_hdr (fmask_hdf_hdr, input, &space_def) != SUCCESS)
+        {
+            IAS_LOG_ERROR("Error writing the ENVI header for CFmask HDF hdr");
             exit(EXIT_FAILURE);
         }
     }
