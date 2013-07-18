@@ -27,8 +27,7 @@ Soille, P., and Gratin, C. (1994). An efficient algorithm for drainage network
 
 3. The segmentation of each cloud part in fcssm.m file with serial of matlab
 image processing routines used (e.g. bwlabel, regionprops, ismember, find) are
-coded as a subroutine named "label" in "object_cloud_shadow_match.c" by using 
-the tree node with linked_list. 
+coded as a subroutine named "label" in "object_cloud_shadow_match.c". 
 
 - Right now, the Fmask code uses LEDAPS output files (metadata file and lndcal
 and lndth files), it uses LEDAPS output metadata file as command line input

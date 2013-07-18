@@ -85,10 +85,7 @@ object_cloud_shadow_match.c: A rewrite of the matlab fcssm.m code. It segments
 the cloud pixels (labeling each cloud pixel with a number to make pixels within
 one cloud have the same number) and identifies the final shadow pixels by 
 getting the maximum cloud and shadow similarity from the geometric cloud/shadow
-match. The object_cloud_shadow_match routine occupies more than 90% of 
-execution time. In order to improve the execution speed, the cloud pixels
-within each cloud segment are better linked through either a linked list or
-child node in a tree structure. This part hasn't been implemented yet.
+match. 
   
 input.c : Read in TOA reflectance for bands 1-5 and 6 and Brightness 
 Temperature (BT) for band 6 as well as all the needed metadata either from
