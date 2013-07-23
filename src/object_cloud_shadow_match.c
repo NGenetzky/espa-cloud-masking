@@ -435,36 +435,37 @@ NOTES:
 ******************************************************************************/
 int object_cloud_shadow_match
 (
-    Input_t *input,
-    float ptm,
-    float t_templ,
-    float t_temph,
-    int cldpix,
-    int sdpix,
-    unsigned char **cloud_mask,
-    unsigned char **shadow_mask,
-    unsigned char **snow_mask,
-    unsigned char **water_mask,
-    unsigned char **final_mask,
-    bool verbose       
+    Input_t *input,             /*I: input structure */
+    float ptm,                  /*I: percent of clear-sky pixels */
+    float t_templ,              /*I: percentile of low background temperature */
+    float t_temph,              /*I: percentile of high background temperature */
+    int cldpix,                 /*I: cloud buffer size */
+    int sdpix,                  /*I: shadow buffer size */
+    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
+    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
+    unsigned char **snow_mask,  /*I/O: snow pixel mask */
+    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **final_mask, /*I/O: final combined pixel mask */
+    bool verbose                /*I: value to indicate if intermediate messages 
+                                     be printed */      
 )
 {
-    char errstr[MAX_STR_LEN];
-    int nrows = input->size.l;
-    int ncols = input->size.s;
-    int row;
-    int col = 0;
-    float sun_ele;
-    float sun_ele_rad;
-    float sun_tazi;
-    float sun_tazi_rad;
-    int sub_size = 30;
-    int status;
+    char errstr[MAX_STR_LEN];  /* error string */
+    int nrows = input->size.l; /* number of rows */
+    int ncols = input->size.s; /* number of columns */
+    int row;                   /* row index */
+    int col = 0;               /* column index */
+    float sun_ele;             /* sun elevation angle */
+    float sun_ele_rad;         /* sun elevation angle in radiance */
+    float sun_tazi;            /* sun azimuth angle */
+    float sun_tazi_rad;        /* sun azimuth angle in radiance */
+    int sub_size = 30;         /* pixel size */
+    int status;                /* return value */
 
     /* Dynamic memory allocation */
-    unsigned char **cloud_cal;
-    unsigned char **shadow_cal;
-    unsigned char **boundary_test;
+    unsigned char **cloud_cal = NULL;     /* cloud pixel mask */
+    unsigned char **shadow_cal = NULL;    /* shadow pixel mask */
+    unsigned char **boundary_test = NULL; /* boundary test mask */
 
     cloud_cal = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
@@ -508,7 +509,10 @@ int object_cloud_shadow_match
     }
 
      /* Revised percent of cloud on the scene after plcloud */
-     revised_ptm = (float)cloud_counter / (float)boundary_counter;
+     if (boundary_counter != 0)
+         revised_ptm = (float)cloud_counter / (float)boundary_counter;
+     else
+         revised_ptm = 0.0;
 
      if (verbose)
      {
@@ -626,9 +630,9 @@ int object_cloud_shadow_match
             &omiga_par, &omiga_per);
 
         /* Allocate memory for segment cloud portion */
-        int *obj_num;
+        int *obj_num = NULL;
         obj_num = (int *)calloc(MAX_CLOUD_TYPE, sizeof(int));
-        cloud_node **cloud;
+        cloud_node **cloud = NULL;
         cloud = (cloud_node **)ias_misc_allocate_2d_array(nrows, 
                ncols, sizeof(cloud_node)); 
         int **cloud_first_node;
@@ -686,7 +690,7 @@ int object_cloud_shadow_match
         }
 
         /* Need to read out whole image brightness temperature for band 6 */
-        int16 **temp;
+        int16 **temp = NULL;
         temp = (int16 **)ias_misc_allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(int16)); 
         if (!temp)
@@ -1065,8 +1069,23 @@ int object_cloud_shadow_match
 
       /* Release the memory */
       status = ias_misc_free_2d_array((void **)cloud_cal);
+      if (status != SUCCESS)
+      {
+          sprintf (errstr, "Freeing memory: cloud_cal\n");
+          ERROR (errstr, "object_cloud_shadow_match");              
+      }
       status = ias_misc_free_2d_array((void **)shadow_cal);
+      if (status != SUCCESS)
+      {
+          sprintf (errstr, "Freeing memory: shadow_cal\n");
+          ERROR (errstr, "object_cloud_shadow_match");              
+      }
       status = ias_misc_free_2d_array(( void **)boundary_test);
+      if (status != SUCCESS)
+      {
+          sprintf (errstr, "Freeing memory: boundary_cal\n");
+          ERROR (errstr, "object_cloud_shadow_match");              
+      }
 
       if (verbose)
       {

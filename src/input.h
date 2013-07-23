@@ -114,33 +114,35 @@ bool GetInputMeta2(Input_t *this);
 
 bool potential_cloud_shadow_snow_mask
 (
-    Input_t *input,
-    float cloud_prob_threshold,
-    float *ptm,
-    float *t_templ,
-    float *t_temph,
-    unsigned char **cloud_mask,
-    unsigned char **shadow_mask,
-    unsigned char **snow_mask,
-    unsigned char **water_mask,
-    unsigned char **final_mask,
-    bool verbose       
+    Input_t *input,             /*I: input structure */
+    float cloud_prob_threshold, /*I: cloud probability threshold */
+    float *ptm,                 /*O: percent of clear-sky pixels */
+    float *t_templ,             /*O: percentile of low background temperature */
+    float *t_temph,             /*O: percentile of high background temperature */
+    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
+    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
+    unsigned char **snow_mask,  /*I/O: snow pixel mask */
+    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **final_mask, /*I/O: final combined pixel mask */
+    bool verbose                /*I: value to indicate if intermediate messages be 
+                                     printed */
 );
 
 int object_cloud_shadow_match
 (
-    Input_t *input,
-    float ptm,
-    float t_templ,
-    float t_temph,
-    int cldpix,
-    int sdpix,
-    unsigned char **cloud_mask,
-    unsigned char **shadow_mask,
-    unsigned char **snow_mask,
-    unsigned char **water_mask,
-    unsigned char **final_mask,
-    bool verbose       
+    Input_t *input,             /*I: input structure */
+    float ptm,                  /*I: percent of clear-sky pixels */
+    float t_templ,              /*I: percentile of low background temperature */
+    float t_temph,              /*I: percentile of high background temperature */
+    int cldpix,                 /*I: cloud buffer size */
+    int sdpix,                  /*I: shadow buffer size */
+    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
+    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
+    unsigned char **snow_mask,  /*I/O: snow pixel mask */
+    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **final_mask, /*I/O: final combined pixel mask */
+    bool verbose                /*I: value to indicate if intermediate messages 
+                                     be printed */      
 );
 
 int write_envi_hdr
@@ -158,11 +160,26 @@ void ias_misc_split_filename
     char *root,                 /* O: Root portion of the file name */
     char *extension             /* O: Extension portion of the file name */
 );
-int prctile(int16 *array, int nums, int16 min, int16 max, float prct, 
-                 float *result); 
 
-int prctile2(float *array, int nums, float min, float max, float prct, 
-                 float *result); 
+int prctile
+(
+    int16 *array,    /*I: input data pointer */ 
+    int nums,        /*I: number of input data array */  
+    int16 min,       /*I: minimum value in the input data array */  
+    int16 max,       /*I: maximum value in the input data array  */  
+    float prct,      /*I: percentage threshold */ 
+    float *result    /*O: percentile calculated */ 
+); 
+
+int prctile2
+(
+    float *array,     /*I: input data pointer */ 
+    int nums,         /*I: number of input data array */   
+    float min,        /*I: minimum value in the input data array */ 
+    float max,        /*I: maximum value in the input data array  */ 
+    float prct,       /*I: percentage threshold */ 
+    float *result     /*O: percentile calculated */ 
+); 
 
 int get_args
 (

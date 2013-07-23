@@ -23,8 +23,15 @@ Date        Programmer       Reason
 
 NOTES: 
 ******************************************************************************/
-int prctile(int16 *array, int nums, int16 min, int16 max, float prct, 
-                   float *result) 
+int prctile
+(
+    int16 *array,    /*I: input data pointer */ 
+    int nums,        /*I: number of input data array */  
+    int16 min,       /*I: minimum value in the input data array */  
+    int16 max,       /*I: maximum value in the input data array  */  
+    float prct,      /*I: percentage threshold */ 
+    float *result    /*O: percentile calculated */ 
+) 
 {
     int *interval; 
     int i, j;
@@ -69,7 +76,8 @@ MODULE:  prctile2
 
 PURPOSE:  Calculate Percentile of a floating point array
 
-RETURN: None
+RETURN: SUCCESS
+        FAILURE
 
 HISTORY:
 Date        Programmer       Reason
@@ -78,8 +86,15 @@ Date        Programmer       Reason
 
 NOTES: 
 ******************************************************************************/
-int prctile2(float *array, int nums, float min, float max, float prct, 
-                   float *result) 
+int prctile2
+(
+    float *array,     /*I: input data pointer */ 
+    int nums,         /*I: number of input data array */   
+    float min,        /*I: minimum value in the input data array */ 
+    float max,        /*I: maximum value in the input data array  */ 
+    float prct,       /*I: percentage threshold */ 
+    float *result     /*O: percentile calculated */ 
+) 
 {
     int *interval; 
     int i, j;
