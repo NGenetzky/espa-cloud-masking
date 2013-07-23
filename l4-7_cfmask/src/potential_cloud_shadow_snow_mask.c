@@ -9,6 +9,8 @@
 #include "input.h"
 
 #define MINSIGMA 1e-5
+#define NO_VALUE 255
+#define LEDAPS_SAT_VALUE 20000
 
 /******************************************************************************
 MODULE: majority_filter 
@@ -227,63 +229,64 @@ NOTES:
 ******************************************************************************/
 bool potential_cloud_shadow_snow_mask
 (
-    Input_t *input,
-    float cloud_prob_threshold,
-    float *ptm,
-    float *t_templ,
-    float *t_temph,
-    unsigned char **cloud_mask,
-    unsigned char **shadow_mask,
-    unsigned char **snow_mask,
-    unsigned char **water_mask,
-    unsigned char **final_mask,
-    bool verbose       
+    Input_t *input,             /*I: input structure */
+    float cloud_prob_threshold, /*I: cloud probability threshold */
+    float *ptm,                 /*O: percent of clear-sky pixels */
+    float *t_templ,             /*O: percentile of low background temperature */
+    float *t_temph,             /*O: percentile of high background temperature */
+    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
+    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
+    unsigned char **snow_mask,  /*I/O: snow pixel mask */
+    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **final_mask, /*I/O: final combined pixel mask */
+    bool verbose                /*I: value to indicate if intermediate messages 
+                                     be printed */
 )
 {
-    char errstr[MAX_STR_LEN];
-    int nrows = input->size.l;
-    int ncols = input->size.s;
-    int ib = 0;
-    int row =0; 
-    int col = 0;
-    int mask_counter = 0;
-    int clear_pixel_counter = 0;
-    int clear_land_pixel_counter = 0;
-    float ndvi, ndsi;
-    int16 *f_temp = NULL;
-    int16 *f_wtemp = NULL;
-    float visi_mean;
-    float whiteness = 0.0;
-    float hot;
-    float lndptm;
-    float l_pt;
-    float h_pt;
-    float t_wtemp;
-    float **wfinal_prob;
-    float **final_prob;
-    float wtemp_prob;
-    int t_bright;
-    float brightness_prob;
-    int t_buffer;
-    float temp_l;
-    float temp_prob;
-    float vari_prob;
-    float max_value;
-    float *prob = NULL;
-    float clr_mask;
-    float wclr_mask;
-    int16 *nir = NULL;
-    int16 *swir = NULL;
-    float backg_b4;
-    float backg_b5;
-    int16 shadow_prob;
-    int status;
-    int satu_bv;
+    char errstr[MAX_STR_LEN];  /* error string */
+    int nrows = input->size.l; /* number of rows */
+    int ncols = input->size.s; /* number of columns */
+    int ib = 0;                /* band index */
+    int row =0;                /* row index */
+    int col = 0;               /* column index */
+    int mask_counter = 0;      /* mask counter */
+    int clear_pixel_counter = 0;       /* clear sky pixel counter */
+    int clear_land_pixel_counter = 0;  /* clear land pixel counter */
+    float ndvi, ndsi;                  /* NDVI and NDSI values*/
+    int16 *f_temp = NULL;   /* clear land temperature */
+    int16 *f_wtemp = NULL;  /* clear water temperature */
+    float visi_mean;        /* mean of visible bands */
+    float whiteness = 0.0;  /* whiteness value*/
+    float hot;     /* hot value for hot test */
+    float lndptm;  /* clear land pixel percentage */
+    float l_pt;    /* low percentile threshold */
+    float h_pt;    /* high percentile threshold */
+    float t_wtemp; /* high percentile water temperature */
+    float **wfinal_prob = NULL;  /* final water pixel probabilty value */
+    float **final_prob = NULL;   /* final land pixel probability value */
+    float wtemp_prob;  /* water temperature probability value */
+    int t_bright;      /* brightness test value for water */
+    float brightness_prob;  /* brightness probability value */
+    int t_buffer;  /* temperature test buffer */
+    float temp_l;  /* difference of low/high tempearture percentiles */
+    float temp_prob;  /* temperature probability */
+    float vari_prob;  /* probability from NDVI, NDSI, and whiteness */
+    float max_value;  /* maximum value */
+    float *prob = NULL;  /* probability value */
+    float clr_mask;      /* clear sky pixel threshold */
+    float wclr_mask;     /* water pixel threshold */
+    int16 *nir = NULL;   /* near infrared band (band 4) data */
+    int16 *swir = NULL;  /* short wavelength infrared (band 5) data */
+    float backg_b4;      /* background band 4 value */
+    float backg_b5;      /* background band 5 value */
+    int16 shadow_prob;   /* shadow probability */
+    int status;          /* return value */
+    int satu_bv;         /* sum of saturated bands 1, 2, 3 value */
 
     /* Dynamic memory allocation */
-    unsigned char **mask;
-    unsigned char **clear_mask;
-    unsigned char **clear_land_mask;
+    unsigned char **mask = NULL;
+    unsigned char **clear_mask = NULL;
+    unsigned char **clear_land_mask = NULL;
 
     mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
@@ -302,7 +305,7 @@ bool potential_cloud_shadow_snow_mask
     /* Loop through each line in the image */
     for (row = 0; row < nrows; row++)
     {
-        /* Print status on every 100 lines */
+        /* Print status on every 1000 lines */
         if (!(row%1000)) 
         {
            if (verbose)
@@ -338,10 +341,10 @@ bool potential_cloud_shadow_snow_mask
             int ib;
             for (ib = 0; ib <  NBAND_REFL_MAX; ib++)
             {
-                 if (input->buf[ib][col] == 20000)
+                 if (input->buf[ib][col] == LEDAPS_SAT_VALUE)
                  input->buf[ib][col] = input->meta.satu_value_max[ib]; 
             }
-            if (input->therm_buf[col] == 20000)
+            if (input->therm_buf[col] == LEDAPS_SAT_VALUE)
                 input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
             /* process non-fill pixels only */
@@ -393,7 +396,7 @@ bool potential_cloud_shadow_snow_mask
           else 
               water_mask[row][col] = 0;
           if (mask[row][col] == 0)
-              water_mask[row][col] = 255;
+              water_mask[row][col] = NO_VALUE;
 
           /* visible bands flatness (sum(abs)/mean < 0.6 => brigt and dark 
              cloud) */
@@ -512,7 +515,7 @@ bool potential_cloud_shadow_snow_mask
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 100 lines */
+            /* Print status on every 1000 lines */
             if (!(row%1000)) 
             {
                 if (verbose)
@@ -531,9 +534,9 @@ bool potential_cloud_shadow_snow_mask
 
              for (col =0; col < ncols; col++)
 	     {
-                 if (input->buf[5][col] == 20000)
+                 if (input->buf[5][col] == LEDAPS_SAT_VALUE)
                      input->buf[5][col] = input->meta.satu_value_max[5]; 
-                 if (input->therm_buf[col] == 20000)
+                 if (input->therm_buf[col] == LEDAPS_SAT_VALUE)
                      input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
                  if ((lndptm-0.1) >= MINSIGMA)
@@ -626,7 +629,7 @@ bool potential_cloud_shadow_snow_mask
          /* Loop through each line in the image */
          for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 100 lines */
+            /* Print status on every 1000 lines */
             if (!(row%1000)) 
             {
                 if (verbose)
@@ -661,10 +664,10 @@ bool potential_cloud_shadow_snow_mask
 	    {
                 for (ib = 0; ib <  NBAND_REFL_MAX - 1; ib++)
                 {
-                    if (input->buf[ib][col] == 20000)
+                    if (input->buf[ib][col] == LEDAPS_SAT_VALUE)
                        input->buf[ib][col] = input->meta.satu_value_max[ib]; 
                 }
-                if (input->therm_buf[col] == 20000)
+                if (input->therm_buf[col] == LEDAPS_SAT_VALUE)
                    input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
                 if (water_mask[row][col] == 1)
@@ -775,12 +778,12 @@ bool potential_cloud_shadow_snow_mask
         /*Dynamic threshold for land */
         status = prctile2(prob, index3, prob_min, prob_max, 100.0*h_pt, 
                           &clr_mask);
-        clr_mask += cloud_prob_threshold;
         if (status != SUCCESS)
         {
 	    sprintf (errstr, "Error calling prctile2 routine");
 	    ERROR (errstr, "pcloud");
         }
+        clr_mask += cloud_prob_threshold;
 
         /* Relase memory for prob */
         free(prob);
@@ -825,7 +828,7 @@ bool potential_cloud_shadow_snow_mask
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 100 lines */
+            /* Print status on every 1000 lines */
             if (!(row%1000)) 
             {
                 if (verbose)
@@ -857,11 +860,11 @@ bool potential_cloud_shadow_snow_mask
 
             for (col =0; col < ncols; col++)
             {
-                if (input->buf[3][col] == 20000)
+                if (input->buf[3][col] == LEDAPS_SAT_VALUE)
                    input->buf[3][col] = input->meta.satu_value_max[3]; 
-                if (input->buf[4][col] == 20000)
+                if (input->buf[4][col] == LEDAPS_SAT_VALUE)
                    input->buf[4][col] = input->meta.satu_value_max[4]; 
-                if (input->therm_buf[col] == 20000)
+                if (input->therm_buf[col] == LEDAPS_SAT_VALUE)
                    input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
                 if ((cloud_mask[row][col] == 1 && final_prob[row][col] > 
@@ -900,7 +903,17 @@ bool potential_cloud_shadow_snow_mask
 
         /* Free the memory */
         status = ias_misc_free_2d_array((void **)wfinal_prob);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: wfinal_prob\n");
+            ERROR (errstr, "pcloud");              
+        }
         status = ias_misc_free_2d_array((void **)final_prob);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: final_prob\n");
+            ERROR (errstr, "pcloud");              
+        }
       
         /* Improve cloud mask by majority filtering */
         majority_filter(cloud_mask, nrows, ncols);
@@ -982,7 +995,12 @@ bool potential_cloud_shadow_snow_mask
             ERROR (errstr, "pcloud");
         }
 
-        system("run_fillminima.py");
+        status = system("run_fillminima.py");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Running run_fillminima.py routine\n");
+            ERROR (errstr, "pcloud");
+        }
 
         /* Open the intermediate file for reading */
         fd = fopen("filled_b4.bin", "rb"); 
@@ -1032,7 +1050,7 @@ bool potential_cloud_shadow_snow_mask
             printf("The fifth pass\n");
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 100 lines */
+            /* Print status on every 1000 lines */
             if (!(row%1000)) 
             {
                 if (verbose)
@@ -1057,9 +1075,9 @@ bool potential_cloud_shadow_snow_mask
 
             for (col = 0; col < ncols; col++)
             {
-                if (input->buf[3][col] == 20000)
+                if (input->buf[3][col] == LEDAPS_SAT_VALUE)
                     input->buf[3][col] = input->meta.satu_value_max[3]; 
-                if (input->buf[4][col] == 20000)
+                if (input->buf[4][col] == LEDAPS_SAT_VALUE)
                     input->buf[4][col] = input->meta.satu_value_max[4]; 
 
                 if (mask[row][col] == 1)
@@ -1080,10 +1098,30 @@ bool potential_cloud_shadow_snow_mask
             }
         }
         status = ias_misc_free_2d_array((void **)new_nir);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: new_nir\n");
+            ERROR (errstr, "pcloud");              
+        }
         status = ias_misc_free_2d_array((void **)new_swir);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: new_swir\n");
+            ERROR (errstr, "pcloud");              
+        }
     }    
     status = ias_misc_free_2d_array((void **)clear_mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing memory: clear_mask\n");
+        ERROR (errstr, "pcloud");              
+    }
     status = ias_misc_free_2d_array((void **)clear_land_mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing memory: clear_land_mask\n");
+        ERROR (errstr, "pcloud");              
+    }
 
     /* Loop through each line in the image */
     for (row = 0; row < nrows; row++)
@@ -1098,12 +1136,17 @@ bool potential_cloud_shadow_snow_mask
 
             if (mask[row][col] == 0)
 	    {
-	        cloud_mask[row][col] = 255;
-	        shadow_mask[row][col] = 255;
+	        cloud_mask[row][col] = NO_VALUE;
+	        shadow_mask[row][col] = NO_VALUE;
 	    }
         }
     }
     status = ias_misc_free_2d_array((void **)mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing memory: mask\n");
+        ERROR (errstr, "pcloud");              
+    }
 
     return SUCCESS;
     

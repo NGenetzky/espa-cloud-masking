@@ -41,9 +41,7 @@
 #define OUTPUT_SHORT_NAME ("ShortName")
 #define OUTPUT_LOCAL_GRAN_ID ("LocalGranuleID")
 #define OUTPUT_PROD_DATE ("ProductionDate")
-#define OUTPUT_LEDAPSVERSION ("LEDAPSVersion")
 #define OUTPUT_CFMASK_VERSION ("CFmaskVersion")
-#define OUTPUT_META_NAME ("LEDAPSMetadataFile")
 
 #define OUTPUT_WEST_BOUND  ("WestBoundingCoordinate")
 #define OUTPUT_EAST_BOUND  ("EastBoundingCoordinate")
@@ -413,30 +411,12 @@ bool PutMetadata(Output_t *this, Input_t *input)
   if (!PutAttrString(this->sds_file_id, &attr, date))
     RETURN_ERROR("writing attribute (production date)", "PutMetadata", false);
 
-#if 0
-  if (sprintf(process_ver, "%s", param->LEDAPSVersion) < 0)
-    RETURN_ERROR("creating LEDAPSVersion","PutMetadata", false);
-  attr.type = DFNT_CHAR8;
-  attr.nval = strlen(process_ver);
-  attr.name = OUTPUT_LEDAPSVERSION;
-  if (!PutAttrString(this->sds_file_id, &attr, process_ver))
-    RETURN_ERROR("writing attribute (LEDAPS Version)", "PutMetadata", false);
-#endif
-
     sprintf (process_ver, "%s", CFMASK_VERSION);
     attr.type = DFNT_CHAR8;
     attr.nval = strlen(process_ver);
     attr.name = OUTPUT_CFMASK_VERSION;
   if (!PutAttrString(this->sds_file_id, &attr, process_ver))
     RETURN_ERROR("writing attribute (CFmask Version)", "PutMetadata", false);
-
-#if 0
-  attr.type = DFNT_CHAR8;
-  attr.nval = strlen(param->metadata_file_name);
-  attr.name = OUTPUT_META_NAME;
-  if (!PutAttrString(this->sds_file_id, &attr, param->metadata_file_name))
-    RETURN_ERROR("writing attribute (meta name)", "PutMetadata", false);
-#endif
 
   attr.type = DFNT_FLOAT32;
   attr.nval = 1;

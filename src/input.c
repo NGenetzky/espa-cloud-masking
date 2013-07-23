@@ -76,9 +76,10 @@ Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
 
-NOTES: 
-******************************************************************************/
-int dn_to_bt(Input_t *input)
+NOTES: The constants and formular used are from BU's matlab code
+       & G. Chander et al. RSE 113 (2009) 893-903
+*****************************************************************************/ 
+bool dn_to_bt(Input_t *input)
 {
     float k1, k2;
     int dn = 255;
@@ -126,9 +127,10 @@ Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
 
-NOTES: 
+NOTES: The constants and formular used are from BU's matlab code
+       & G. Chander et al. RSE 113 (2009) 893-903  
 ******************************************************************************/
-int dn_to_toa(Input_t *input)
+bool dn_to_toa(Input_t *input)
 {
     float esun[6];
     int ib;
@@ -209,6 +211,7 @@ int getMeta(char meta_filename[], Input_t *this)
     char  *seperator2 = ",";
     FILE *in;
     int ib;
+    int status;
 
     in=fopen(meta_filename, "r");
     if (in == NULL)
@@ -312,13 +315,30 @@ int getMeta(char meta_filename[], Input_t *this)
     }
 
     for (i = 0; i < 366; i++)
-        fscanf(in, "%f", &this->dsun_doy[i]);
+    {
+        if (fscanf(in, "%f", &this->dsun_doy[i]) == EOF)
+        {
+            error_string = "End of file (EOF) is met before 336 lines";
+            ERROR(error_string, "GetMeta");
+        }            
+    }
     fclose(in);
 
     /* Calculate maximum TOA reflectance values and put them in metadata */
-    dn_to_toa(this);
+    status = dn_to_toa(this);
+    if (!status)
+    {
+        error_string = "Error calling dn_to_toa routine";
+        ERROR(error_string, "GetMeta");
+    }
+
     /* Calculate maximum BT values and put them in metadata */
-    dn_to_bt(this);
+    status = dn_to_bt(this);
+    if (!status)
+    {
+        error_string = "Error calling dn_to_bt routine";
+        ERROR(error_string, "GetMeta");
+    }
 
     return SUCCESS;
 }

@@ -19,37 +19,37 @@ Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
 5/14/2013   Song Guo         Added in Polar Stereographic support
+7/17/2013   Song Guo         Added in Map info 
 
 NOTES: type ./cfmask --help for information to run the code
 ******************************************************************************/
 int main (int argc, char *argv[])
 {
     char errstr[MAX_STR_LEN];           /* error string */
-    char lndcal_name[MAX_STR_LEN];
-    char lndth_name[MAX_STR_LEN];
-    char fmask_name[MAX_STR_LEN];
-    char fmask_header[MAX_STR_LEN];
-    char fmask_hdf_name[MAX_STR_LEN];
-    char fmask_hdf_hdr[MAX_STR_LEN];
+    char lndcal_name[MAX_STR_LEN];      /* ledaps TOA reflectance file */
+    char lndth_name[MAX_STR_LEN];       /* ledaps Brightness Temperature file */
+    char fmask_name[MAX_STR_LEN];       /* output fmask binary file name */
+    char fmask_header[MAX_STR_LEN];     /* output fmask binary file header */
+    char fmask_hdf_name[MAX_STR_LEN];   /* output fmask HDF file name */
+    char fmask_hdf_hdr[MAX_STR_LEN];    /* output fmask HDF file header */
     char *lndmeta_name = NULL;          /* input lndmeta data filename */
-    char directory[MAX_STR_LEN];
-    char extension[MAX_STR_LEN];
+    char directory[MAX_STR_LEN];        /* input/output data directory */
+    char extension[MAX_STR_LEN];        /* input metadata file extension */
     int ib;                             /* band counters */
     char sds_names[NBAND_REFL_MAX][MAX_STR_LEN]; /* array of image SDS names */
     Input_t *input = NULL;              /* input data and metadata */
-    char  scene_name[MAX_STR_LEN];
-    char description[MAX_STR_LEN];
+    char  scene_name[MAX_STR_LEN];      /* input data scene name */
     char *hdf_grid_name = "Grid";  /* name of the grid for HDF-EOS */
-    unsigned char **cloud_mask;
-    unsigned char **shadow_mask;
-    unsigned char **snow_mask;
-    unsigned char **water_mask;
-    unsigned char **final_mask;
-    int status;
-    FILE *fd;
-    float ptm;
-    float t_templ;
-    float t_temph;
+    unsigned char **cloud_mask;    /* cloud pixel mask */
+    unsigned char **shadow_mask;   /* shadow pixel mask */
+    unsigned char **snow_mask;     /* snow pixel mask */
+    unsigned char **water_mask;    /* water pixel mask */
+    unsigned char **final_mask;    /* final combined mask */
+    int status;                    /* return value from function call */
+    FILE *fd = NULL;               /* file pointer */
+    float ptm;                     /* percent of clear-sky pixels */
+    float t_templ;     /* percentile of low background temperature */
+    float t_temph;     /* percentile of high background temperature */
     int out_sds_types[NUM_OUT_SDS];     /* array of image SDS types */
     char *sds_name="fmask_band";        /* Fmask hdf SDS name */
     Output_t *output = NULL;            /* output structure and metadata */
@@ -225,24 +225,28 @@ int main (int argc, char *argv[])
              cloud, land_clear, fill, input->size.l*input->size.s);
     }
     status = ias_misc_free_2d_array((void **)shadow_mask);
-    status = ias_misc_free_2d_array((void **)snow_mask);
-    status = ias_misc_free_2d_array((void **)water_mask);
-    status = ias_misc_free_2d_array((void **)cloud_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
     }
-
-    IAS_PROJECTION proj_info;
-    proj_info.proj_code = 1;
-    proj_info.zone = input->meta.zone;
-    status = snprintf(description, sizeof(description), "Fmask for cloud, "
-            "cloud shadow, snow, and water");
-    if (status < 0 || status >= sizeof(description))
+    status = ias_misc_free_2d_array((void **)snow_mask);
+    if (status != SUCCESS)
     {
-        IAS_LOG_ERROR("Buffer for envi header description not large enough");
-        exit(EXIT_FAILURE);
+        sprintf (errstr, "Freeing mask memory");
+        ERROR (errstr, "main");
+    }
+    status = ias_misc_free_2d_array((void **)water_mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing mask memory");
+        ERROR (errstr, "main");
+    }
+    status = ias_misc_free_2d_array((void **)cloud_mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing mask memory");
+        ERROR (errstr, "main");
     }
 
     /* Get the projection and spatial information from the input TOA
@@ -375,7 +379,7 @@ void usage ()
 {
     printf ("Fmask identify the cloud, shadow, snow, water and clear pixels using "
             "the input Landsat scene (top of atmosphere (TOA)reflection and "
-            "brightness temperature (BT) for bamd 6) output from LEDAPS\n\n");
+            "brightness temperature (BT) for band 6) output from LEDAPS\n\n");
     printf ("usage: ./cfmask "
             "--metadata=input_metadata_filename_with_full_path "
             "--prob=input_cloud_probability_value "
