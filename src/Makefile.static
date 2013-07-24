@@ -62,5 +62,5 @@ clean:
 $(OBJ): $(INC)
 
 .c.o:
-	$(CC) $(EXTRAS) $(NCFLAGS) $(INCDIR) -c $<
+	$(CC) $(NCFLAGS) $(INCDIR) -c $<
 
