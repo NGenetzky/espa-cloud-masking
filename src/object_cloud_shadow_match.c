@@ -10,7 +10,7 @@
 #include "input.h"
 
 #define MINSIGMA 1e-5
-#define MAX_CLOUD_TYPE 300000
+#define MAX_CLOUD_TYPE 3000000
 #define MIN_CLOUD_OBJ 9
 #define PI (3.141592653589793238)
 
@@ -631,13 +631,13 @@ int object_cloud_shadow_match
 
         /* Allocate memory for segment cloud portion */
         int *obj_num = NULL;
-        obj_num = (int *)calloc(MAX_CLOUD_TYPE, sizeof(int));
+        obj_num = (int *)calloc(MAX_CLOUD_TYPE, sizeof(unsigned int));
         cloud_node **cloud = NULL;
         cloud = (cloud_node **)ias_misc_allocate_2d_array(nrows, 
                ncols, sizeof(cloud_node)); 
         int **cloud_first_node;
         cloud_first_node = (int **)ias_misc_allocate_2d_array(2, 
-               MAX_CLOUD_TYPE, sizeof(int)); 
+               MAX_CLOUD_TYPE, sizeof(unsigned int)); 
         if (obj_num == NULL || cloud == NULL || cloud_first_node == NULL)
         {
             sprintf (errstr, "Allocating memory");
