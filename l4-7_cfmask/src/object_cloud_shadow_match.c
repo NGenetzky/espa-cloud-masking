@@ -630,13 +630,13 @@ int object_cloud_shadow_match
             &omiga_par, &omiga_per);
 
         /* Allocate memory for segment cloud portion */
-        int *obj_num = NULL;
-        obj_num = (int *)calloc(MAX_CLOUD_TYPE, sizeof(unsigned int));
+        unsigned int *obj_num = NULL;
+        obj_num = (unsigned int *)calloc(MAX_CLOUD_TYPE, sizeof(unsigned int));
         cloud_node **cloud = NULL;
         cloud = (cloud_node **)ias_misc_allocate_2d_array(nrows, 
                ncols, sizeof(cloud_node)); 
-        int **cloud_first_node;
-        cloud_first_node = (int **)ias_misc_allocate_2d_array(2, 
+        unsigned int **cloud_first_node;
+        cloud_first_node = (unsigned int **)ias_misc_allocate_2d_array(2, 
                MAX_CLOUD_TYPE, sizeof(unsigned int)); 
         if (obj_num == NULL || cloud == NULL || cloud_first_node == NULL)
         {
