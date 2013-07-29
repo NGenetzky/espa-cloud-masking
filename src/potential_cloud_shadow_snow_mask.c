@@ -37,178 +37,178 @@ NOTES:
    boundary line pixel is labeled as cloud pixel. */
 void majority_filter(unsigned char **mask, int nrows, int ncols)
 {
- int row, col;
- int cloud_pixels = 0;
+    int row, col;         /* loop indices */
+    int cloud_pixels = 0; /* cloud counter */
 
-   for (row = 0; row < nrows; row++)
-   {
-      for (col = 0; col < ncols; col++)
-      {
-          if ((row-1) > 0 && (row+1) < (nrows-1))
-          {
-              cloud_pixels = 0;
-              if ((col-1) > 0 && (col+1) < (ncols-1))
-              {
-                  if (mask[row-1][col-1] == 1)
-                      cloud_pixels++;
-                  if (mask[row-1][col] == 1)
-                      cloud_pixels++;
-                  if (mask[row-1][col+1] == 1)
-                      cloud_pixels++;
-                  if (mask[row][col-1] == 1)
-                      cloud_pixels++;
-                  if (mask[row][col] == 1)
-                      cloud_pixels++;
-                  if (mask[row][col+1] == 1)
-                      cloud_pixels++;
-                  if (mask[row+1][col-1] == 1)
-                      cloud_pixels++;
-                  if (mask[row+1][col] == 1)
-                      cloud_pixels++;
-                  if (mask[row+1][col+1] == 1)
-                      cloud_pixels++;
-             }
-         }
-         if (cloud_pixels >= 5)
-             mask[row][col] = 1;
+    for (row = 0; row < nrows; row++)
+    {
+        for (col = 0; col < ncols; col++)
+        {
+            if ((row-1) > 0 && (row+1) < (nrows-1))
+            {
+                cloud_pixels = 0;
+                if ((col-1) > 0 && (col+1) < (ncols-1))
+                {
+                    if (mask[row-1][col-1] == 1)
+                        cloud_pixels++;
+                    if (mask[row-1][col] == 1)
+                        cloud_pixels++;
+                    if (mask[row-1][col+1] == 1)
+                        cloud_pixels++;
+                    if (mask[row][col-1] == 1)
+                        cloud_pixels++;
+                    if (mask[row][col] == 1)
+                        cloud_pixels++;
+                    if (mask[row][col+1] == 1)
+                        cloud_pixels++;
+                    if (mask[row+1][col-1] == 1)
+                        cloud_pixels++;
+                    if (mask[row+1][col] == 1)
+                        cloud_pixels++;
+                    if (mask[row+1][col+1] == 1)
+                        cloud_pixels++;
+                }
+            }
+            if (cloud_pixels >= 5)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if (row == 0 && col == 0)
-         {
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col+1] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col+1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 2)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if (row == 0 && col == 0)
+            {
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if (row == 0 && col == ncols-1)
-         {
-             if (mask[row][col-1] == 1)
-                cloud_pixels++;
-             if (mask[row][col] == 1)
-                cloud_pixels++;
-             if (mask[row+1][col-1] == 1)
-                cloud_pixels++;
-             if (mask[row+1][col] == 1)
-                cloud_pixels++;
-         }
-         if (cloud_pixels >= 2)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if (row == 0 && col == ncols-1)
+            {
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if (row == nrows-1 && col == 0)
-         {
-             if (mask[row-1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col+1] == 1)
-                 cloud_pixels++;
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col+1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 2)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if (row == nrows-1 && col == 0)
+            {
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if (row == nrows-1 && col == ncols-1)
-         {
-             if (mask[row-1][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col-1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 2)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if (row == nrows-1 && col == ncols-1)
+            {
+                if (mask[row-1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if (row == 0 && (col > 0 && col < (ncols-1)))
-         {
-             if (mask[row][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col+1] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col+1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 3)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if (row == 0 && (col > 0 && col < (ncols-1)))
+            {
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if (row == ncols-1 && (col > 0 && col < (ncols-1)))
-         {
-             if (mask[row][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col+1] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col+1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 3)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if (row == ncols-1 && (col > 0 && col < (ncols-1)))
+            {
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if ((row > 0 && row < (nrows-1)) && col == 0)
-         {
-             if (mask[row-1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col+1] == 1)
-                 cloud_pixels++;
-             if (mask[row][col+1] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col+1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 3)
-             mask[row][col] = 1;
+            cloud_pixels = 0;
+            if ((row > 0 && row < (nrows-1)) && col == 0)
+            {
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
 
-         cloud_pixels = 0;
-         if ((row > 0 && row < (nrows-1)) && col == ncols-1)
-         {
-             if (mask[row-1][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col-1] == 1)
-                 cloud_pixels++;
-             if (mask[row-1][col] == 1)
-                 cloud_pixels++;
-             if (mask[row][col] == 1)
-                 cloud_pixels++;
-             if (mask[row+1][col-1] == 1)
-                 cloud_pixels++;
-         }
-         if (cloud_pixels >= 3)
-             mask[row][col] = 1;
-      }
-   }
+            cloud_pixels = 0;
+            if ((row > 0 && row < (nrows-1)) && col == ncols-1)
+            {
+                if (mask[row-1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
+        }
+    }
 }
 
 /******************************************************************************
@@ -361,19 +361,19 @@ bool potential_cloud_shadow_snow_mask
   
             if ((input->buf[2][col] +  input->buf[3][col]) != 0 
                 && mask[row][col] == 1)
-                ndvi = (float)(input->buf[3][col] -  input->buf[2][col]) / 
-                    (float)(input->buf[3][col] +  input->buf[2][col]);
+                ndvi = (float)(input->buf[3][col] - input->buf[2][col]) / 
+                    (float)(input->buf[3][col] + input->buf[2][col]);
             else
                 ndvi = 0.01;
 
             if ((input->buf[1][col] +  input->buf[4][col]) != 0 
                 && mask[row][col] == 1)
-                ndsi = (float)(input->buf[1][col] -  input->buf[4][col]) / 
-                (float)(input->buf[1][col] +  input->buf[4][col]);
+                ndsi = (float)(input->buf[1][col] - input->buf[4][col]) / 
+                (float)(input->buf[1][col] + input->buf[4][col]);
             else
                 ndsi = 0.01;
 
-            /* Basic cloud test */
+            /* Basic cloud test, equation 1 */
             if (((ndsi - 0.8) < MINSIGMA) && ((ndvi - 0.8) < MINSIGMA) && 
                 (input->buf[5][col] > 300) && (input->therm_buf[col] < 2700))
                  cloud_mask[row][col] = 1;
@@ -381,14 +381,14 @@ bool potential_cloud_shadow_snow_mask
                  cloud_mask[row][col] = 0;
 
            /* It takes every snow pixels including snow pixel under thin 
-              clouds or icy clouds */
+              clouds or icy clouds, equation 20 */
            if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 380) && 
                (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
                snow_mask[row][col] = 1;
            else 
                snow_mask[row][col] = 0;
 
-           /* Zhe's water test (works over thin cloud) */
+           /* Zhe's water test (works over thin cloud), equation 5 */
           if (((((ndvi - 0.01) < MINSIGMA) && (input->buf[3][col] < 1100)) || 
               (((ndvi - 0.1) < MINSIGMA) && (ndvi > MINSIGMA) && 
               (input->buf[3][col] < 500))) && (mask[row][col]==1))
@@ -399,7 +399,7 @@ bool potential_cloud_shadow_snow_mask
               water_mask[row][col] = NO_VALUE;
 
           /* visible bands flatness (sum(abs)/mean < 0.6 => brigt and dark 
-             cloud) */
+             cloud), equation 2 */
           if (cloud_mask[row][col] == 1 && mask[row][col] == 1)
           {
              visi_mean = (float)(input->buf[0][col] + input->buf[1][col] +
@@ -433,7 +433,7 @@ bool potential_cloud_shadow_snow_mask
           else
               cloud_mask[row][col] = 0;
 
-          /* Haze test */
+          /* Haze test, equation 3 */
           hot = (float)input->buf[0][col] - 0.5 * (float)input->buf[2][col] 
                  - 800.0;
           if (cloud_mask[row][col] == 1 && (hot > MINSIGMA || satu_bv == 1))
@@ -441,7 +441,7 @@ bool potential_cloud_shadow_snow_mask
           else
               cloud_mask[row][col] = 0;
 
-          /* Ratio 4/5 > 0.75 test */
+          /* Ratio 4/5 > 0.75 test, equation 4 */
           if (cloud_mask[row][col] == 1 && input->buf[4][col] != 0)
           {
               if ((float)input->buf[3][col]/(float)(input->buf[4][col]) - 0.75 
@@ -565,6 +565,7 @@ bool potential_cloud_shadow_snow_mask
 	                 index++;
 	             }
 	         }
+                 /* Equation 7 */
         	 if (water_mask[row][col] == 1 && input->buf[5][col] <= 300)
 	         {
 	             f_wtemp[index2] = input->therm_buf[col];
