@@ -43,7 +43,22 @@
 #define PI (3.141592653589793238)
 
 
-char *trimwhitespace(char *str)
+/******************************************************************************
+MODULE:  trim_white_space
+
+PURPOSE:  Trim the white space before the string
+
+RETURN: trimed string
+
+HISTORY:
+Date        Programmer       Reason
+--------    ---------------  -------------------------------------
+3/15/2013   Song Guo         Original Development (based on example
+                             on line)
+
+NOTES: 
+*****************************************************************************/ 
+char *trim_white_space(char *str)
 {
   char *end;
 
@@ -229,30 +244,30 @@ int getMeta(char meta_filename[], Input_t *this)
     {
         /* get string token */
         tokenptr = strtok(buffer, seperator);
-        label=trimwhitespace(tokenptr);
+        label=trim_white_space(tokenptr);
  
         if (strcmp(label,"UPPER_LEFT_CORNER") == 0)
         {
-            tokenptr = trimwhitespace(strtok(NULL, seperator));
+            tokenptr = trim_white_space(strtok(NULL, seperator));
         }
 
         if (strcmp(label,"UPPER_LEFT_CORNER") == 0)
         {
             tokenptr2 = strtok(tokenptr, seperator2);
-            label2=trimwhitespace(tokenptr2);
-            tokenptr2 = trimwhitespace(strtok(NULL, seperator2));
+            label2=trim_white_space(tokenptr2);
+            tokenptr2 = trim_white_space(strtok(NULL, seperator2));
             this->meta.ul_projection_x = atof(label2);
             this->meta.ul_projection_y = atof(tokenptr2);
         }
 
         if (strcmp(label,"PROJECTION_NUMBER") == 0)
         {
-            tokenptr = trimwhitespace(strtok(NULL, seperator));
+            tokenptr = trim_white_space(strtok(NULL, seperator));
             this->meta.zone = atoi(tokenptr);
         }
         if (strcmp(label,"GAIN") == 0)
         {
-            tokenptr = trimwhitespace(strtok(NULL, seperator));
+            tokenptr = trim_white_space(strtok(NULL, seperator));
         }
 
         if (strcmp(label,"GAIN") == 0)
@@ -268,7 +283,7 @@ int getMeta(char meta_filename[], Input_t *this)
         }
         if (strcmp(label,"BIAS") == 0)
         {
-            tokenptr = trimwhitespace(strtok(NULL, seperator));
+            tokenptr = trim_white_space(strtok(NULL, seperator));
         }
 
         if (strcmp(label,"BIAS") == 0)
@@ -284,12 +299,12 @@ int getMeta(char meta_filename[], Input_t *this)
         }
         if (strcmp(label,"GAIN_TH") == 0)
         {
-            tokenptr = trimwhitespace(strtok(NULL, seperator));
+            tokenptr = trim_white_space(strtok(NULL, seperator));
             this->meta.gain_th = atof(tokenptr);
         }
         if (strcmp(label,"BIAS_TH") == 0)
         {
-            tokenptr = trimwhitespace(strtok(NULL, seperator));
+            tokenptr = trim_white_space(strtok(NULL, seperator));
             this->meta.bias_th = atof(tokenptr);
         }
       }
