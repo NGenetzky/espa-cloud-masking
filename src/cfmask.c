@@ -4,8 +4,7 @@
 #include "output.h"
 #include "cfmask.h"
 #include "space.h"
-#include "ias_logging.h"
-#include "ias_misc_2d_array.h"
+#include "2d_array.h"
 
 #define NUM_OUT_SDS 1
 char *out_sds_names[NUM_OUT_SDS] = {"fmask_band"};
@@ -71,7 +70,7 @@ int main (int argc, char *argv[])
         ERROR (errstr, "main");
     }
 
-    ias_misc_split_filename(lndmeta_name, directory, scene_name, extension);
+    split_filename(lndmeta_name, directory, scene_name, extension);
     if (verbose)
         printf("directory, scene_name, extension=%s,%s,%s\n", 
             directory, scene_name, extension);
@@ -152,15 +151,15 @@ int main (int argc, char *argv[])
         strcpy (&sds_names[ib][0], input->sds[ib].name);
 
     /* Dynamic allocate the 2d mask memory */
-    cloud_mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    cloud_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    shadow_mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    shadow_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    snow_mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    snow_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    water_mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    water_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    final_mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    final_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
     if (cloud_mask == NULL  || shadow_mask == NULL || snow_mask == NULL
         || water_mask == NULL || final_mask == NULL)
@@ -224,25 +223,25 @@ int main (int argc, char *argv[])
              "total_pixels=%d,%d, %d, %d, %d, %d, %d\n", water, shadow, snow,
              cloud, land_clear, fill, input->size.l*input->size.s);
     }
-    status = ias_misc_free_2d_array((void **)shadow_mask);
+    status = free_2d_array((void **)shadow_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
     }
-    status = ias_misc_free_2d_array((void **)snow_mask);
+    status = free_2d_array((void **)snow_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
     }
-    status = ias_misc_free_2d_array((void **)water_mask);
+    status = free_2d_array((void **)water_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
     }
-    status = ias_misc_free_2d_array((void **)cloud_mask);
+    status = free_2d_array((void **)cloud_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
@@ -254,9 +253,8 @@ int main (int argc, char *argv[])
     status = get_space_def_hdf (&space_def, lndcal_name, hdf_grid_name);
     if (status != SUCCESS)
     {
-        IAS_LOG_ERROR("Reading spatial metadata from the HDF file: "
-                      "%s", lndcal_name);
-        exit(EXIT_FAILURE);
+        sprintf(errstr, "Reading spatial metadata from the HDF file: %s", lndcal_name);
+        ERROR (errstr, "main");
     }
 
     if (write_binary)
@@ -265,16 +263,16 @@ int main (int argc, char *argv[])
      status = write_envi_hdr(fmask_header, BINARY_FILE, input, &space_def);
         if (status != SUCCESS)
         {
-            IAS_LOG_ERROR("Creating ENVI header for binary fmask");
-            exit(EXIT_FAILURE);
+            sprintf(errstr, "Creating ENVI header for binary fmask");
+            ERROR (errstr, "main");
         }
 
         /* Open the mask file for writing */
         fd = fopen(fmask_name, "w"); 
         if (fd == NULL)
         {
-            IAS_LOG_ERROR("Opening report file: %s", fmask_name);
-            exit(EXIT_FAILURE);
+            sprintf(errstr, "Opening report file: %s", fmask_name);
+            ERROR (errstr, "main");
         }
 
         /* Write out the mask file */
@@ -282,16 +280,16 @@ int main (int argc, char *argv[])
                  input->size.s, fd);
         if (status != input->size.l * input->size.s)
         {
-            IAS_LOG_ERROR("Writing to %s", fmask_name);
-            exit(EXIT_FAILURE);
+            sprintf(errstr, "Writing to %s", fmask_name);
+            ERROR (errstr, "main");
         }
 
         /* Close the mask file */
         status = fclose(fd);
         if ( status )
         {
-            IAS_LOG_ERROR("Closing file %s", fmask_name);
-            exit(EXIT_FAILURE);
+            sprintf(errstr, "Closing file %s", fmask_name);
+            ERROR (errstr, "main");
         }
     }
 
@@ -301,8 +299,8 @@ int main (int argc, char *argv[])
         status = CreateOutput(fmask_hdf_name);
         if (status != true)
         {
-            IAS_LOG_ERROR("Creating HDF fmask output file");
-            exit(EXIT_FAILURE);
+            sprintf(errstr, "Creating HDF fmask output file");
+            ERROR (errstr, "main");
         }
         output = OpenOutput (fmask_hdf_name, sds_name, &input->size);
         if (output == NULL)
@@ -311,7 +309,7 @@ int main (int argc, char *argv[])
             ERROR(errstr, "main");
         }
 
-        if (!PutOutputLine(output, final_mask))
+        if (!PutOutput(output, final_mask))
         {
             sprintf (errstr, "Writing output fmask in HDF files\n");
             ERROR (errstr, "main");
@@ -332,17 +330,17 @@ int main (int argc, char *argv[])
         if (put_space_def_hdf (&space_def, fmask_hdf_name, NUM_OUT_SDS, 
             out_sds_names, out_sds_types, hdf_grid_name) != SUCCESS)
         {
-            IAS_LOG_ERROR("Putting spatial metadata to the HDF file: "
+            sprintf("Putting spatial metadata to the HDF file: "
             "%s", lndcal_name);
-            exit(EXIT_FAILURE);
+            ERROR (errstr, "main");
         }
 
         /* Write CFmask HDF header to add in envi map info */
         sprintf (fmask_hdf_hdr, "%s.hdr", fmask_hdf_name);
         if (write_envi_hdr (fmask_hdf_hdr, HDF_FILE, input, &space_def) != SUCCESS)
         {
-            IAS_LOG_ERROR("Error writing the ENVI header for CFmask HDF hdr");
-            exit(EXIT_FAILURE);
+            sprintf(errstr, "Error writing the ENVI header for CFmask HDF hdr");
+            ERROR (errstr, "main");
         }
     }
 
@@ -351,7 +349,7 @@ int main (int argc, char *argv[])
     FreeInput (input);
 
     /* Free the final_mask buffer */
-    status = ias_misc_free_2d_array((void **)final_mask);
+    status = free_2d_array((void **)final_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing cloud mask memory");

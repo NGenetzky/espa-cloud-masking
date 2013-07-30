@@ -9,4 +9,11 @@
 #define DEG (180.0 / PI)
 #define RAD (PI / 180.0)
 
+#ifndef SUCCESS
+#define SUCCESS  0
+#endif
+#ifndef FAILURE
+#define FAILURE 1
+#endif
+
 #endif

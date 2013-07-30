@@ -5,17 +5,16 @@ MV	= mv
 EXTRA = -g -Wall 
 
 # Define the include files
-INC = const.h date.h error.h mystring.h input.h myhdf.h ias_misc_2d_array.h \
-      ias_const.h ias_logging.h ias_types.h cfmask.h output.h space.h \
-      myproj.h myproj_const.h 
+INC = const.h date.h error.h mystring.h input.h myhdf.h 2d_array.h \
+      cfmask.h output.h space.h myproj.h myproj_const.h 
 INCDIR  = -I. -I$(HDFINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) -I$(OPENCVINC)  
 NCFLAGS = $(EXTRA) $(INCDIR)
 
 # Define the source code and object files
-SRC = date.c error.c input.c myhdf.c mystring.c ias_misc_2d_array.c cfmask.c \
-      ias_logging.c potential_cloud_shadow_snow_mask.c \
-      write_envi_hdr.c ias_misc_split_filename.c \
-      object_cloud_shadow_match.c ias_misc.c output.c space.c 
+SRC = date.c error.c input.c myhdf.c mystring.c 2d_array.c cfmask.c \
+      potential_cloud_shadow_snow_mask.c \
+      write_envi_hdr.c split_filename.c \
+      object_cloud_shadow_match.c misc.c output.c space.c 
 OBJ = $(SRC:.c=.o)
 
 # Define the object libraries
