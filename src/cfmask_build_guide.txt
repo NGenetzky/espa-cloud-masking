@@ -6,6 +6,8 @@ Installation:
 
 2. Set up environment variables. Can create an environment shell file or add 
    the following to your bash shell. For C shell, use 'setenv VAR "directory"
+    export JPEGINC="path_to_JPEG_include_files"
+    export JPEGLIB="path_to_JPEG_libraries"
     export HDFINC="path_to_HDF_include_files"
     export HDFLIB="path_to_HDF_libraries"
     export HDFEOS_INC="path_to_HDFEOS_include_files"

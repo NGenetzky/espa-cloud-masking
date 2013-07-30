@@ -7,7 +7,7 @@ EXTRA = -g -Wall
 # Define the include files
 INC = const.h date.h error.h mystring.h input.h myhdf.h 2d_array.h \
       cfmask.h output.h space.h myproj.h myproj_const.h 
-INCDIR  = -I. -I$(HDFINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) -I$(OPENCVINC)  
+INCDIR  = -I. -I$(JPEGINC) -I$(HDFINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) -I$(OPENCVINC)  
 NCFLAGS = $(EXTRA) $(INCDIR)
 
 # Define the source code and object files
@@ -18,7 +18,7 @@ SRC = date.c error.c input.c myhdf.c mystring.c 2d_array.c cfmask.c \
 OBJ = $(SRC:.c=.o)
 
 # Define the object libraries
-LIB   = -L$(HDFLIB) -lmfhdf -ldf \
+LIB   = -L$(HDFLIB) -lmfhdf -ldf -L$(JPEGLIB) -ljpeg -lz \
 	-lxdr -lm -lstdc++
 EOSLIB = -L$(HDFEOS_LIB) -lhdfeos -L$(HDFEOS_GCTPLIB) -lGctp
 
