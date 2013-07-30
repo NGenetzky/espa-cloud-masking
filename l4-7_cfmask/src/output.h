@@ -23,7 +23,7 @@ typedef struct {
 bool CreateOutput(char *file_name);
 Output_t *OpenOutput(char *file_name, char sds_names[MAX_STR_LEN],
    Img_coord_int_t *size);
-bool PutOutputLine(Output_t *this, unsigned char **final_mask);
+bool PutOutput(Output_t *this, unsigned char **final_mask);
 bool CloseOutput(Output_t *this);
 bool FreeOutput(Output_t *this);
 bool PutMetadata(Output_t *this, Input_t *input);

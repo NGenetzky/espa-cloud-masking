@@ -9,7 +9,6 @@
 #include "date.h"
 #include "error.h"
 #include "mystring.h"
-#include "ias_types.h"
 #include "cfmask.h"
 #include "space.h"
 
@@ -153,7 +152,7 @@ int write_envi_hdr
     Space_def_t *space_def /* I: spatial definition information */
 );
 
-void ias_misc_split_filename 
+void split_filename 
 (
     const char *filename,       /* I: Name of file to split */
     char *directory,            /* O: Directory portion of file name */

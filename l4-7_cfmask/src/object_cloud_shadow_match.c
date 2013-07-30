@@ -6,7 +6,7 @@
 #include "ml.h"
 #include "cxcore.h"
 #include "highgui.h"
-#include "ias_misc_2d_array.h"
+#include "2d_array.h"
 #include "input.h"
 
 #define MINSIGMA 1e-5
@@ -294,8 +294,8 @@ void label
     int nrows,                  /*I: number of rows */ 
     int ncols,                  /*I: number of columns */ 
     cloud_node **cloud,         /*O: cloud pixel node */
-    int *obj_num,               /*O: cloud number */ 
-    int **first_cloud_node      /*O: fisrt cloud pixel node */
+    unsigned int *obj_num,               /*O: cloud number */ 
+    unsigned int **first_cloud_node      /*O: fisrt cloud pixel node */
 )
 { 
     int row, col; /* loop indices */
@@ -607,11 +607,11 @@ int object_cloud_shadow_match
     unsigned char **shadow_cal = NULL;    /* shadow pixel mask */
     unsigned char **boundary_test = NULL; /* boundary test mask */
 
-    cloud_cal = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    cloud_cal = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    shadow_cal = (unsigned char **)ias_misc_allocate_2d_array(
+    shadow_cal = (unsigned char **)allocate_2d_array(
                  input->size.l, input->size.s, sizeof(unsigned char)); 
-    boundary_test = (unsigned char **)ias_misc_allocate_2d_array(
+    boundary_test = (unsigned char **)allocate_2d_array(
                  input->size.l, input->size.s, sizeof(unsigned char)); 
     if (cloud_cal == NULL || shadow_cal == NULL || boundary_test == NULL)
     {
@@ -746,9 +746,9 @@ int object_cloud_shadow_match
 
         /* Allocate memory for segment cloud portion */
         obj_num = (unsigned int *)calloc(MAX_CLOUD_TYPE, sizeof(unsigned int));
-        cloud = (cloud_node **)ias_misc_allocate_2d_array(nrows, 
+        cloud = (cloud_node **)allocate_2d_array(nrows, 
                ncols, sizeof(cloud_node)); 
-        cloud_first_node = (unsigned int **)ias_misc_allocate_2d_array(2, 
+        cloud_first_node = (unsigned int **)allocate_2d_array(2, 
                MAX_CLOUD_TYPE, sizeof(unsigned int)); 
         if (obj_num == NULL || cloud == NULL || cloud_first_node == NULL)
         {
@@ -800,7 +800,7 @@ int object_cloud_shadow_match
         }
 
         /* Need to read out whole image brightness temperature for band 6 */
-        temp = (int16 **)ias_misc_allocate_2d_array(input->size.l, 
+        temp = (int16 **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(int16)); 
         if (!temp)
         {
@@ -833,15 +833,15 @@ int object_cloud_shadow_match
                          array(3,1) in matlab is equal to array[2][0] in C */
                 min_cl_height = 200;
                 max_cl_height = 12000;
-                xy_type = (int **)ias_misc_allocate_2d_array(2, 
+                xy_type = (int **)allocate_2d_array(2, 
                            obj_num[cloud_type], sizeof(int)); 
-                tmp_xy_type = (int **)ias_misc_allocate_2d_array(2, 
+                tmp_xy_type = (int **)allocate_2d_array(2, 
                      obj_num[cloud_type], sizeof(int)); 
                 /* corrected for view angle xys */
-                tmp_xys = (float **)ias_misc_allocate_2d_array(2, 
+                tmp_xys = (float **)allocate_2d_array(2, 
                           obj_num[cloud_type], sizeof(float)); 
                 /* record the original xys */
-                orin_xys = (int **)ias_misc_allocate_2d_array(2, 
+                orin_xys = (int **)allocate_2d_array(2, 
                       obj_num[cloud_type], sizeof(int)); 
                 if (xy_type == NULL || tmp_xy_type == NULL || tmp_xys == NULL 
                     || orin_xys == NULL)
@@ -1039,15 +1039,15 @@ int object_cloud_shadow_match
                free(h);
                free(record_h);
                /* Free all the memory */
-               status = ias_misc_free_2d_array((void **)xy_type);
-               status = ias_misc_free_2d_array((void **)tmp_xys);
-               status = ias_misc_free_2d_array((void **)orin_xys);
+               status = free_2d_array((void **)xy_type);
+               status = free_2d_array((void **)tmp_xys);
+               status = free_2d_array((void **)orin_xys);
                free(temp_obj);
             }
        }      
        free(obj_num); 
-       status = ias_misc_free_2d_array((void **)temp);
-       status = ias_misc_free_2d_array((void **)cloud);
+       status = free_2d_array((void **)temp);
+       status = free_2d_array((void **)cloud);
 
        IplImage* src = cvCreateImage(cvSize(ncols, nrows), IPL_DEPTH_8U, 1);
        IplImage* dst = cvCreateImage(cvSize(ncols, nrows), IPL_DEPTH_8U, 1);
@@ -1146,19 +1146,19 @@ int object_cloud_shadow_match
       }
 
       /* Release the memory */
-      status = ias_misc_free_2d_array((void **)cloud_cal);
+      status = free_2d_array((void **)cloud_cal);
       if (status != SUCCESS)
       {
           sprintf (errstr, "Freeing memory: cloud_cal\n");
           ERROR (errstr, "object_cloud_shadow_match");              
       }
-      status = ias_misc_free_2d_array((void **)shadow_cal);
+      status = free_2d_array((void **)shadow_cal);
       if (status != SUCCESS)
       {
           sprintf (errstr, "Freeing memory: shadow_cal\n");
           ERROR (errstr, "object_cloud_shadow_match");              
       }
-      status = ias_misc_free_2d_array(( void **)boundary_test);
+      status = free_2d_array(( void **)boundary_test);
       if (status != SUCCESS)
       {
           sprintf (errstr, "Freeing memory: boundary_cal\n");

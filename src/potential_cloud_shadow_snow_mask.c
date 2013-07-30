@@ -5,7 +5,7 @@
 #include "ml.h"
 #include "cxcore.h"
 #include "highgui.h"
-#include "ias_misc_2d_array.h"
+#include "2d_array.h"
 #include "input.h"
 
 #define MINSIGMA 1e-5
@@ -288,11 +288,11 @@ bool potential_cloud_shadow_snow_mask
     unsigned char **clear_mask = NULL;
     unsigned char **clear_land_mask = NULL;
 
-    mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    clear_mask = (unsigned char **)ias_misc_allocate_2d_array(input->size.l, 
+    clear_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    clear_land_mask = (unsigned char **)ias_misc_allocate_2d_array(
+    clear_land_mask = (unsigned char **)allocate_2d_array(
                  input->size.l, input->size.s, sizeof(unsigned char)); 
     if (mask == NULL || clear_mask == NULL || clear_land_mask ==NULL)
     {
@@ -615,9 +615,9 @@ bool potential_cloud_shadow_snow_mask
          free(f_wtemp);
          free(f_temp);
 
-         wfinal_prob = (float **)ias_misc_allocate_2d_array(input->size.l, 
+         wfinal_prob = (float **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(float)); 
-         final_prob = (float **)ias_misc_allocate_2d_array(input->size.l, 
+         final_prob = (float **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(float)); 
          if (wfinal_prob == NULL   ||  final_prob == NULL)
          {
@@ -814,9 +814,9 @@ bool potential_cloud_shadow_snow_mask
         int16 **new_nir;
         int16 **new_swir;   
 
-        new_nir = (int16 **)ias_misc_allocate_2d_array(input->size.l, 
+        new_nir = (int16 **)allocate_2d_array(input->size.l, 
               input->size.s, sizeof(int16)); 
-        new_swir = (int16 **)ias_misc_allocate_2d_array(input->size.l, 
+        new_swir = (int16 **)allocate_2d_array(input->size.l, 
               input->size.s, sizeof(int16)); 
         if (new_nir == NULL  || new_swir == NULL)
         {
@@ -903,13 +903,13 @@ bool potential_cloud_shadow_snow_mask
         }
 
         /* Free the memory */
-        status = ias_misc_free_2d_array((void **)wfinal_prob);
+        status = free_2d_array((void **)wfinal_prob);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Freeing memory: wfinal_prob\n");
             ERROR (errstr, "pcloud");              
         }
-        status = ias_misc_free_2d_array((void **)final_prob);
+        status = free_2d_array((void **)final_prob);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Freeing memory: final_prob\n");
@@ -920,8 +920,18 @@ bool potential_cloud_shadow_snow_mask
         majority_filter(cloud_mask, nrows, ncols);
 
         /* Estimating background (land) Band 4 Ref */
-        prctile(nir, index + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
-        prctile(swir, index2 + 1, swir_min, swir_max, 100.0*l_pt, &backg_b5);
+        status = prctile(nir, index + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Calling prctile function\n");
+            ERROR (errstr, "pcloud");              
+        }
+        status = prctile(swir, index2 + 1, swir_min, swir_max, 100.0*l_pt, &backg_b5);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Calling prctile2 function\n");
+            ERROR (errstr, "pcloud");              
+        }
 
         /* Release the memory */
         free(nir);
@@ -1098,26 +1108,26 @@ bool potential_cloud_shadow_snow_mask
                 }
             }
         }
-        status = ias_misc_free_2d_array((void **)new_nir);
+        status = free_2d_array((void **)new_nir);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Freeing memory: new_nir\n");
             ERROR (errstr, "pcloud");              
         }
-        status = ias_misc_free_2d_array((void **)new_swir);
+        status = free_2d_array((void **)new_swir);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Freeing memory: new_swir\n");
             ERROR (errstr, "pcloud");              
         }
     }    
-    status = ias_misc_free_2d_array((void **)clear_mask);
+    status = free_2d_array((void **)clear_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing memory: clear_mask\n");
         ERROR (errstr, "pcloud");              
     }
-    status = ias_misc_free_2d_array((void **)clear_land_mask);
+    status = free_2d_array((void **)clear_land_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing memory: clear_land_mask\n");
@@ -1142,7 +1152,7 @@ bool potential_cloud_shadow_snow_mask
 	    }
         }
     }
-    status = ias_misc_free_2d_array((void **)mask);
+    status = free_2d_array((void **)mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing memory: mask\n");

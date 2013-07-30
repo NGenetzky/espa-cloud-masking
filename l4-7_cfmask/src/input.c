@@ -3,7 +3,6 @@
 *****************************************************************************/
 
 #include "input.h"
-#include "ias_const.h"
 
 #define SDS_PREFIX ("band")
 
@@ -52,30 +51,29 @@ RETURN: trimed string
 
 HISTORY:
 Date        Programmer       Reason
---------    ---------------  -------------------------------------
-3/15/2013   Song Guo         Original Development (based on example
-                             on line)
+--------    ---------------  ----------------------------------------------
+3/15/2013   Song Guo         Original Development (based on online example)
 
 NOTES: 
 *****************************************************************************/ 
 char *trim_white_space(char *str)
 {
-  char *end;
+    char *end; /* end character */
 
-  /* Trim leading space */
-  while(isspace(*str)) str++;
+    /* Trim leading space */
+    while(isspace(*str)) str++;
 
-  if(*str == 0)  
+    if(*str == 0)  
+        return str;
+
+    /* Trim trailing space */
+    end = str + strlen(str) - 1;
+    while(end > str && isspace(*end)) end--;
+
+    /* Write new null terminator */
+    *(end+1) = 0;
+
     return str;
-
-  /* Trim trailing space */
-  end = str + strlen(str) - 1;
-  while(end > str && isspace(*end)) end--;
-
-  /* Write new null terminator */
-  *(end+1) = 0;
-
-  return str;
 }
 
 /******************************************************************************
@@ -96,8 +94,9 @@ NOTES: The constants and formular used are from BU's matlab code
 *****************************************************************************/ 
 bool dn_to_bt(Input_t *input)
 {
-    float k1, k2;
-    int dn = 255;
+    float k1, k2; /* constans */
+    int dn = 255; /* maximum DN value */
+    float temp;   /* intermediate variable */
 
     if(strcmp(input->meta.sat, "LANDSAT_7") == 0)
     {
@@ -120,7 +119,6 @@ bool dn_to_bt(Input_t *input)
        return false;
     }
 
-    float temp;
     temp = (input->meta.gain_th * (float)dn) + 
             input->meta.bias_th;
     temp = k2 / log ((k1/temp)+1);
@@ -147,9 +145,10 @@ NOTES: The constants and formular used are from BU's matlab code
 ******************************************************************************/
 bool dn_to_toa(Input_t *input)
 {
-    float esun[6];
-    int ib;
-    int dn = 255;
+    float esun[6]; /* earth sun distance for each band */
+    int ib;        /* band loop variable */
+    int dn = 255;  /* maximum DN value */
+    float temp;   /* intermediate variable */
 
     if(strcmp(input->meta.sat, "LANDSAT_7") == 0)
     {
@@ -184,7 +183,6 @@ bool dn_to_toa(Input_t *input)
        return false;
     }
 
-    float temp;
     for (ib = 0; ib < NBAND_REFL_MAX; ib++)
     {
         temp = (input->meta.gain[ib] * (float)dn) + 
@@ -209,24 +207,28 @@ RETURN: SUCCESS
 HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
-3/15/2013   Song Guo         
+3/15/2013   Song Guo         Original Development
 
 NOTES: 
 ******************************************************************************/
 int getMeta(char meta_filename[], Input_t *this)
 {
     /* vars used in parameter parsing */
-    char *error_string = (char *)NULL;
-    char  buffer[MAX_STR_LEN] = "\0";
-    char  *label = NULL;
-    char  *label2 = NULL;
-    char  *tokenptr = NULL;
-    char  *tokenptr2 = NULL;
-    char  *seperator = "=";
-    char  *seperator2 = ",";
-    FILE *in;
-    int ib;
-    int status;
+    char *error_string = (char *)NULL; /* error string */
+    char  buffer[MAX_STR_LEN] = "\0";  /* buffer string */
+    char  *label = NULL;       /* label to partition metadata */
+    char  *label2 = NULL;      /* label2 to partition metadata */
+    char  *tokenptr = NULL;    /* token to partition metadata */
+    char  *tokenptr2 = NULL;   /* token2 to partition metadata */
+    char  *seperator = "=";    /* seperator to partition metadata */
+    char  *seperator2 = ",";   /* seperator2 to partition metadata */
+    FILE *in;                  /* File pointer */
+    int ib;                    /* loop variable */ 
+    int status;                /* return value */
+    char *s;                   /* return character */
+    int i;                     /* loop variable */
+    char *path = NULL;         /* path variable */
+    char full_path[MAX_STR_LEN]; /* full path with filename */
 
     in=fopen(meta_filename, "r");
     if (in == NULL)
@@ -238,7 +240,6 @@ int getMeta(char meta_filename[], Input_t *this)
     /* process line by line */
     while(fgets(buffer, MAX_STR_LEN, in) != NULL) {
 
-    char *s;
     s = strchr(buffer, '=');
     if (s != NULL)
     {
@@ -311,9 +312,6 @@ int getMeta(char meta_filename[], Input_t *this)
     }
     fclose(in);
 
-    int i;  
-    char *path = NULL;
-    char full_path[MAX_STR_LEN];
     path = getenv("ESUN");
     if (path == NULL)
     {

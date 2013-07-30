@@ -4,9 +4,8 @@
 !Description: Functions creating and writting data to the product output file.
 
 !Revision History:
- Revision 1.0 2012/10/22
- Gail Schmidt
- Original Version - borrowed from some of the LEDAPS libraries.
+ Song Guo 
+ Original Version - borrowed and modified from some of the LEDAPS libraries.
 
 !Team Unique Header:
   This software was developed by the Landsat Science, Research, and
@@ -305,13 +304,12 @@ bool FreeOutput(Output_t *this)
 }
 
 /******************************************************************************
-!Description: 'PutOutputLine' writes a line of data to the output file.
+!Description: 'PutOutputLine' writes nlines of data to the output file.
  
 !Input Parameters:
  this           'output' data structure; the following fields are written:
                 buf -- contains the line to be written
- iband          current band to be written (0-based)
- iline          current line to be written (0-based)
+ final_mask     current nlines of data to be written (0-based)
 
 !Output Parameters:
  this           'output' data structure; the following fields are modified:
@@ -323,7 +321,7 @@ bool FreeOutput(Output_t *this)
 
 !Design Notes:
 *****************************************************************************/
-bool PutOutputLine(Output_t *this, unsigned char **final_mask)
+bool PutOutput(Output_t *this, unsigned char **final_mask)
 {
   int32 start[MYHDF_MAX_RANK], nval[MYHDF_MAX_RANK];
   int il,ib;
