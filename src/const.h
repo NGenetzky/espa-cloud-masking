@@ -16,4 +16,6 @@
 #define FAILURE 1
 #endif
 
+#define MINSIGMA 1e-5
+
 #endif

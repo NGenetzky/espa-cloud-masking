@@ -7,6 +7,7 @@
 #include "highgui.h"
 #include "2d_array.h"
 #include "input.h"
+#include "const.h"
 
 #define MINSIGMA 1e-5
 #define NO_VALUE 255

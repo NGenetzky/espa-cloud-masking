@@ -8,8 +8,8 @@
 #include "highgui.h"
 #include "2d_array.h"
 #include "input.h"
+#include "const.h"
 
-#define MINSIGMA 1e-5
 #define MAX_CLOUD_TYPE 3000000
 #define MIN_CLOUD_OBJ 9
 #define PI (3.141592653589793238)
@@ -948,6 +948,9 @@ int object_cloud_shadow_match
                    for (i = 0; i < obj_num[cloud_type]; i++)
                    {
                        i_xy=h[i]/((float)sub_size*tan(sun_ele_rad));
+                       /* The check here can assume to handle the south up north
+                          down scene case correctly as azimuth angle needs to be 
+                          added by 180.0 degree */
                        if ((input->meta.sun_az - 180.0) < MINSIGMA)
                        {
                             xy_type[1][i] = 
@@ -1002,6 +1005,9 @@ int object_cloud_shadow_match
                        {
                            i_vir = record_h[i] / 
                                    ((float)sub_size*tan(sun_ele_rad));
+                           /* The check here can assume to handle the south up north
+                              down scene case correctly as azimuth angle needs to be 
+                              added by 180.0 degree */
                            if ((input->meta.sun_az - 180.0) < MINSIGMA)
                            {
                                tmp_xy_type[1][i]=rint(tmp_xys[0][i]-

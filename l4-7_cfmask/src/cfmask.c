@@ -5,8 +5,10 @@
 #include "cfmask.h"
 #include "space.h"
 #include "2d_array.h"
+#include "const.h"
 
 #define NUM_OUT_SDS 1
+#define PI (3.141592653589793238)
 char *out_sds_names[NUM_OUT_SDS] = {"fmask_band"};
 /******************************************************************************
 MODULE:  cfmask
@@ -145,6 +147,7 @@ int main (int argc, char *argv[])
         printf("DEBUG: UL projection X is %f\n", input->meta.ul_projection_x);
         printf("DEBUG: UL projection Y is %f\n", input->meta.ul_projection_y);
     }
+
     /* Copy the SDS names and QA SDS names from the input structure for the
        output structure, since we are simply duplicating the input */
     for (ib = 0; ib < input->nband; ib++)
