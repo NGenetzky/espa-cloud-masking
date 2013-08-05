@@ -64,3 +64,5 @@ output files (therefore the input files for Fmask) instead of 20000 is saved.
 Our long-term goal is simply use LEDAPS output files as inputs to the Fmask 
 after all constant updates are taken in place. Also note that the ESUN environment 
 variable is needed to be set to indicate location of the EarthSunDistance.txt file.    
+
+4. Current version_1.1.2 fixed cfmask to work on all water scenes
