@@ -148,6 +148,22 @@ int main (int argc, char *argv[])
         printf("DEBUG: UL projection Y is %f\n", input->meta.ul_projection_y);
     }
 
+    /* If the scene is an ascending polar scene (flipped upside down), then
+       the solar azimuth needs to be adjusted by 180 degrees.  The scene in
+       this case would be north down and the solar azimuth is based on north
+       being up. Fmask may already handles this but I found it will produce
+       the same results with this part of code is kept */
+    if (input->meta.ul_corner.is_fill &&
+        input->meta.lr_corner.is_fill &&
+        (input->meta.ul_corner.lat - input->meta.lr_corner.lat) < MINSIGMA)
+    {
+        input->meta.sun_az += 180.0;
+        if ((input->meta.sun_az - 360.0) > MINSIGMA)
+            input->meta.sun_az -= 360.0;
+        printf ("  Polar or ascending scene.  Readjusting solar azimuth by "
+            "180 degrees.\n    New value: %f degrees\n", input->meta.sun_az);
+    }
+
     /* Copy the SDS names and QA SDS names from the input structure for the
        output structure, since we are simply duplicating the input */
     for (ib = 0; ib < input->nband; ib++)

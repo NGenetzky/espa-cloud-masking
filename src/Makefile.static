@@ -1,3 +1,7 @@
+# export OPENCVLIB=/opt/cots/opencv-2.4.3-static/lib
+# export OPENCVINC=/opt/cots/opencv-2.4.3/include/opencv
+# export OPENCVINC2=/opt/cots/opencv-2.4.3/include
+
 # Set up compile options
 CC	= gcc
 RM	= rm -f
