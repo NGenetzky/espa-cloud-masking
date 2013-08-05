@@ -89,7 +89,7 @@ supportCcode = """
         p = (PQel *)calloc(1, sizeof(PQel));
         if (p == NULL)
         {
-            printf("Error allocating memory for p in fillminima.py\n");
+            printf("Error allocating memory for p in fillminima.py\\n");
             exit(EXIT_FAILURE);
         }
         p->i = i;
@@ -110,7 +110,7 @@ supportCcode = """
         pixQ = (PixelQueue *)calloc(1, sizeof(PixelQueue));
         if (pixQ == NULL)
         {
-            printf("Error allocating memory for pixQ in fillminima.py\n");
+            printf("Error allocating memory for pixQ in fillminima.py\\n");
             exit(EXIT_FAILURE);
         }
         numLevels = hMax - hMin + 1;
@@ -119,7 +119,7 @@ supportCcode = """
         pixQ->q = (PQhdr *)calloc(numLevels, sizeof(PQhdr));
         if (pixQ->q == NULL)
         {
-            printf("Error allocating memory for pixQ->q in fillminima.py\n");
+            printf("Error allocating memory for pixQ->q in fillminima.py\\n");
             exit(EXIT_FAILURE);
         }
         for (i=0; i<numLevels; i++) {

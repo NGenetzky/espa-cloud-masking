@@ -778,12 +778,20 @@ bool potential_cloud_shadow_snow_mask
         }
 
         /*Dynamic threshold for land */
-        status = prctile2(prob, index3, prob_min, prob_max, 100.0*h_pt, 
-                          &clr_mask);
-        if (status != SUCCESS)
+        if (index3 != 0)
         {
-	    sprintf (errstr, "Error calling prctile2 routine");
-	    ERROR (errstr, "pcloud");
+            status = prctile2(prob, index3, prob_min, prob_max, 100.0*h_pt, 
+                              &clr_mask);
+            if (status != SUCCESS)
+            {
+	        sprintf (errstr, "Error calling prctile2 routine");
+	        ERROR (errstr, "pcloud");
+            }
+        }
+        else
+        {
+            clr_mask = 22.5; /* no clear land pixel, make clr_mask double of  
+                                cloud_prob_threshold */
         }
         clr_mask += cloud_prob_threshold;
 
@@ -1052,11 +1060,36 @@ bool potential_cloud_shadow_snow_mask
             ERROR (errstr, "pcloud");
         }
 
-        system("rm b4_b5.txt");
-        system("rm b4.bin");
-        system("rm b5.bin");
-        system("rm filled_b4.bin");
-        system("rm filled_b5.bin");
+        status = system("rm b4_b5.txt");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Removing b4_b5.txt file\n");
+            ERROR (errstr, "pcloud");
+        }
+        status = system("rm b4.bin");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Removing b4.bin file\n");
+            ERROR (errstr, "pcloud");
+        }
+        status = system("rm b5.bin");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Removing b5.bin file\n");
+            ERROR (errstr, "pcloud");
+        }
+        status = system("rm filled_b4.bin");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Removing filled_b4.bin file\n");
+            ERROR (errstr, "pcloud");
+        }
+        status = system("rm filled_b5.bin");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Removing filled_b5.bin file\n");
+            ERROR (errstr, "pcloud");
+        }
 
         if (verbose)
             printf("The fifth pass\n");
@@ -1103,6 +1136,7 @@ bool potential_cloud_shadow_snow_mask
 	                 shadow_prob = new_swir[row][col];
 
                      if (shadow_prob > 200)
+                     //                     if (new_nir[row][col] > 200)
 	                 shadow_mask[row][col] = 1;
                      else
 	                 shadow_mask[row][col] = 0;
