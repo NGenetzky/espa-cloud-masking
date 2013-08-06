@@ -102,7 +102,7 @@ typedef enum
 }File_type;
 
 /* Prototypes */
-Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name);
+Input_t *OpenInput(char *lndth_name, char *lndcal_name);
 bool GetInputLine(Input_t *this, int iband, int iline);
 bool GetInputQALine(Input_t *this, int iband, int iline);
 bool GetInputThermLine(Input_t *this, int iline);
@@ -156,7 +156,7 @@ void split_filename
 (
     const char *filename,       /* I: Name of file to split */
     char *directory,            /* O: Directory portion of file name */
-    char *root,                 /* O: Root portion of the file name */
+    char *scene_name,           /* O: Scene name portion of the file name */
     char *extension             /* O: Extension portion of the file name */
 );
 
@@ -184,7 +184,7 @@ int get_args
 (
     int argc,              /* I: number of cmd-line args */
     char *argv[],          /* I: string of cmd-line args */
-    char **metadata_infile,/* O: address of input TOA filename */
+    char **toa_infile,     /* O: address of input TOA filename */
     float *cloud_prob,     /* O: cloud_probability input */
     int *cldpix,           /* O: cloud_pixel buffer used for image dilate */
     int *sdpix,            /* O: shadow_pixel buffer used for image dilate  */

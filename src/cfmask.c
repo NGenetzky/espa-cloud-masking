@@ -27,18 +27,17 @@ NOTES: type ./cfmask --help for information to run the code
 int main (int argc, char *argv[])
 {
     char errstr[MAX_STR_LEN];           /* error string */
-    char lndcal_name[MAX_STR_LEN];      /* ledaps TOA reflectance file */
     char lndth_name[MAX_STR_LEN];       /* ledaps Brightness Temperature file */
     char fmask_name[MAX_STR_LEN];       /* output fmask binary file name */
     char fmask_header[MAX_STR_LEN];     /* output fmask binary file header */
     char fmask_hdf_name[MAX_STR_LEN];   /* output fmask HDF file name */
     char fmask_hdf_hdr[MAX_STR_LEN];    /* output fmask HDF file header */
-    char *lndmeta_name = NULL;          /* input lndmeta data filename */
+    char *lndcal_name = NULL;           /* input lndcal data filename */
     char directory[MAX_STR_LEN];        /* input/output data directory */
-    char extension[MAX_STR_LEN];        /* input metadata file extension */
+    char extension[MAX_STR_LEN];        /* input TOA file extension */
     int ib;                             /* band counters */
     char sds_names[NBAND_REFL_MAX][MAX_STR_LEN]; /* array of image SDS names */
-    Input_t *input = NULL;              /* input data and metadata */
+    Input_t *input = NULL;              /* input data and meta data */
     char  scene_name[MAX_STR_LEN];      /* input data scene name */
     char *hdf_grid_name = "Grid";  /* name of the grid for HDF-EOS */
     unsigned char **cloud_mask;    /* cloud pixel mask */
@@ -64,7 +63,7 @@ int main (int argc, char *argv[])
   
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
-    status = get_args (argc, argv, &lndmeta_name, &cloud_prob, &cldpix,
+    status = get_args (argc, argv, &lndcal_name, &cloud_prob, &cldpix,
                        &sdpix, &write_binary, &no_hdf_output, &verbose);
     if (status != 0)
     { 
@@ -72,7 +71,7 @@ int main (int argc, char *argv[])
         ERROR (errstr, "main");
     }
 
-    split_filename(lndmeta_name, directory, scene_name, extension);
+    split_filename(lndcal_name, directory, scene_name, extension);
     if (verbose)
         printf("directory, scene_name, extension=%s,%s,%s\n", 
             directory, scene_name, extension);
@@ -83,14 +82,13 @@ int main (int argc, char *argv[])
     sprintf(fmask_hdf_name, "%sfmask.%s.hdf", directory, scene_name);
     if (verbose)
     {
-        printf("lndmeta_name=%s\n",lndmeta_name);
         printf("lndcal_name, lndth_name = %s, %s\n", lndcal_name, lndth_name); 
         printf("fmask_name, fmask_header, fmask_hdf_name = %s, %s, %s\n", 
                 fmask_name, fmask_header, fmask_hdf_name); 
     }
 
     /* Open input file, read metadata, and set up buffers */
-    input = OpenInput(lndth_name, lndcal_name, lndmeta_name);
+    input = OpenInput(lndth_name, lndcal_name);
     if (input == (Input_t *)NULL)
     {
         sprintf (errstr, "opening the input files: %s & %s", lndth_name,
@@ -272,7 +270,8 @@ int main (int argc, char *argv[])
     status = get_space_def_hdf (&space_def, lndcal_name, hdf_grid_name);
     if (status != SUCCESS)
     {
-        sprintf(errstr, "Reading spatial metadata from the HDF file: %s", lndcal_name);
+        sprintf(errstr, "Reading spatial metadata from the HDF file: %s", 
+               lndcal_name);
         ERROR (errstr, "main");
     }
 
@@ -375,7 +374,7 @@ int main (int argc, char *argv[])
         ERROR (errstr, "main");
     }
 
-    free(lndmeta_name);
+    free(lndcal_name);
     printf ("Processing complete.\n");
     return (SUCCESS);
 }
@@ -398,15 +397,15 @@ void usage ()
             "the input Landsat scene (top of atmosphere (TOA)reflection and "
             "brightness temperature (BT) for band 6) output from LEDAPS\n\n");
     printf ("usage: ./cfmask "
-            "--metadata=input_metadata_filename_with_full_path "
+            "--toarefl=input_toarefl_filename_with_full_path "
             "--prob=input_cloud_probability_value "
             "--cldpix=input_cloud_pixel_buffer "
             "--sdpix=input_shadow_pixel_buffer "
             "[--write_binary] [--verbose]\n");
 
     printf ("\nwhere the following parameters are required:\n");
-    printf ("    -metadata: name of the input metadata file (full path) output "
-            "from LEDAPS\n");
+    printf ("    -toarefl: name of the input TOA reflelctance file (full path) "
+            "output from LEDAPS\n");
     printf ("\nwhere the following parameters are optional:\n");
     printf ("    -prob: cloud_probability, default value is 22.5\n");
     printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 3\n");
@@ -421,8 +420,8 @@ void usage ()
             "is false)\n");
     printf ("\n./fmask --help will print the usage statement\n");
     printf ("\nExample: ./cfmask "
-            "--metadata=/home/sguo/LEDAPS/ledaps-read-only/"
-            "ledapsSrc/src/fmask2/L5010054_05420110312.metadata.txt "
+            "--toarefl=/home/sguo/LEDAPS/ledaps-read-only/"
+            "ledapsSrc/src/fmask2/lndcal.L5010054_05420110312.hdf "
             "--prob=22.5 "
             "--cldpix=3 "
             "--sdpix=3 "
