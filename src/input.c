@@ -18,6 +18,10 @@
 #define INPUT_WRS_ROW ("WRS_Row")
 #define INPUT_NBAND ("NumberOfBands")
 #define INPUT_BANDS ("BandNumbers")
+#define INPUT_REFL_GAINS ("ReflGains")
+#define INPUT_REFL_BIAS ("ReflBias")
+#define INPUT_TH_GAIN ("ThermalGain")
+#define INPUT_TH_BIAS ("ThermalBias")
 #define INPUT_FILL_VALUE ("_FillValue")
 #define INPUT_WEST_BOUND  ("WestBoundingCoordinate")
 #define INPUT_EAST_BOUND  ("EastBoundingCoordinate")
@@ -196,167 +200,6 @@ bool dn_to_toa(Input_t *input)
     return true;
 }
 
-
-/******************************************************************************
-MODULE:  getMeta
-
-PURPOSE: Get needed metadata from the LEDAPS generated metadata file
-
-RETURN: SUCCESS
-        FAILURE
-HISTORY:
-Date        Programmer       Reason
---------    ---------------  -------------------------------------
-3/15/2013   Song Guo         Original Development
-
-NOTES: 
-******************************************************************************/
-int getMeta(char meta_filename[], Input_t *this)
-{
-    /* vars used in parameter parsing */
-    char *error_string = (char *)NULL; /* error string */
-    char  buffer[MAX_STR_LEN] = "\0";  /* buffer string */
-    char  *label = NULL;       /* label to partition metadata */
-    char  *label2 = NULL;      /* label2 to partition metadata */
-    char  *tokenptr = NULL;    /* token to partition metadata */
-    char  *tokenptr2 = NULL;   /* token2 to partition metadata */
-    char  *seperator = "=";    /* seperator to partition metadata */
-    char  *seperator2 = ",";   /* seperator2 to partition metadata */
-    FILE *in;                  /* File pointer */
-    int ib;                    /* loop variable */ 
-    int status;                /* return value */
-    char *s;                   /* return character */
-    int i;                     /* loop variable */
-    char *path = NULL;         /* path variable */
-    char full_path[MAX_STR_LEN]; /* full path with filename */
-
-    in=fopen(meta_filename, "r");
-    if (in == NULL)
-    {
-        error_string = "Can't open metadata file";
-        ERROR(error_string, "GetMeta");
-    }
-
-    /* process line by line */
-    while(fgets(buffer, MAX_STR_LEN, in) != NULL) {
-
-    s = strchr(buffer, '=');
-    if (s != NULL)
-    {
-        /* get string token */
-        tokenptr = strtok(buffer, seperator);
-        label=trim_white_space(tokenptr);
- 
-        if (strcmp(label,"UPPER_LEFT_CORNER") == 0)
-        {
-            tokenptr = trim_white_space(strtok(NULL, seperator));
-        }
-
-        if (strcmp(label,"UPPER_LEFT_CORNER") == 0)
-        {
-            tokenptr2 = strtok(tokenptr, seperator2);
-            label2=trim_white_space(tokenptr2);
-            tokenptr2 = trim_white_space(strtok(NULL, seperator2));
-            this->meta.ul_projection_x = atof(label2);
-            this->meta.ul_projection_y = atof(tokenptr2);
-        }
-
-        if (strcmp(label,"PROJECTION_NUMBER") == 0)
-        {
-            tokenptr = trim_white_space(strtok(NULL, seperator));
-            this->meta.zone = atoi(tokenptr);
-        }
-        if (strcmp(label,"GAIN") == 0)
-        {
-            tokenptr = trim_white_space(strtok(NULL, seperator));
-        }
-
-        if (strcmp(label,"GAIN") == 0)
-        {
-            tokenptr2 = strtok(tokenptr, seperator2);
-            ib = 0;
-            while(tokenptr2 != NULL)
-            {
-                this->meta.gain[ib] = atof(tokenptr2);
-                tokenptr2 = strtok(NULL, seperator2);
-                ib++;
-            }
-        }
-        if (strcmp(label,"BIAS") == 0)
-        {
-            tokenptr = trim_white_space(strtok(NULL, seperator));
-        }
-
-        if (strcmp(label,"BIAS") == 0)
-        {
-            tokenptr2 = strtok(tokenptr, seperator2);
-            ib = 0;
-            while(tokenptr2 != NULL)
-            {
-                this->meta.bias[ib] = atof(tokenptr2);
-                tokenptr2 = strtok(NULL, seperator2);
-                ib++;
-            }
-        }
-        if (strcmp(label,"GAIN_TH") == 0)
-        {
-            tokenptr = trim_white_space(strtok(NULL, seperator));
-            this->meta.gain_th = atof(tokenptr);
-        }
-        if (strcmp(label,"BIAS_TH") == 0)
-        {
-            tokenptr = trim_white_space(strtok(NULL, seperator));
-            this->meta.bias_th = atof(tokenptr);
-        }
-      }
-    }
-    fclose(in);
-
-    path = getenv("ESUN");
-    if (path == NULL)
-    {
-        error_string = "ESUN environment variable is not set";
-        ERROR(error_string, "GetMeta");
-    }
-
-    sprintf(full_path,"%s/%s",path,"EarthSunDistance.txt");
-    in = fopen(full_path, "r");
-    if (in == NULL)
-    {
-        error_string = "Can't open EarthSunDistance.txt file";
-        ERROR(error_string, "GetMeta");
-    }
-
-    for (i = 0; i < 366; i++)
-    {
-        if (fscanf(in, "%f", &this->dsun_doy[i]) == EOF)
-        {
-            error_string = "End of file (EOF) is met before 336 lines";
-            ERROR(error_string, "GetMeta");
-        }            
-    }
-    fclose(in);
-
-    /* Calculate maximum TOA reflectance values and put them in metadata */
-    status = dn_to_toa(this);
-    if (!status)
-    {
-        error_string = "Error calling dn_to_toa routine";
-        ERROR(error_string, "GetMeta");
-    }
-
-    /* Calculate maximum BT values and put them in metadata */
-    status = dn_to_bt(this);
-    if (!status)
-    {
-        error_string = "Error calling dn_to_bt routine";
-        ERROR(error_string, "GetMeta");
-    }
-
-    return SUCCESS;
-}
-
-
 /******************************************************************************
 !Description: 'OpenInput' sets up the 'input' data structure, opens the
  input file for read access, allocates space, and stores some of the metadata.
@@ -371,7 +214,7 @@ int getMeta(char meta_filename[], Input_t *this)
 
 !Design Notes:
 ******************************************************************************/
-Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name)
+Input_t *OpenInput(char *lndth_name, char *lndcal_name)
 {
   Input_t *this;
   Myhdf_attr_t attr;
@@ -382,7 +225,6 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name)
   int ib;
   double dval[NBAND_REFL_MAX];
   int16 *buf = NULL;
-  int status;
 
   /* Create the Input data structure */
   this = (Input_t *)malloc(sizeof(Input_t));
@@ -574,18 +416,7 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name, char *lndmeta_name)
     RETURN_ERROR(error_string, "OpenInput", NULL);
   }
 
-    /* Get metadata info as needed */
-    status = getMeta(lndmeta_name, this);
-    if (status != 0)
-        error_string = "Getting metadata";
-
-    if (error_string != NULL) {
-        FreeInput (this);
-        CloseInput (this);
-        RETURN_ERROR(error_string, "OpenInput", NULL);
-    }
-
-    return this;
+  return this;
 }
 
 
@@ -1026,6 +857,50 @@ bool GetInputMeta(Input_t *this)
     if (meta->band[ib] < 1)
       RETURN_ERROR("band number out of range", "GetInputMeta", false);
   }
+
+    /* Read the reflectance band gains */
+    attr.type = DFNT_FLOAT64;
+    attr.nval = this->nband;
+    attr.name = INPUT_REFL_GAINS;
+    if (!GetAttrDouble(this->sds_cal_file_id, &attr, dval))
+      RETURN_ERROR("reading attribute (reflectance gains)", "GetInputMeta",
+          false);
+    if (attr.nval != this->nband) 
+      RETURN_ERROR("invalid number of values (reflectance gains)", 
+                   "GetInputMeta", false);
+    for (ib = 0; ib < this->nband; ib++)
+      meta->gain[ib] = (float) dval[ib];
+
+    /* Read the reflectance band biases */
+    attr.type = DFNT_FLOAT64;
+    attr.nval = this->nband;
+    attr.name = INPUT_REFL_BIAS;
+    if (!GetAttrDouble(this->sds_cal_file_id, &attr, dval))
+      RETURN_ERROR("reading attribute (reflectance biases)", "GetInputMeta",
+          false);
+    if (attr.nval != this->nband) 
+      RETURN_ERROR("invalid number of values (reflectance biases)", 
+                   "GetInputMeta", false);
+    for (ib = 0; ib < this->nband; ib++)
+      meta->bias[ib] = (float) dval[ib];
+
+    /* Read the thermal band gain */
+    attr.type = DFNT_FLOAT64;
+    attr.nval = 1;
+    attr.name = INPUT_TH_GAIN;
+    if (!GetAttrDouble(this->sds_th_file_id, &attr, dval))
+      RETURN_ERROR("reading attribute (reflectance gains)", "GetInputMeta",
+        false);
+    meta->gain_th = (float) dval[0];
+
+    /* Read the thermal band bias */
+    attr.type = DFNT_FLOAT64;
+    attr.nval = 1;
+    attr.name = INPUT_TH_BIAS;
+    if (!GetAttrDouble(this->sds_th_file_id, &attr, dval))
+      RETURN_ERROR("reading attribute (thermal bias)", "GetInputMeta",
+        false);
+    meta->bias_th = (float) dval[0];
 
   /* Check WRS path/rows */
   error_string = (char *)NULL;
