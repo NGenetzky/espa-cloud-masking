@@ -38,6 +38,9 @@ int prctile
 
     int loops;
 
+    if (nums == 0)
+        *result = 0.0;  
+
     loops = max - min +1;
 
     interval = calloc(loops, sizeof(int));
@@ -101,6 +104,9 @@ int prctile2
 
     int start, end;
     int loops;
+
+    if (nums == 0)
+        *result = 0.0;  
 
     start = (int)rint(min);
     end = (int)rint(max);

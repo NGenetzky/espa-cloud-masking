@@ -596,6 +596,7 @@ bool potential_cloud_shadow_snow_mask
 	     sprintf (errstr, "Error calling prctile routine");
 	     ERROR (errstr, "pcloud");
          }
+
          status = prctile(f_wtemp, index2, f_wtemp_min, f_wtemp_max, 
                           100.0*h_pt, &t_wtemp);
          if (status != SUCCESS)
@@ -927,8 +928,20 @@ bool potential_cloud_shadow_snow_mask
         majority_filter(cloud_mask, nrows, ncols);
 
         /* Estimating background (land) Band 4 Ref */
-        prctile(nir, index + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
-        prctile(swir, index2 + 1, swir_min, swir_max, 100.0*l_pt, &backg_b5);
+        status = prctile(nir, index + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Error calculating NIR percentile\n");
+            ERROR (errstr, "pcloud");              
+        }
+
+        status = prctile(swir, index2 + 1, swir_min, swir_max, 100.0*l_pt, 
+                         &backg_b5);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Error calculating SWIR percentile\n");
+            ERROR (errstr, "pcloud");              
+        }
 
         /* Release the memory */
         free(nir);
