@@ -36,6 +36,10 @@ int prctile
     int loops;         /* data range for input data */
     char errstr[MAX_STR_LEN];           /* error string */
 
+    /* Just return 0 if no input value */
+    if (nums == 0)
+        *result = 0.0;  
+
     loops = max - min +1;
 
     interval = calloc(loops, sizeof(int));
@@ -99,6 +103,10 @@ int prctile2
     int start, end;     /* start/end variables */
     int loops;          /* data range of input data */
     char errstr[MAX_STR_LEN];           /* error string */
+
+    /* Just return 0 if no input value */
+    if (nums == 0)
+        *result = 0.0;  
 
     start = (int)rint(min);
     end = (int)rint(max);
