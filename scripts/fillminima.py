@@ -40,6 +40,9 @@ def fillMinima(img, nullval, boundaryval):
     img2 = numpy.zeros((nrows, ncols), dtype=dtype)
     img2.fill(hMax)
 
+    if boundaryval == 0.0:
+       boundaryval = hMax
+
     if nullmask.sum() > 0:
         nullmaskDilated = grey_dilation(nullmask, size=(3, 3))
         innerBoundary = nullmaskDilated - nullmask
