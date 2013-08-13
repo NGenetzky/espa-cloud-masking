@@ -1136,7 +1136,6 @@ bool potential_cloud_shadow_snow_mask
 	                 shadow_prob = new_swir[row][col];
 
                      if (shadow_prob > 200)
-                     //                     if (new_nir[row][col] > 200)
 	                 shadow_mask[row][col] = 1;
                      else
 	                 shadow_mask[row][col] = 0;
