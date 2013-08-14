@@ -225,6 +225,11 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name)
   int ib;
   double dval[NBAND_REFL_MAX];
   int16 *buf = NULL;
+  FILE *in;
+  int i;  
+  char *path = NULL;
+  char full_path[MAX_STR_LEN];
+  int status;
 
   /* Create the Input data structure */
   this = (Input_t *)malloc(sizeof(Input_t));
@@ -415,6 +420,47 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name)
     CloseInput (this);
     RETURN_ERROR(error_string, "OpenInput", NULL);
   }
+
+    path = getenv("ESUN");
+    if (path == NULL)
+    {
+        error_string = "ESUN environment variable is not set";
+        ERROR(error_string, "OpenInput");
+    }
+
+    sprintf(full_path,"%s/%s",path,"EarthSunDistance.txt");
+    in = fopen(full_path, "r");
+    if (in == NULL)
+    {
+        error_string = "Can't open EarthSunDistance.txt file";
+        ERROR(error_string, "OpenInput");
+    }
+
+    for (i = 0; i < 366; i++)
+    {
+        if (fscanf(in, "%f", &this->dsun_doy[i]) == EOF)
+        {
+            error_string = "End of file (EOF) is met before 336 lines";
+            ERROR(error_string, "OpenInput");
+        }            
+    }
+    fclose(in);
+
+    /* Calculate maximum TOA reflectance values and put them in metadata */
+    status = dn_to_toa(this);
+    if (!status)
+    {
+        error_string = "Error calling dn_to_toa routine";
+        ERROR(error_string, "OpenInput");
+    }
+
+    /* Calculate maximum BT values and put them in metadata */
+    status = dn_to_bt(this);
+    if (!status)
+    {
+        error_string = "Error calling dn_to_bt routine";
+        ERROR(error_string, "OpenInput");
+    }
 
   return this;
 }

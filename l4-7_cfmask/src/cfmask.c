@@ -118,18 +118,22 @@ int main (int argc, char *argv[])
             printf ("DEBUG: Band %d-->\n", ib);
             printf ("DEBUG:   SDS name is %s\n", input->sds[ib].name);
             printf ("DEBUG:   SDS rank: %d\n", input->sds[ib].rank);
-            printf ("DEBUG:   band stau_value_ref: %d\n", 
+            printf ("DEBUG:   band satu_value_ref: %d\n", 
                    input->meta.satu_value_ref[ib]);
-            printf ("DEBUG:   band stau_value_max: %d\n", 
+            printf ("DEBUG:   band satu_value_max: %d\n", 
                    input->meta.satu_value_max[ib]);
+            printf ("DEBUG:   band gains: %f, band biases: %f\n", 
+                    input->meta.gain[ib], input->meta.bias[ib]);      
         }
         printf ("DEBUG: Thermal Band -->\n");
         printf ("DEBUG:   SDS name is %s\n", input->therm_sds.name);
         printf ("DEBUG:   SDS rank: %d\n", input->therm_sds.rank);
-        printf ("DEBUG:   therm_stau_value_ref: %f\n", 
+        printf ("DEBUG:   therm_satu_value_ref: %f\n", 
                    input->meta.therm_satu_value_ref);
-        printf ("DEBUG:   therm_stau_value_max: %d\n", 
+        printf ("DEBUG:   therm_satu_value_max: %d\n", 
                    input->meta.therm_satu_value_max);
+        printf ("DEBUG:   therm_gain: %f, therm_bias: %f\n", 
+                input->meta.gain_th, input->meta.bias_th);
 
         printf("DEBUG: ROW is %d\n", input->meta.row);
         printf("DEBUG: PATH is %d\n", input->meta.path);
@@ -141,9 +145,6 @@ int main (int argc, char *argv[])
         printf("DEBUG: valid_range_ref is %f & %f\n", 
            input->meta.valid_range_ref[0], 
            input->meta.valid_range_ref[1]);
-
-        printf("DEBUG: UL projection X is %f\n", input->meta.ul_projection_x);
-        printf("DEBUG: UL projection Y is %f\n", input->meta.ul_projection_y);
     }
 
     /* If the scene is an ascending polar scene (flipped upside down), then

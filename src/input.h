@@ -63,8 +63,6 @@ typedef struct {
   float therm_calibrated_nt_ref; 
   float ul_lat;
   float ul_lon;
-  float ul_projection_x;
-  float ul_projection_y;
   int band[NBAND_REFL_MAX];    /* Band numbers */
   float gain[NBAND_REFL_MAX];  /* Band gain (MSS and TM only) */
   float bias[NBAND_REFL_MAX]; 
