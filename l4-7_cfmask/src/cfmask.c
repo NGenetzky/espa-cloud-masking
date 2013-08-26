@@ -150,9 +150,9 @@ int main (int argc, char *argv[])
     /* If the scene is an ascending polar scene (flipped upside down), then
        the solar azimuth needs to be adjusted by 180 degrees.  The scene in
        this case would be north down and the solar azimuth is based on north
-       being up. Fmask already handles this but I found it will produce
-       the same results with this part of code is kept and it maskes things 
-       nore clear. 
+       being up clock-wise direction. Flip the south to be up will not change 
+       the actual sun location, with the below relations, the solar azimuth
+       angle will need add in 180.0 for correct sun location */
        cos(pi+suz_az) = - cos(sun_az); sin(pi+sun_az) = - sin(sun_az)*/
     if (input->meta.ul_corner.is_fill &&
         input->meta.lr_corner.is_fill &&
