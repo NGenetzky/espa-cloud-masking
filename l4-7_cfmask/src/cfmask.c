@@ -153,7 +153,6 @@ int main (int argc, char *argv[])
        being up clock-wise direction. Flip the south to be up will not change 
        the actual sun location, with the below relations, the solar azimuth
        angle will need add in 180.0 for correct sun location */
-       cos(pi+suz_az) = - cos(sun_az); sin(pi+sun_az) = - sin(sun_az)*/
     if (input->meta.ul_corner.is_fill &&
         input->meta.lr_corner.is_fill &&
         (input->meta.ul_corner.lat - input->meta.lr_corner.lat) < MINSIGMA)
