@@ -60,6 +60,7 @@ int main (int argc, char *argv[])
     int sdpix;               /* Default buffer for shadow pixel dilate */
     float cloud_prob;        /* Default cloud probability */
     Space_def_t space_def;   /* spatial definition information */
+    float sun_azi_temp;      /* Keep the original sun azimuth angle */
   
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
@@ -157,11 +158,14 @@ int main (int argc, char *argv[])
         input->meta.lr_corner.is_fill &&
         (input->meta.ul_corner.lat - input->meta.lr_corner.lat) < MINSIGMA)
     {
+        /* Keep the original solar azimuth angle */
+        sun_azi_temp = input->meta.sun_az;
         input->meta.sun_az += 180.0;
         if ((input->meta.sun_az - 360.0) > MINSIGMA)
             input->meta.sun_az -= 360.0;
-        printf ("  Polar or ascending scene.  Readjusting solar azimuth by "
-            "180 degrees.\n    New value: %f degrees\n", input->meta.sun_az);
+        if (verbose)
+            printf ("  Polar or ascending scene.  Readjusting solar azimuth by "
+                "180 degrees.\n  New value: %f degrees\n", input->meta.sun_az);
     }
 
     /* Copy the SDS names and QA SDS names from the input structure for the
@@ -266,6 +270,14 @@ int main (int argc, char *argv[])
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
     }
+
+    /* Reassign solar azimuth angle for output purpose if south up north 
+       down scene is involved */
+    if (input->meta.ul_corner.is_fill &&
+        input->meta.lr_corner.is_fill &&
+        (input->meta.ul_corner.lat - input->meta.lr_corner.lat) < MINSIGMA)
+        input->meta.sun_az = sun_azi_temp;
+   
 
     /* Get the projection and spatial information from the input TOA
        reflectance product */
