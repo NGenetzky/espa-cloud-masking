@@ -23,7 +23,22 @@ import numpy
 from scipy import weave
 from scipy.ndimage import grey_erosion, grey_dilation, minimum_filter
 
-
+############################################################################
+# Description: Set the boundary values and call the fillMinima C code  
+#
+# Inputs:
+#   img - original img data
+#   nullval - pixel value outside the boundary
+#   boundaryval - value set for all boundary of the scene which is 17.5%
+#                 percentile of clear land pixel value   
+#
+# Returns: filled image data
+#
+# Notes: Fill all local minima in the input img. The input
+#        array should be a numpy 2-d array. This function returns
+#        an array of the same shape and datatype, with the same contents, but
+#        with local minima filled using the reconstruction-by-erosion algorithm. 
+############################################################################
 def fillMinima(img, nullval, boundaryval):
     """
     Fill all local minima in the input img. The input

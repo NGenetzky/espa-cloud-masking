@@ -147,7 +147,7 @@ MODULE:  Find
 
 PURPOSE:  Find the parent node
 
-RETURN: None
+RETURN: parent node
 
 HISTORY:
 Date        Programmer       Reason
@@ -177,7 +177,7 @@ cloud_node* Find(cloud_node* node) {
 }
 
 /******************************************************************************
-MODULE:  Union_Find
+MODULE:  Union_child
 
 PURPOSE: Combine two cloud node child together 
 
@@ -201,7 +201,7 @@ void Union_child(cloud_node* node1, cloud_node* node2) {
 }
 
 /******************************************************************************
-MODULE:  Union_Find
+MODULE:  Find_child
 
 PURPOSE: Find the child node
 
@@ -616,13 +616,14 @@ int object_cloud_shadow_match
     if (cloud_cal == NULL || shadow_cal == NULL || boundary_test == NULL)
     {
         sprintf (errstr, "Allocating mask memory");
-        ERROR (errstr, "cloud/shadow match");
+        RETURN_ERROR (errstr, "cloud/shadow match", false);
     }
 
     /* Read in potential mask ... */
     /* Solar elevation angle */
     sun_ele = 90 - input->meta.sun_zen;
     sun_ele_rad = (PI / 180.0) * sun_ele;
+
     /* Solar azimuth angle */
     sun_tazi = input->meta.sun_az - 90;
     sun_tazi_rad = (PI / 180.0) * sun_tazi;
@@ -753,8 +754,7 @@ int object_cloud_shadow_match
         if (obj_num == NULL || cloud == NULL || cloud_first_node == NULL)
         {
             sprintf (errstr, "Allocating memory");
-            ERROR (errstr, "cloud/shadow match");
-            return FAILURE;        
+            RETURN_ERROR (errstr, "cloud/shadow match", false);
         }
 
         /* Initialize the cloud nodes */
@@ -805,7 +805,7 @@ int object_cloud_shadow_match
         if (!temp)
         {
              sprintf (errstr, "Allocating temp memory");
-             ERROR (errstr, "cloud/shadow match");
+             RETURN_ERROR (errstr, "cloud/shadow match", false);
         }
 
         /* Read out thermal band in 2d */
@@ -814,7 +814,7 @@ int object_cloud_shadow_match
 	    if (!GetInputThermLine(input, row))
             {
 	        sprintf (errstr, "Reading input thermal data for line %d", row);
-	        ERROR (errstr,"cloud/shadow match");
+	        RETURN_ERROR (errstr,"cloud/shadow match", false);
 	    }
             memcpy(&temp[row][0], &input->therm_buf[0], input->size.s * 
                    sizeof(int16));
@@ -822,7 +822,6 @@ int object_cloud_shadow_match
 
         /* Use iteration to get the optimal move distance, Calulate the 
            moving cloud shadow */
-
         for (cloud_type = 1; cloud_type <= num_clouds; cloud_type++)
         {
             if (obj_num[cloud_type] == 0)
@@ -847,7 +846,7 @@ int object_cloud_shadow_match
                     || orin_xys == NULL)
                 {
                     sprintf (errstr, "Allocating cloud memory");
-                    ERROR (errstr, "cloud/shadow match");
+                    RETURN_ERROR (errstr, "cloud/shadow match", false);
                 }
 
                 /* Temperature of the cloud object */
@@ -855,7 +854,7 @@ int object_cloud_shadow_match
                 if (temp_obj == NULL)
                 {
                     sprintf (errstr, "Allocating temp_obj memory");
-                    ERROR (errstr, "cloud/shadow match");
+                    RETURN_ERROR (errstr, "cloud/shadow match", false);
                 }
      
                 temp_obj_max = 0;
@@ -888,6 +887,7 @@ int object_cloud_shadow_match
                 /* the base temperature for cloud
                    assume object is round r_obj is radium of object */
                 r_obj=sqrt((float)obj_num[cloud_type]/PI);
+
                 /* number of inward pixes for correct temperature */
                 pct_obj=((r_obj-(float)num_pix)*(r_obj-(float)num_pix)) /
                           (r_obj * r_obj);
@@ -899,7 +899,7 @@ int object_cloud_shadow_match
                 if (status != SUCCESS)
                 {
                     sprintf (errstr, "Error calling prctile");
-                    ERROR (errstr, "cloud/shadow match");
+                    RETURN_ERROR (errstr, "cloud/shadow match", false);
                 }
 
                 /* refine cloud height range (m) */
@@ -909,6 +909,7 @@ int object_cloud_shadow_match
                     min_cl_height = min_height;
                 if (max_cl_height > max_height)
                     max_cl_height = max_height;
+
                 /* put the edge of the cloud the same value as t_obj */
                 for (i = 0; i < obj_num[cloud_type]; i++)
                 {
@@ -922,7 +923,7 @@ int object_cloud_shadow_match
                 if (h == NULL || record_h == NULL)
                 {
                     sprintf (errstr, "Allocating h memory");
-                    ERROR (errstr, "cloud/shadow match");
+                    RETURN_ERROR (errstr, "cloud/shadow match", false);
                 }
 
                 /* initialize height and similarity info */
@@ -1044,10 +1045,26 @@ int object_cloud_shadow_match
                }
                free(h);
                free(record_h);
+
                /* Free all the memory */
                status = free_2d_array((void **)xy_type);
+               if (status != SUCCESS)
+               {
+                   sprintf (errstr, "Freeing memory: xy_type\n");
+                   RETURN_ERROR (errstr, "pcloud", false);              
+               }
                status = free_2d_array((void **)tmp_xys);
+               if (status != SUCCESS)
+               {
+                   sprintf (errstr, "Freeing memory: tmp_xys\n");
+                   RETURN_ERROR (errstr, "pcloud", false);              
+               }
                status = free_2d_array((void **)orin_xys);
+               if (status != SUCCESS)
+               {
+                   sprintf (errstr, "Freeing memory: orin_xys\n");
+                   RETURN_ERROR (errstr, "pcloud", false);              
+               }
                free(temp_obj);
             }
        }      
@@ -1060,7 +1077,7 @@ int object_cloud_shadow_match
        if (!src || !dst)
        {
             sprintf (errstr, "Creating images\n");
-            ERROR (errstr, "cloud/shadow match");
+            RETURN_ERROR (errstr, "cloud/shadow match", false);
        }
  
        IplConvKernel* element = cvCreateStructuringElementEx( 
@@ -1125,6 +1142,12 @@ int object_cloud_shadow_match
          cvReleaseImage(&dst);
      }
 
+     /* Do majority filters for all masks to remove the scan_lines */
+     majority_filter(cloud_cal, nrows, ncols);
+     majority_filter(shadow_cal, nrows, ncols);
+     majority_filter(snow_mask, nrows, ncols);
+     majority_filter(water_mask, nrows, ncols);
+
      /* Use cloud mask as the final output mask */  
      for (row = 0; row < nrows; row++)
      {
@@ -1156,19 +1179,19 @@ int object_cloud_shadow_match
       if (status != SUCCESS)
       {
           sprintf (errstr, "Freeing memory: cloud_cal\n");
-          ERROR (errstr, "object_cloud_shadow_match");              
+          RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
       }
       status = free_2d_array((void **)shadow_cal);
       if (status != SUCCESS)
       {
           sprintf (errstr, "Freeing memory: shadow_cal\n");
-          ERROR (errstr, "object_cloud_shadow_match");              
+          RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
       }
       status = free_2d_array(( void **)boundary_test);
       if (status != SUCCESS)
       {
           sprintf (errstr, "Freeing memory: boundary_cal\n");
-          ERROR (errstr, "object_cloud_shadow_match");              
+          RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
       }
 
       if (verbose)
@@ -1181,6 +1204,6 @@ int object_cloud_shadow_match
                           / (float)boundary_counter;
           printf("The cloud and shadow percentage is %f\n", cloud_shadow_percent);
       }
-  
+
       return SUCCESS;
 }

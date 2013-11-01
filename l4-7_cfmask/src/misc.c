@@ -7,6 +7,210 @@
 #include <error.h>
 
 /******************************************************************************
+MODULE: majority_filter 
+
+PURPOSE: Simulate matlab majority function (The pixel is cloud pixel if 5 out of
+         the 8 neighboring pixels plus the pixel itself are cloud pixels, 2 out
+         of 4 if it's a corner pixel, 3 out of 6 if it's a boundary pixel)
+
+RETURN: None
+
+HISTORY:
+Date        Programmer       Reason
+--------    ---------------  -------------------------------------
+3/15/2013   Song Guo         Original Development
+
+NOTES: 
+******************************************************************************/
+
+/* majority_filter will label a pixel as cloud_pixel when 5 of the 8
+   neighboring pixels plus the pixel itself (totally 9) are labeled 
+   as cloud pixels. If the pixel is at the corner, then if 2 out of 4 
+   pixels are labeled as cloud pixel, then the corner pixel is labeled
+   as cloud pixel. If the pixel is at the boundary line (not corner), 
+   then if 3 out of 6 pixels are labeled as cloud pixel, then the 
+   boundary line pixel is labeled as cloud pixel. */
+void majority_filter(
+    unsigned char **mask,      /* I/O: Mask to be filtered */
+    int nrows,                 /* I: Number of rows in the mask */ 
+    int ncols                  /* I: Number of columns in the mask */ 
+)
+{
+    int row, col;         /* loop indices */
+    int cloud_pixels = 0; /* cloud counter */
+
+    for (row = 0; row < nrows; row++)
+    {
+        for (col = 0; col < ncols; col++)
+        {
+            if ((row-1) > 0 && (row+1) < (nrows-1))
+            {
+                cloud_pixels = 0;
+                if ((col-1) > 0 && (col+1) < (ncols-1))
+                {
+                    if (mask[row-1][col-1] == 1)
+                        cloud_pixels++;
+                    if (mask[row-1][col] == 1)
+                        cloud_pixels++;
+                    if (mask[row-1][col+1] == 1)
+                        cloud_pixels++;
+                    if (mask[row][col-1] == 1)
+                        cloud_pixels++;
+                    if (mask[row][col] == 1)
+                        cloud_pixels++;
+                    if (mask[row][col+1] == 1)
+                        cloud_pixels++;
+                    if (mask[row+1][col-1] == 1)
+                        cloud_pixels++;
+                    if (mask[row+1][col] == 1)
+                        cloud_pixels++;
+                    if (mask[row+1][col+1] == 1)
+                        cloud_pixels++;
+                }
+            }
+            if (cloud_pixels >= 5)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if (row == 0 && col == 0)
+            {
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if (row == 0 && col == ncols-1)
+            {
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if (row == nrows-1 && col == 0)
+            {
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if (row == nrows-1 && col == ncols-1)
+            {
+                if (mask[row-1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 2)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if (row == 0 && (col > 0 && col < (ncols-1)))
+            {
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if (row == ncols-1 && (col > 0 && col < (ncols-1)))
+            {
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if ((row > 0 && row < (nrows-1)) && col == 0)
+            {
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col+1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col+1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
+
+            cloud_pixels = 0;
+            if ((row > 0 && row < (nrows-1)) && col == ncols-1)
+            {
+                if (mask[row-1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+                if (mask[row-1][col] == 1)
+                    cloud_pixels++;
+                if (mask[row][col] == 1)
+                    cloud_pixels++;
+                if (mask[row+1][col-1] == 1)
+                    cloud_pixels++;
+            }
+            if (cloud_pixels >= 3)
+                mask[row][col] = 1;
+        }
+    }
+}
+
+/******************************************************************************
 MODULE:  prctile
 
 PURPOSE: Calculate Percentile of an integer array 
@@ -158,14 +362,12 @@ FAILURE         Error getting the command-line arguments or a command-line
                 argument and associated value were not specified
 SUCCESS         No errors encountered
 
-PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
-at the USGS EROS
-
 HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 1/2/2013    Gail Schmidt     Original Development
 3/15/2013   Song Guo         Changed to support Fmask
+9/13/2013   Song Guo         Changed to use RETURN_ERROR
 
 NOTES:
   1. Memory is allocated for the input and output files.  All of these should
@@ -256,9 +458,8 @@ int get_args
             case '?':
             default:
                 sprintf (errmsg, "Unknown option %s", argv[optind-1]);
-                error_handler (true, FUNC_NAME, errmsg);
                 usage ();
-                return FAILURE;
+                RETURN_ERROR(errmsg, FUNC_NAME, false);
                 break;
         }
     }
@@ -267,9 +468,8 @@ int get_args
     if (*toa_infile == NULL)
     {
         sprintf (errmsg, "TOA input file is a required argument");
-        error_handler (true, FUNC_NAME, errmsg);
         usage();
-        return FAILURE;
+        RETURN_ERROR(errmsg, FUNC_NAME, false);
     }
 
     /* Check the write HDF flag */
@@ -303,34 +503,3 @@ int get_args
     return SUCCESS;
 }
 
-/******************************************************************************
-MODULE:  error_handler
-
-PURPOSE:  Prints the error/warning message.
-
-RETURN VALUE:
-Type = None
-
-PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
-at the USGS EROS
-
-HISTORY:
-Date        Programmer       Reason
---------    ---------------  -------------------------------------
-1/2/2012    Gail Schmidt     Original Development
-3/15/2013   Song Guo         Used for Fmask
-
-NOTES:
-******************************************************************************/
-void error_handler
-(
-    bool error_flag,  /* I: true for errors, false for warnings */
-    char *module,     /* I: calling module name */
-    char *errmsg      /* I: error message to be printed, without ending EOL */
-)
-{
-    if (error_flag)
-        printf ("Error: %s : %s\n\n", module, errmsg);
-    else
-        printf ("Warning: %s : %s\n", module, errmsg);
-}

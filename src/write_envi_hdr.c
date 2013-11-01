@@ -20,8 +20,8 @@ RETURN VALUE:
 Type = int
 Value           Description
 -----           -----------
--1              An error occurred generating the header file
-0               Header file was successful
+FAILURE         An error occurred generating the header file
+SUCCESS         Header file was successful
 
 PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
 at the USGS EROS
@@ -33,6 +33,7 @@ Date        Programmer       Reason
 5/14/2013   Song Guo         Modified to support CFmask
 7/15/2013   Song Guo         Added to support HDF hdr file which
                              includes map info
+9/13/2013   Song Guo         Changed to use RETURN_ERROR
 
 NOTES:
   1. It's assumed the header file will be for unsigned byte products and
@@ -56,8 +57,7 @@ int write_envi_hdr
     if (hdr_fptr == NULL)
     {
         sprintf (errmsg, "Error opening %s for write access.", hdr_file);
-        error_handler (true, FUNC_NAME, errmsg);
-        return (-1);
+        RETURN_ERROR(errmsg, FUNC_NAME, false);
     }
 
     /* Verify the projection is UTM or PS and sphere is WGS-84 */
@@ -66,15 +66,13 @@ int write_envi_hdr
     {
         sprintf (errmsg, "Error UTM projection code (%d) or PS projection "
             "code (%d) expected.", GCTP_UTM_PROJ, GCTP_PS_PROJ);
-        error_handler (true, FUNC_NAME, errmsg);
-        return (-1);
+        RETURN_ERROR(errmsg, FUNC_NAME, false);
     }
 
     if (space_def->sphere != 12)
     {
         sprintf (errmsg, "Error WGS-84 sphere code (12) expected.");
-        error_handler (true, FUNC_NAME, errmsg);
-        return (-1);
+        RETURN_ERROR(errmsg, FUNC_NAME, false);
     }
 
     /* Create the name of the associated raw binary file by replacing the
