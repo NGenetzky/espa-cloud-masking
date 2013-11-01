@@ -109,7 +109,7 @@ bool FreeInput(Input_t *this);
 bool GetInputMeta(Input_t *this);
 bool GetInputMeta2(Input_t *this);
 
-bool potential_cloud_shadow_snow_mask
+int potential_cloud_shadow_snow_mask
 (
     Input_t *input,             /*I: input structure */
     float cloud_prob_threshold, /*I: cloud probability threshold */
@@ -156,6 +156,12 @@ void split_filename
     char *directory,            /* O: Directory portion of file name */
     char *scene_name,           /* O: Scene name portion of the file name */
     char *extension             /* O: Extension portion of the file name */
+);
+
+void majority_filter(
+    unsigned char **mask,      /* I/O: Mask to be filtered */
+    int nrows,                 /* I: Number of rows in the mask */ 
+    int ncols                  /* I: Number of columns in the mask */ 
 );
 
 int prctile

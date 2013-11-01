@@ -11,9 +11,19 @@
 #define PI (3.141592653589793238)
 char *out_sds_names[NUM_OUT_SDS] = {"fmask_band"};
 /******************************************************************************
-MODULE:  cfmask
+METHOD:  cfmask
 
 PURPOSE:  the main routine for fmask in C
+
+RETURN VALUE:
+Type = int
+Value           Description
+-----           -----------
+ERROR           An error occurred during processing of the cfmask
+SUCCESS         Processing was successful
+
+PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
+at the USGS EROS
 
 HISTORY:
 Date        Programmer       Reason
@@ -21,6 +31,8 @@ Date        Programmer       Reason
 3/15/2013   Song Guo         Original Development
 5/14/2013   Song Guo         Added in Polar Stereographic support
 7/17/2013   Song Guo         Added in Map info 
+8/15/2013   Song Guo         Modified to use TOA reflectance file 
+                             as input instead of metadata file
 
 NOTES: type ./cfmask --help for information to run the code
 ******************************************************************************/
@@ -398,10 +410,15 @@ MODULE:  usage
 
 PURPOSE:  Prints the usage information for this application.
 
+RETURN VALUE:
+Type = None
+
 HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
+8/15/2013   Song Guo         Modified to use TOA reflectance file 
+                             as input instead of metadata file
 
 NOTES: 
 ******************************************************************************/
@@ -418,7 +435,7 @@ void usage ()
             "[--write_binary] [--verbose]\n");
 
     printf ("\nwhere the following parameters are required:\n");
-    printf ("    -toarefl: name of the input TOA reflelctance file (full path) "
+    printf ("    -toarefl: name of the input TOA reflectance file (full path) "
             "output from LEDAPS\n");
     printf ("\nwhere the following parameters are optional:\n");
     printf ("    -prob: cloud_probability, default value is 22.5\n");

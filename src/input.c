@@ -101,26 +101,27 @@ bool dn_to_bt(Input_t *input)
     float k1, k2; /* constans */
     int dn = 255; /* maximum DN value */
     float temp;   /* intermediate variable */
+    char errmsg[STR_SIZE];   /* error message */
 
     if(strcmp(input->meta.sat, "LANDSAT_7") == 0)
     {
-       k1 = 666.09;
-       k2 = 1282.71;
+        k1 = 666.09;
+        k2 = 1282.71;
     }
     else if(strcmp(input->meta.sat, "LANDSAT_5") == 0)
     {
-       k1 = 607.76;
-       k2 = 1260.56;
+        k1 = 607.76;
+        k2 = 1260.56;
     }
     else if(strcmp(input->meta.sat, "LANDSAT_4") == 0)
     {
-       k1 = 671.62;
-       k2 = 1284.30;
+        k1 = 671.62;
+        k2 = 1284.30;
     }
     else
     {
-       printf("Unsupported satellite sensor\n");
-       return false;
+        sprintf (errmsg, "Unsupported satellite sensor");
+        RETURN_ERROR(errmsg, "dn_to_bt", false);
     }
 
     temp = (input->meta.gain_th * (float)dn) + 
@@ -152,39 +153,40 @@ bool dn_to_toa(Input_t *input)
     float esun[6]; /* earth sun distance for each band */
     int ib;        /* band loop variable */
     int dn = 255;  /* maximum DN value */
-    float temp;   /* intermediate variable */
+    float temp;    /* intermediate variable */
+    char errmsg[STR_SIZE];   /* error message */
 
     if(strcmp(input->meta.sat, "LANDSAT_7") == 0)
     {
-     esun[0] = 1997.0;
-     esun[1] = 1812.0;
-     esun[2] = 1533.0;
-     esun[3] = 1039.0;
-     esun[4] = 230.8;
-     esun[5] = 84.9;
+        esun[0] = 1997.0;
+        esun[1] = 1812.0;
+        esun[2] = 1533.0;
+        esun[3] = 1039.0;
+        esun[4] = 230.8;
+        esun[5] = 84.9;
     }
     else if(strcmp(input->meta.sat, "LANDSAT_5") == 0)
     {
-     esun[0] = 1983.0;
-     esun[1] = 1796.0;
-     esun[2] = 1536.0;
-     esun[3] = 1031.0;
-     esun[4] = 220.0;
-     esun[5] = 83.44;
+        esun[0] = 1983.0;
+        esun[1] = 1796.0;
+        esun[2] = 1536.0;
+        esun[3] = 1031.0;
+        esun[4] = 220.0;
+        esun[5] = 83.44;
     }
     else if(strcmp(input->meta.sat, "LANDSAT_4") == 0)
     {
-     esun[0] = 1983.0;
-     esun[1] = 1795.0;
-     esun[2] = 1539.0;
-     esun[3] = 1028.0;
-     esun[4] = 219.8;
-     esun[5] = 83.49;
+        esun[0] = 1983.0;
+        esun[1] = 1795.0;
+        esun[2] = 1539.0;
+        esun[3] = 1028.0;
+        esun[4] = 219.8;
+        esun[5] = 83.49;
     }
     else
     {
-       printf("Unsupported satellite sensor\n");
-       return false;
+        sprintf (errmsg, "Unsupported satellite sensor");
+        RETURN_ERROR(errmsg, "dn_to_bt", false);
     }
 
     for (ib = 0; ib < NBAND_REFL_MAX; ib++)
@@ -516,7 +518,8 @@ bool CloseInput(Input_t *this)
 
 !Output Parameters:
  (returns)      status:
-                  'true' = okay (always returned)
+                  'true' = okay
+                  'false' = error return
 
 !Team Unique Header:
 
@@ -683,8 +686,6 @@ bool GetInputMeta(Input_t *this)
   int ib;
   Input_meta_t *meta = NULL;
   char *error_string = NULL;
-  char errmsg[MAX_STR_LEN];    /* error message */
-  char FUNC_NAME[] = "GetInputMeta";   /* function name */
 
   /* Check the parameters */
   if (!this->open)
@@ -786,8 +787,7 @@ bool GetInputMeta(Input_t *this)
     attr.name = INPUT_UL_LAT_LONG;
     if (GetAttrDouble(this->sds_cal_file_id, &attr, dval) != SUCCESS)
     {
-        strcpy (errmsg, "Unable to read the UL lat/long coordinates.  ");
-        error_handler (false, FUNC_NAME, errmsg);
+        printf ("Unable to read the UL lat/long coordinates.\n");
         meta->ul_corner.is_fill = true;
     }
     if (attr.nval != 2) 
@@ -804,8 +804,7 @@ bool GetInputMeta(Input_t *this)
     attr.name = INPUT_LR_LAT_LONG;
     if (GetAttrDouble(this->sds_cal_file_id, &attr, dval) != SUCCESS)
     {
-        strcpy (errmsg, "Unable to read the LR lat/long coordinates.  ");
-        error_handler (false, FUNC_NAME, errmsg);
+        printf ("Unable to read the LR lat/long coordinates.\n");
         meta->lr_corner.is_fill = true;
     }
     if (attr.nval != 2) 
