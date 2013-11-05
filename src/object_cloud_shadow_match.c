@@ -1146,7 +1146,6 @@ int object_cloud_shadow_match
      majority_filter(cloud_cal, nrows, ncols);
      majority_filter(shadow_cal, nrows, ncols);
      majority_filter(snow_mask, nrows, ncols);
-     majority_filter(water_mask, nrows, ncols);
 
      /* Use cloud mask as the final output mask */  
      for (row = 0; row < nrows; row++)
