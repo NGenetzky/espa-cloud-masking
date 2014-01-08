@@ -7,8 +7,9 @@ EXTRA = -Wall -g
 # Define the include files
 INC = const.h date.h error.h mystring.h input.h myhdf.h 2d_array.h \
       cfmask.h output.h space.h myproj.h myproj_const.h
-INCDIR  = -I. -I$(JPEGINC) -I$(OPENCVINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) \
-          -I$(HDFINC)
+#INCDIR  = -I. -I$(JPEGINC) -I$(OPENCVINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) \
+#          -I$(HDFINC)
+INCDIR  = -I. -I$(JPEGINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) -I$(HDFINC)
 NCFLAGS = $(EXTRA) $(INCDIR)
 
 # Define the source code and object files
@@ -23,11 +24,6 @@ LIB   = -L$(HDFLIB) -lmfhdf -ldf -L$(JPEGLIB) -ljpeg -lz -lpthread -lrt \
         -lstdc++ -lm
 EOSLIB = -L$(HDFEOS_LIB) -lhdfeos -L$(HDFEOS_GCTPLIB) -lGctp
 
-CVLIB = -L$(OPENCVLIB) \
-        -lopencv_ml \
-        -lopencv_imgproc \
-        -lopencv_core 
-
 # Define the executable
 EXE = cfmask
 
@@ -35,7 +31,8 @@ EXE = cfmask
 all: $(EXE)
 
 cfmask: $(OBJ) $(INC)
-	$(CC) $(NCFLAGS) -o cfmask $(OBJ) $(CVLIB) $(EOSLIB) $(LIB)
+#	$(CC) $(NCFLAGS) -o cfmask $(OBJ) $(CVLIB) $(EOSLIB) $(LIB)
+	$(CC) $(NCFLAGS) -o cfmask $(OBJ) $(EOSLIB) $(LIB)
 
 install:
 	cp $(EXE) $(BIN)

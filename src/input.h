@@ -54,7 +54,7 @@ typedef struct {
   float add_offset_err_ref; 
   float calibrated_nt_ref; 
   float therm_valid_range_ref[2];
-  float therm_satu_value_ref; 
+  int therm_satu_value_ref; 
   int therm_satu_value_max; 
   float therm_scale_factor_ref; 
   float therm_add_offset_ref; 
@@ -120,7 +120,6 @@ int potential_cloud_shadow_snow_mask
     unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
     unsigned char **snow_mask,  /*I/O: snow pixel mask */
     unsigned char **water_mask, /*I/O: water pixel mask */
-    unsigned char **final_mask, /*I/O: final combined pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages be 
                                      printed */
 );
@@ -137,7 +136,6 @@ int object_cloud_shadow_match
     unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
     unsigned char **snow_mask,  /*I/O: snow pixel mask */
     unsigned char **water_mask, /*I/O: water pixel mask */
-    unsigned char **final_mask, /*I/O: final combined pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */      
 );
@@ -156,12 +154,6 @@ void split_filename
     char *directory,            /* O: Directory portion of file name */
     char *scene_name,           /* O: Scene name portion of the file name */
     char *extension             /* O: Extension portion of the file name */
-);
-
-void majority_filter(
-    unsigned char **mask,      /* I/O: Mask to be filtered */
-    int nrows,                 /* I: Number of rows in the mask */ 
-    int ncols                  /* I: Number of columns in the mask */ 
 );
 
 int prctile

@@ -7,17 +7,7 @@ the sequence of the two code is basically the same:
 in C and "object_cloud_shadow_match.c" is a rewriting of "fcssm.m" matlab code
 in C.
 
-- Only openCV library routine cvDilate is used to replace the matlab image
-processing routine imdilate. All other matlab image processing routines
-used in the matlab code is recoded in C by the author as below:
-
-1. The majority_filter will label a pixel as cloud_pixel when 5 of the 8
-   neighboring pixels plus the pixel itself (totally 9) are labeled 
-   as cloud pixels. If the pixel is at the corner, then if 2 out of 4 
-   pixels are labeled as cloud pixel, then the corner pixel is labeled
-   as cloud pixel. If the pixel is at the boundary line (not corner), 
-   then if 3 out of 6 pixels are labeled as cloud pixel, then the 
-   boundary line pixel is labeled as cloud pixel.
+1. The matlab image dilute routine is recoded in C now.
 
 2. The matlab imfill routine is simulated using the Australian Python code:
 fillminima.py in which the algorithm is based on paper:
@@ -29,9 +19,8 @@ Soille, P., and Gratin, C. (1994). An efficient algorithm for drainage network
 image processing routines used (e.g. bwlabel, regionprops, ismember, find) are
 coded as a subroutine named "label" in "object_cloud_shadow_match.c". 
 
-- Right now, the Fmask code uses LEDAPS output files (metadata file and lndcal
-and lndth files), it uses LEDAPS output metadata file as command line input
-argument.
+- Right now, the Fmask code uses LEDAPS output files (lndcal and lndth files), 
+it uses LEDAPS output metadata file as command line input argument.
 
 - It's better to use the newly updated ESUN, K1/K2 and earth_sun_distance in
 the digital number (DN) to TOA reflectance and brightness temperature (BT)
