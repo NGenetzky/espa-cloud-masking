@@ -69,8 +69,8 @@ int potential_cloud_shadow_snow_mask
     float vari_prob;  /* probability from NDVI, NDSI, and whiteness */
     float max_value;  /* maximum value */
     float *prob = NULL;  /* probability value */
-    float clr_mask;      /* clear sky pixel threshold */
-    float wclr_mask;     /* water pixel threshold */
+    float clr_mask = 0.0;/* clear sky pixel threshold */
+    float wclr_mask = 0.0;/* water pixel threshold */
     int16 *nir = NULL;   /* near infrared band (band 4) data */
     int16 *swir = NULL;  /* short wavelength infrared (band 5) data */
     float backg_b4;      /* background band 4 value */
@@ -103,11 +103,11 @@ int potential_cloud_shadow_snow_mask
         /* Print status on every 1000 lines */
         if (!(row%1000)) 
         {
-           if (verbose)
-           {
-               printf ("Processing line %d\r",row);
-               fflush (stdout);
-           }
+            if (verbose)
+            {
+                printf ("Processing line %d\r",row);
+                fflush (stdout);
+            }
         }
 
         /* For each of the image bands */
@@ -136,8 +136,8 @@ int potential_cloud_shadow_snow_mask
             int ib;
             for (ib = 0; ib <  NBAND_REFL_MAX; ib++)
             {
-                 if (input->buf[ib][col] == input->meta.satu_value_ref[ib])
-                 input->buf[ib][col] = input->meta.satu_value_max[ib]; 
+                if (input->buf[ib][col] == input->meta.satu_value_ref[ib])
+                input->buf[ib][col] = input->meta.satu_value_max[ib]; 
             }
             if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
                 input->therm_buf[col] = input->meta.therm_satu_value_max; 
@@ -150,8 +150,8 @@ int potential_cloud_shadow_snow_mask
                 mask = 0;
             else
             {
-                 mask = 1;
-	         mask_counter++;
+                mask = 1;
+	        mask_counter++;
             }
   
             if ((input->buf[2][col] +  input->buf[3][col]) != 0 
@@ -175,106 +175,106 @@ int potential_cloud_shadow_snow_mask
             else
                  cloud_mask[row][col] = 0;
 
-           /* It takes every snow pixels including snow pixel under thin 
-              clouds or icy clouds, equation 20 */
-           if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 380) &&
-               (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
-               snow_mask[row][col] = 1;
-           else 
-               snow_mask[row][col] = 0;
+            /* It takes every snow pixels including snow pixel under thin 
+               clouds or icy clouds, equation 20 */
+            if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 380) &&
+                (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
+                snow_mask[row][col] = 1;
+            else 
+                snow_mask[row][col] = 0;
 
-           /* Zhe's water test (works over thin cloud), equation 5 */
-          if (((((ndvi - 0.01) < MINSIGMA) && (input->buf[3][col] < 1100)) || 
-              (((ndvi - 0.1) < MINSIGMA) && (ndvi > MINSIGMA) && 
-              (input->buf[3][col] < 500))) && (mask == 1))
-              water_mask[row][col] = 1;
-          else 
-              water_mask[row][col] = 0;
-          if (mask == 0)
-              water_mask[row][col] = NO_VALUE;
+            /* Zhe's water test (works over thin cloud), equation 5 */
+            if (((((ndvi - 0.01) < MINSIGMA) && (input->buf[3][col] < 1100)) || 
+                (((ndvi - 0.1) < MINSIGMA) && (ndvi > MINSIGMA) && 
+                (input->buf[3][col] < 500))) && (mask == 1))
+                water_mask[row][col] = 1;
+            else 
+                water_mask[row][col] = 0;
+            if (mask == 0)
+                water_mask[row][col] = NO_VALUE;
 
-          /* visible bands flatness (sum(abs)/mean < 0.6 => brigt and dark 
-             cloud), equation 2 */
-          if (cloud_mask[row][col] == 1 && mask == 1)
-          {
-             visi_mean = (float)(input->buf[0][col] + input->buf[1][col] +
-                  input->buf[2][col]) / 3.0;
-             if (visi_mean != 0)
-                 whiteness = ((fabs((float)input->buf[0][col] - visi_mean) + 
-                     fabs((float)input->buf[1][col] - visi_mean) +
-                     fabs((float)input->buf[2][col] - visi_mean)))/ visi_mean;
-             else
-                 whiteness = 100.0; /* Just put a large value to remove them 
-                                       from cloud pixel identification */
-          }         
+            /* visible bands flatness (sum(abs)/mean < 0.6 => brigt and dark 
+               cloud), equation 2 */
+            if (cloud_mask[row][col] == 1 && mask == 1)
+            {
+                visi_mean = (float)(input->buf[0][col] + input->buf[1][col] +
+                    input->buf[2][col]) / 3.0;
+                if (visi_mean != 0)
+                    whiteness = ((fabs((float)input->buf[0][col] - visi_mean) + 
+                        fabs((float)input->buf[1][col] - visi_mean) +
+                        fabs((float)input->buf[2][col] - visi_mean)))/ visi_mean;
+                else
+                    whiteness = 100.0; /* Just put a large value to remove them 
+                                          from cloud pixel identification */
+            }         
 
-          /* Update cloud_mask,  if one visible band is saturated, 
-             whiteness = 0, due to data type conversion, pixel value difference
-             of 1 is possible */
-          if ((input->buf[0][col] >= (input->meta.satu_value_max[0]-1)) ||
-	     (input->buf[1][col] >= (input->meta.satu_value_max[1]-1)) ||
-	     (input->buf[2][col] >= (input->meta.satu_value_max[2]-1)))
-          {
-              whiteness = 0.0;
-              satu_bv = 1;
-          }
-          else
-          {
-             satu_bv = 0;
-          }
+            /* Update cloud_mask,  if one visible band is saturated, 
+               whiteness = 0, due to data type conversion, pixel value difference
+               of 1 is possible */
+            if ((input->buf[0][col] >= (input->meta.satu_value_max[0]-1)) ||
+	        (input->buf[1][col] >= (input->meta.satu_value_max[1]-1)) ||
+	        (input->buf[2][col] >= (input->meta.satu_value_max[2]-1)))
+            {
+                whiteness = 0.0;
+                satu_bv = 1;
+            }
+            else
+            {
+                satu_bv = 0;
+            }
 
-          if (cloud_mask[row][col] == 1 && (whiteness - 0.7) < MINSIGMA)
-              cloud_mask[row][col] = 1; 
-          else
-              cloud_mask[row][col] = 0;
+            if (cloud_mask[row][col] == 1 && (whiteness - 0.7) < MINSIGMA)
+                cloud_mask[row][col] = 1; 
+            else
+                cloud_mask[row][col] = 0;
 
-          /* Haze test, equation 3 */
-          hot = (float)input->buf[0][col] - 0.5 * (float)input->buf[2][col] 
+            /* Haze test, equation 3 */
+            hot = (float)input->buf[0][col] - 0.5 * (float)input->buf[2][col] 
                  - 800.0;
-          if (cloud_mask[row][col] == 1 && (hot > MINSIGMA || satu_bv == 1))
-              cloud_mask[row][col] = 1;
-          else
-              cloud_mask[row][col] = 0;
+            if (cloud_mask[row][col] == 1 && (hot > MINSIGMA || satu_bv == 1))
+                cloud_mask[row][col] = 1;
+            else
+                cloud_mask[row][col] = 0;
 
-          /* Ratio 4/5 > 0.75 test, equation 4 */
-          if (cloud_mask[row][col] == 1 && input->buf[4][col] != 0)
-          {
-              if ((float)input->buf[3][col]/(float)(input->buf[4][col]) - 0.75 
-                  > MINSIGMA)
-                  cloud_mask[row][col] = 1;
-              else
-                  cloud_mask[row][col] = 0;
-          }
-          else
-              cloud_mask[row][col] = 0;
+            /* Ratio 4/5 > 0.75 test, equation 4 */
+            if (cloud_mask[row][col] == 1 && input->buf[4][col] != 0)
+            {
+                if ((float)input->buf[3][col]/(float)(input->buf[4][col]) - 0.75 
+                    > MINSIGMA)
+                    cloud_mask[row][col] = 1;
+                else
+                    cloud_mask[row][col] = 0;
+            }
+            else
+                cloud_mask[row][col] = 0;
      
-          /* Test whether use thermal band or not */
-          if (cloud_mask[row][col] == 0 && mask == 1)
-          {
-	      clear_mask[row][col] = 1;
-	      clear_pixel_counter++;
-          }
-          else
-              clear_mask[row][col] = 0;
+            /* Test whether use thermal band or not */
+            if (cloud_mask[row][col] == 0 && mask == 1)
+            {
+                clear_mask[row][col] = 1;
+	        clear_pixel_counter++;
+            }
+            else
+                clear_mask[row][col] = 0;
 
-          if (water_mask[row][col] == 0 && clear_mask[row][col] == 1)
-          {
-	      clear_land_mask[row][col] = 1;
-              clear_land_pixel_counter++;
-	      clear_water_mask[row][col] = 0;
+            if (water_mask[row][col] == 0 && clear_mask[row][col] == 1)
+            {
+                clear_land_mask[row][col] = 1;
+                clear_land_pixel_counter++;
+	        clear_water_mask[row][col] = 0;
               
-          }
-          else if (water_mask[row][col] == 1 && clear_mask[row][col] == 1)
-          {
-	      clear_water_mask[row][col] = 1;
-              clear_land_mask[row][col] = 0;
-          }
-          else
-          {
-              clear_land_mask[row][col] = 0;
-              clear_water_mask[row][col] = 0;
-          }
-       }
+            }
+            else if (water_mask[row][col] == 1 && clear_mask[row][col] == 1)
+            {
+                clear_water_mask[row][col] = 1;
+                clear_land_mask[row][col] = 0;
+            }
+            else
+            {
+                clear_land_mask[row][col] = 0;
+                clear_water_mask[row][col] = 0;
+            }
+        }
     }
 
     *ptm = 100. * ((float)clear_pixel_counter / (float)mask_counter);
@@ -290,7 +290,7 @@ int potential_cloud_shadow_snow_mask
         {
 	    for (col = 0; col <ncols; col++)
 	    {	    
-	        /* All cloud */
+                /* All cloud */
 	        if (cloud_mask[row][col] != 1)
 	            shadow_mask[row][col] = 1;
                 else
@@ -347,105 +347,105 @@ int potential_cloud_shadow_snow_mask
 	    {
 	        sprintf (errstr,"Reading input thermal data for line %d", row);
 	        RETURN_ERROR (errstr, "pcloud", false);
-	     }
+	    }
 
-             for (col =0; col < ncols; col++)
-	     {
-                 if (input->buf[5][col] == input->meta.satu_value_ref[5])
-                     input->buf[5][col] = input->meta.satu_value_max[5]; 
-                 if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
-                     input->therm_buf[col] = input->meta.therm_satu_value_max; 
+            for (col =0; col < ncols; col++)
+	    {
+                if (input->buf[5][col] == input->meta.satu_value_ref[5])
+                    input->buf[5][col] = input->meta.satu_value_max[5]; 
+                if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
+                    input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
-                 if ((lndptm-0.1) >= MINSIGMA)
-	         {
-                     /* get clear land temperature */
-	             if (clear_land_mask[row][col] == 1)
-	             {
-		         f_temp[index] = input->therm_buf[col];
-                         if (f_temp_max < f_temp[index])
-                             f_temp_max = f_temp[index];
-                         if (f_temp_min > f_temp[index])
-                             f_temp_min = f_temp[index];
-        	         index++;
-	             }
-                 }
-        	 else
-	         {
-	             /*get clear water temperature */
-	             if (clear_mask[row][col] == 1)
-	             {
-                         f_temp[index] = input->therm_buf[col];
-                         if (f_temp_max < f_temp[index])
-                             f_temp_max = f_temp[index];
-                         if (f_temp_min > f_temp[index])
-                             f_temp_min = f_temp[index];
-	                 index++;
-	             }
-	         }
-                 /* Equation 7 */
-        	 if (clear_water_mask[row][col] == 1)
-	         {
-	             f_wtemp[index2] = input->therm_buf[col];
-                     if (f_wtemp[index2] > f_wtemp_max)
-                         f_wtemp_max = f_wtemp[index2];
-                     if (f_wtemp[index2] < f_wtemp_min)
-                         f_wtemp_min = f_wtemp[index2];
-                     index2++;
-	         }
-             }
+                if ((lndptm-0.1) >= MINSIGMA)
+	        {
+                    /* get clear land temperature */
+	            if (clear_land_mask[row][col] == 1)
+	            {
+		        f_temp[index] = input->therm_buf[col];
+                        if (f_temp_max < f_temp[index])
+                            f_temp_max = f_temp[index];
+                        if (f_temp_min > f_temp[index])
+                            f_temp_min = f_temp[index];
+            	            index++;
+	            }
+                }
+        	else
+	        {
+	            /*get clear water temperature */
+	            if (clear_mask[row][col] == 1)
+	            {
+                        f_temp[index] = input->therm_buf[col];
+                        if (f_temp_max < f_temp[index])
+                            f_temp_max = f_temp[index];
+                        if (f_temp_min > f_temp[index])
+                            f_temp_min = f_temp[index];
+	                index++;
+	            }
+	        }
+                /* Equation 7 */
+        	if (clear_water_mask[row][col] == 1)
+	        {
+	            f_wtemp[index2] = input->therm_buf[col];
+                    if (f_wtemp[index2] > f_wtemp_max)
+                        f_wtemp_max = f_wtemp[index2];
+                    if (f_wtemp[index2] < f_wtemp_min)
+                        f_wtemp_min = f_wtemp[index2];
+                    index2++;
+	        }
+            }
         }
     
-         /* Tempearture for snow test */
-         l_pt = 0.175;
-         h_pt = 1.0 - l_pt;
-         /* 0.175 percentile background temperature (low) */
-         status = prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*l_pt, 
-                          t_templ);
-         if (status != SUCCESS)
-         {
-	     sprintf (errstr, "Error calling prctile routine");
-	     RETURN_ERROR (errstr, "pcloud", false);
-         }
-         /* 0.825 percentile background temperature (high) */
-         status = prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*h_pt, 
-                          t_temph);
-         if (status != SUCCESS)
-         {
-	     sprintf (errstr, "Error calling prctile routine");
-	     RETURN_ERROR (errstr, "pcloud", false);
-         }
-         status = prctile(f_wtemp, index2, f_wtemp_min, f_wtemp_max, 
-                          100.0*h_pt, &t_wtemp);
-         if (status != SUCCESS)
-         {
-	     sprintf (errstr, "Error calling prctile routine");
-	     RETURN_ERROR (errstr, "pcloud", false);
-         }
+        /* Tempearture for snow test */
+        l_pt = 0.175;
+        h_pt = 1.0 - l_pt;
+        /* 0.175 percentile background temperature (low) */
+        status = prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*l_pt, 
+                         t_templ);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Error calling prctile routine");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+        /* 0.825 percentile background temperature (high) */
+        status = prctile(f_temp, index, f_temp_min, f_temp_max, 100.0*h_pt, 
+                         t_temph);
+        if (status != SUCCESS)
+        {
+	    sprintf (errstr, "Error calling prctile routine");
+	    RETURN_ERROR (errstr, "pcloud", false);
+        }
+        status = prctile(f_wtemp, index2, f_wtemp_min, f_wtemp_max, 
+                         100.0*h_pt, &t_wtemp);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Error calling prctile routine");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
 
-         /* Temperature test */
-         t_buffer = 4*100;    
-         *t_templ -= (float)t_buffer;
-         *t_temph += (float)t_buffer;
-         temp_l=*t_temph-*t_templ;
+        /* Temperature test */
+        t_buffer = 4*100;    
+        *t_templ -= (float)t_buffer;
+        *t_temph += (float)t_buffer;
+        temp_l=*t_temph-*t_templ;
 
-         /* Relase f_temp memory */
-         free(f_wtemp);
-         free(f_temp);
+        /* Relase f_temp memory */
+        free(f_wtemp);
+        free(f_temp);
 
-         wfinal_prob = (float **)allocate_2d_array(input->size.l, 
+        wfinal_prob = (float **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(float)); 
-         final_prob = (float **)allocate_2d_array(input->size.l, 
+        final_prob = (float **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(float)); 
-         if (wfinal_prob == NULL   ||  final_prob == NULL)
-         {
-	     sprintf (errstr, "Allocating prob memory");
-	     RETURN_ERROR (errstr, "pcloud", false);
-         }
+        if (wfinal_prob == NULL   ||  final_prob == NULL)
+        {
+            sprintf (errstr, "Allocating prob memory");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
 
-         if (verbose)
-             printf("The third pass\n");
-         /* Loop through each line in the image */
-         for (row = 0; row < nrows; row++)
+        if (verbose)
+            printf("The third pass\n");
+        /* Loop through each line in the image */
+        for (row = 0; row < nrows; row++)
         {
             /* Print status on every 1000 lines */
             if (!(row%1000)) 
@@ -486,7 +486,7 @@ int potential_cloud_shadow_snow_mask
                        input->buf[ib][col] = input->meta.satu_value_max[ib]; 
                 }
                 if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
-                   input->therm_buf[col] = input->meta.therm_satu_value_max; 
+                    input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
                 if (water_mask[row][col] == 1)
                 {
@@ -508,6 +508,7 @@ int potential_cloud_shadow_snow_mask
 	    
                     /*Final prob mask (water), cloud over water probability */
 	            wfinal_prob[row][col] =100.0 * wtemp_prob * brightness_prob;
+                    final_prob[row][col] = 0.0;
                 }
                 else
                 {	    
@@ -576,6 +577,7 @@ int potential_cloud_shadow_snow_mask
 
                     /*Final prob mask (land) */
 	            final_prob[row][col] = 100.0 * (temp_prob * vari_prob);
+                    wfinal_prob[row][col] = 0.0;
                 }
             }
         }
@@ -721,8 +723,8 @@ int potential_cloud_shadow_snow_mask
         }
 
         /* Band 4 &5 flood fill */
-        nir = malloc(input->size.l * input->size.s * sizeof(int16)); 
-        swir = malloc(input->size.l * input->size.s * sizeof(int16)); 
+        nir = calloc(input->size.l * input->size.s, sizeof(int16)); 
+        swir = calloc(input->size.l * input->size.s, sizeof(int16)); 
         if (nir == NULL   || swir == NULL)
         {
             sprintf(errstr, "Allocating nir and swir memory");
@@ -808,14 +810,14 @@ int potential_cloud_shadow_snow_mask
             }
 
             /* Write out the intermediate file */
-            status = fwrite(&input->buf[3], sizeof(int16), 
+            status = fwrite(&input->buf[3][0], sizeof(int16), 
                      input->size.s, fd1);
             if (status != input->size.s)
             {
                 sprintf (errstr, "Writing file: b4.bin\n");
                 RETURN_ERROR (errstr, "pcloud", false);
             }
-            status = fwrite(&input->buf[4], sizeof(int16), 
+            status = fwrite(&input->buf[4][0], sizeof(int16), 
                      input->size.s, fd2);
             if (status != input->size.s)
             {

@@ -518,8 +518,8 @@ void image_dilate
     unsigned char **out_mask      /* O: Mask after dilate */
 )
 {
-    int row, col, ir, ic;         /* loop indices */
-    unsigned char mask; 
+    int row, col, ir, ic; /* loop indices */
+    unsigned char mask;   /* temporarily output pixel mask value */
 
     for (row = 0; row < nrows; row++)
     {
@@ -705,60 +705,60 @@ int object_cloud_shadow_match
         }
     }
 
-     /* Revised percent of cloud on the scene after plcloud */
-     if (boundary_counter != 0)
-         revised_ptm = (float)cloud_counter / (float)boundary_counter;
-     else
-         revised_ptm = 0.0;
+    /* Revised percent of cloud on the scene after plcloud */
+    if (boundary_counter != 0)
+        revised_ptm = (float)cloud_counter / (float)boundary_counter;
+    else
+        revised_ptm = 0.0;
 
-     if (verbose)
-     {
-         printf("cloud_counter, boundary_counter = %d, %d\n", cloud_counter, 
-                boundary_counter);
-         printf("Revised percent of cloud = %f\n", revised_ptm);
-     }
+    if (verbose)
+    {
+        printf("cloud_counter, boundary_counter = %d, %d\n", cloud_counter, 
+               boundary_counter);
+        printf("Revised percent of cloud = %f\n", revised_ptm);
+    }
 
-     /* cloud covers more than 90% of the scene
-         => no match => rest are definite shadows */
-     if (ptm <= 0.1 || revised_ptm >= 0.90)
-     {
-         for (row = 0; row < nrows; row++)
-         {
-             for (col = 0; col < ncols; col++)
-             {
-                 /* No Shadow Match due to too much cloud (>90 percent) */
-                 if (cloud_mask[row][col] == 1) 
-                     cloud_cal[row][col] = 1;
-                 else
-                     shadow_cal[row][col] = 1;
-             }
-         }
-     }
-     else
-     {
-         if (verbose)
-             printf("Shadow Match in processing\n");
+    /* cloud covers more than 90% of the scene
+        => no match => rest are definite shadows */
+    if (ptm <= 0.1 || revised_ptm >= 0.90)
+    {
+        for (row = 0; row < nrows; row++)
+        {
+            for (col = 0; col < ncols; col++)
+            {
+                /* No Shadow Match due to too much cloud (>90 percent) */
+                if (cloud_mask[row][col] == 1) 
+                    cloud_cal[row][col] = 1;
+                else
+                    shadow_cal[row][col] = 1;
+            }
+        }
+    }
+    else
+    {
+        if (verbose)
+            printf("Shadow Match in processing\n");
 
-         if (verbose)
-         {
-             printf("Set cloud similarity = %.3f\n", t_similar);
-             printf("Set matching buffer = %.3f\n", t_buffer);
-             printf("Shadow match for cloud object >= %d pixels\n", num_cldoj);
-         }
-         i_step=rint(2.0*(float)sub_size*tan(sun_ele_rad)); 
+        if (verbose)
+        {
+            printf("Set cloud similarity = %.3f\n", t_similar);
+            printf("Set matching buffer = %.3f\n", t_buffer);
+            printf("Shadow match for cloud object >= %d pixels\n", num_cldoj);
+        }
+        i_step=rint(2.0*(float)sub_size*tan(sun_ele_rad)); 
                                             /* move 2 pixel at a time */
-         /* Get moving direction, the idea is to get the corner rows/cols */
-         for (row = 0; row < nrows; row++)
-         {
-             for (col = 0; col < ncols; col++)
-             {
-                 if (boundary_test[row][col] == 1)
-                 {
-                     y_ul = row;
-                     x_ul = col;
-                     break;
-                 }
-             }
+        /* Get moving direction, the idea is to get the corner rows/cols */
+        for (row = 0; row < nrows; row++)
+        {
+            for (col = 0; col < ncols; col++)
+            {
+                if (boundary_test[row][col] == 1)
+                {
+                    y_ul = row;
+                    x_ul = col;
+                    break;
+                }
+            }
         }
 
         for (col = ncols - 1; col >= 0; col--)
@@ -819,14 +819,14 @@ int object_cloud_shadow_match
         /* Initialize the cloud nodes */
         for (row = 0; row < nrows; row++)
         {
-           for (col = 0; col <ncols; col++)
-           {
-               cloud[row][col].value = 0;
-               cloud[row][col].row = 0;
-               cloud[row][col].col = 0;
-               cloud[row][col].parent = &cloud[row][col];
-               cloud[row][col].child = &cloud[row][col];
-           }
+            for (col = 0; col <ncols; col++)
+            {
+                cloud[row][col].value = 0;
+                cloud[row][col].row = 0;
+                cloud[row][col].col = 0;
+                cloud[row][col].parent = &cloud[row][col];
+                cloud[row][col].child = &cloud[row][col];
+            }
         }
 
         /* Labeling the cloud pixels */
@@ -836,10 +836,10 @@ int object_cloud_shadow_match
            of cloud pixels is less than 9 within a cloud cluster */
         for (num = 1; num <= num_clouds; num++)
         {
-           if (obj_num[num] <= MIN_CLOUD_OBJ)
-               obj_num[num] = 0;
-           else
-               counter++;
+            if (obj_num[num] <= MIN_CLOUD_OBJ)
+                obj_num[num] = 0;
+            else
+                counter++;
         }
 
         if (verbose)
@@ -848,14 +848,15 @@ int object_cloud_shadow_match
         /* Cloud_cal pixels are cloud_mask pixels with < 9 pixels removed */
         for (row = 0; row < nrows; row++)
         {
-           for (col = 0; col <ncols; col++)
-           {
-              if ((cloud_mask[row][col] == 1) && (boundary_test[row][col] != 0)
-                   && (obj_num[cloud[row][col].value] != 0))
-                  cloud_cal[row][col] = cloud_mask[row][col];
-              else
-                  cloud_cal[row][col] = 0;
-          }
+            for (col = 0; col <ncols; col++)
+            {
+                shadow_cal[row][col] = 0;
+                if ((cloud_mask[row][col] == 1) && (boundary_test[row][col] != 0)
+                    && (obj_num[cloud[row][col].value] != 0))
+                    cloud_cal[row][col] = cloud_mask[row][col];
+                else
+                    cloud_cal[row][col] = 0;
+            }
         }
 
         /* Need to read out whole image brightness temperature for band 6 */
@@ -863,8 +864,8 @@ int object_cloud_shadow_match
                  input->size.s, sizeof(int16)); 
         if (!temp)
         {
-             sprintf (errstr, "Allocating temp memory");
-             RETURN_ERROR (errstr, "cloud/shadow match", false);
+            sprintf (errstr, "Allocating temp memory");
+            RETURN_ERROR (errstr, "cloud/shadow match", false);
         }
 
         /* Read out thermal band in 2d */
@@ -1013,23 +1014,23 @@ int object_cloud_shadow_match
                           added by 180.0 degree */
                        if ((input->meta.sun_az - 180.0) < MINSIGMA)
                        {
-                            xy_type[1][i] = 
-                                rint(tmp_xys[0][i]-i_xy*cos(sun_tazi_rad)); 
-                            xy_type[0][i] = 
-                                rint(tmp_xys[1][i]-i_xy*sin(sun_tazi_rad)); 
+                           xy_type[1][i] = 
+                               rint(tmp_xys[0][i]-i_xy*cos(sun_tazi_rad)); 
+                           xy_type[0][i] = 
+                               rint(tmp_xys[1][i]-i_xy*sin(sun_tazi_rad)); 
                        }
                        else
                        {
-                            xy_type[1][i] =
-                                rint(tmp_xys[0][i]+i_xy*cos(sun_tazi_rad)); 
-                            xy_type[0][i] = 
-                                rint(tmp_xys[1][i]+i_xy*sin(sun_tazi_rad)); 
+                           xy_type[1][i] =
+                               rint(tmp_xys[0][i]+i_xy*cos(sun_tazi_rad)); 
+                           xy_type[0][i] = 
+                               rint(tmp_xys[1][i]+i_xy*sin(sun_tazi_rad)); 
                        }
 
                        /* the id that is out of the image */
                        if (xy_type[0][i] < 0 || xy_type[0][i] >= nrows 
-                          || xy_type[1][i] < 0 || xy_type[1][i] >= ncols)
-                          out_all++;
+                           || xy_type[1][i] < 0 || xy_type[1][i] >= ncols)
+                           out_all++;
                        else
                        {
                            if (boundary_test[xy_type[0][i]][xy_type[1][i]] == 0
@@ -1042,177 +1043,183 @@ int object_cloud_shadow_match
                                cloud_type)
                                total_all++; 
                         }
-                   }
-                   match_all += out_all;
-                   total_all+=out_all;
+                    }
+                    match_all += out_all;
+                    total_all+=out_all;
 
-                   thresh_match=(float)match_all/(float)total_all;
-                   if (((thresh_match - t_buffer*record_thresh) >= MINSIGMA)
-                       && (base_h < max_cl_height-i_step) && ((record_thresh
+                    thresh_match=(float)match_all/(float)total_all;
+                    if (((thresh_match - t_buffer*record_thresh) >= MINSIGMA)
+                        && (base_h < max_cl_height-i_step) && ((record_thresh
                            - max_similar)<MINSIGMA))
-                   {
-                       if ((thresh_match - record_thresh) > MINSIGMA)
-                       {
-                           record_thresh=thresh_match;
-                           for (i = 0; i < obj_num[cloud_type]; i++)
-                               record_h[i] = h[i];
-                       }
-                   }
-                   else if ((record_thresh - t_similar) > MINSIGMA)
-                   {
-                       float i_vir;
-                       for (i = 0; i < obj_num[cloud_type]; i++)
-                       {
-                           i_vir = record_h[i] / 
-                                   ((float)sub_size*tan(sun_ele_rad));
-                           /* The check here can assume to handle the south up north
-                              down scene case correctly as azimuth angle needs to be 
-                              added by 180.0 degree */
-                           if ((input->meta.sun_az - 180.0) < MINSIGMA)
-                           {
-                               tmp_xy_type[1][i]=rint(tmp_xys[0][i]-
+                    {
+                        if ((thresh_match - record_thresh) > MINSIGMA)
+                        {
+                            record_thresh=thresh_match;
+                            for (i = 0; i < obj_num[cloud_type]; i++)
+                                record_h[i] = h[i];
+                        }
+                    }
+                    else if ((record_thresh - t_similar) > MINSIGMA)
+                    {
+                        float i_vir;
+                        for (i = 0; i < obj_num[cloud_type]; i++)
+                        {
+                            i_vir = record_h[i] / 
+                                    ((float)sub_size*tan(sun_ele_rad));
+                            /* The check here can assume to handle the south up north
+                               down scene case correctly as azimuth angle needs to be 
+                               added by 180.0 degree */
+                            if ((input->meta.sun_az - 180.0) < MINSIGMA)
+                            {
+                                tmp_xy_type[1][i]=rint(tmp_xys[0][i]-
                                      i_vir*cos(sun_tazi_rad)); 
-                               tmp_xy_type[0][i]=rint(tmp_xys[1][i]-
+                                tmp_xy_type[0][i]=rint(tmp_xys[1][i]-
                                      i_vir*sin(sun_tazi_rad)); 
-                           }
-                           else
-                           {
-                               tmp_xy_type[1][i]=rint(tmp_xys[0][i]+
-                               i_vir*cos(sun_tazi_rad)); 
-                               tmp_xy_type[0][i]=rint(tmp_xys[1][i]+
-                               i_vir*sin(sun_tazi_rad)); 
-                           }
+                            }
+                            else
+                            {
+                                tmp_xy_type[1][i]=rint(tmp_xys[0][i]+
+                                i_vir*cos(sun_tazi_rad)); 
+                                tmp_xy_type[0][i]=rint(tmp_xys[1][i]+
+                                i_vir*sin(sun_tazi_rad)); 
+                            }
 
-                           /* put data within range */
-                           if (tmp_xy_type[0][i]<0)
-                               tmp_xy_type[0][i]=0;
-                           if (tmp_xy_type[0][i]>=nrows)
-                               tmp_xy_type[0][i]=nrows-1;
-                           if (tmp_xy_type[1][i]<0)
-                               tmp_xy_type[1][i]=0;
-                           if (tmp_xy_type[1][i]>=ncols)
-                               tmp_xy_type[1][i]=ncols-1;
-                           shadow_cal[tmp_xy_type[0][i]][tmp_xy_type[1][i]] = 1;
-                       }
-                       break;
-                   }
-                   else
-                   {
-                       record_thresh=0.0;
-                       continue;
-                   }
-               }
-               free(h);
-               free(record_h);
+                            /* put data within range */
+                            if (tmp_xy_type[0][i]<0)
+                                tmp_xy_type[0][i]=0;
+                            if (tmp_xy_type[0][i]>=nrows)
+                                tmp_xy_type[0][i]=nrows-1;
+                            if (tmp_xy_type[1][i]<0)
+                                tmp_xy_type[1][i]=0;
+                            if (tmp_xy_type[1][i]>=ncols)
+                                tmp_xy_type[1][i]=ncols-1;
+                            shadow_cal[tmp_xy_type[0][i]][tmp_xy_type[1][i]] = 1;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        record_thresh=0.0;
+                        continue;
+                    }
+                }
+                free(h);
+                free(record_h);
 
-               /* Free all the memory */
-               status = free_2d_array((void **)xy_type);
-               if (status != SUCCESS)
-               {
-                   sprintf (errstr, "Freeing memory: xy_type\n");
-                   RETURN_ERROR (errstr, "pcloud", false);              
-               }
-               status = free_2d_array((void **)tmp_xys);
-               if (status != SUCCESS)
-               {
-                   sprintf (errstr, "Freeing memory: tmp_xys\n");
-                   RETURN_ERROR (errstr, "pcloud", false);              
-               }
-               status = free_2d_array((void **)orin_xys);
-               if (status != SUCCESS)
-               {
-                   sprintf (errstr, "Freeing memory: orin_xys\n");
-                   RETURN_ERROR (errstr, "pcloud", false);              
-               }
-               free(temp_obj);
+                /* Free all the memory */
+                status = free_2d_array((void **)xy_type);
+                if (status != SUCCESS)
+                {
+                    sprintf (errstr, "Freeing memory: xy_type\n");
+                    RETURN_ERROR (errstr, "pcloud", false);              
+                }
+                status = free_2d_array((void **)tmp_xys);
+                if (status != SUCCESS)
+                {
+                    sprintf (errstr, "Freeing memory: tmp_xys\n");
+                    RETURN_ERROR (errstr, "pcloud", false);              
+                }
+                status = free_2d_array((void **)tmp_xy_type);
+                if (status != SUCCESS)
+                {
+                    sprintf (errstr, "Freeing memory: tmp_xy_type\n");
+                    RETURN_ERROR (errstr, "pcloud", false);              
+                }
+                status = free_2d_array((void **)orin_xys);
+                if (status != SUCCESS)
+                {
+                    sprintf (errstr, "Freeing memory: orin_xys\n");
+                    RETURN_ERROR (errstr, "pcloud", false);              
+                }
+                free(temp_obj);
             }
-         }      
-         free(obj_num); 
-         status = free_2d_array((void **)temp);
-         status = free_2d_array((void **)cloud);
-         status = free_2d_array((void **)cloud_first_node);
+        }      
+        free(obj_num); 
+        status = free_2d_array((void **)temp);
+        status = free_2d_array((void **)cloud);
+        status = free_2d_array((void **)cloud_first_node);
 
-         /* Set the output masks to zero before image dilate */
-         for (row = 0; row < nrows; row++)
-         {
-             for (col = 0; col < ncols; col++)
-             {
-                 cloud_mask[row][col] = 0;
-                 shadow_mask[row][col] = 0;
-             }
-         }
+        /* Set the output masks to zero before image dilate */
+        for (row = 0; row < nrows; row++)
+        {
+            for (col = 0; col < ncols; col++)
+            {
+                cloud_mask[row][col] = 0;
+                shadow_mask[row][col] = 0;
+            }
+        }
 
-         /* Do image dilate for cloud, shadow, snow */
-         image_dilate(cloud_cal, nrows, ncols, cldpix, cloud_mask);
-         image_dilate(shadow_cal, nrows, ncols, cldpix, shadow_mask);
-         image_dilate(snow_mask, nrows, ncols, sdpix, cloud_cal);
-     }
+        /* Do image dilate for cloud, shadow, snow */
+        image_dilate(cloud_cal, nrows, ncols, cldpix, cloud_mask);
+        image_dilate(shadow_cal, nrows, ncols, cldpix, shadow_mask);
+        image_dilate(snow_mask, nrows, ncols, sdpix, cloud_cal);
+    }
 
-     /* Use shadow_cal mask as the final output mask */  
-     for (row = 0; row < nrows; row++)
-     {
-         for (col = 0; col < ncols; col++)
-         {
-             if (boundary_test[row][col] ==0)
-                 shadow_cal[row][col] = 255;
-             else if (cloud_mask[row][col] == 1)
-             {
-	         shadow_cal[row][col] = 4;
-                 cloud_count++;
-             }
-             else if (shadow_mask[row][col] == 1)
-             {
-	         shadow_cal[row][col] = 2;
-                 shadow_count++;
-             }
-             else if (cloud_cal[row][col] == 1)
-                 shadow_cal[row][col] = 3;
-             else if (water_mask[row][col] == 1)
-	         shadow_cal[row][col] = 1;
-             else 
-                 shadow_cal[row][col] = 0;
-         }
-     }
+    /* Use shadow_cal mask as the final output mask */  
+    for (row = 0; row < nrows; row++)
+    {
+        for (col = 0; col < ncols; col++)
+        {
+            if (boundary_test[row][col] ==0)
+                shadow_cal[row][col] = 255;
+            else if (cloud_mask[row][col] == 1)
+            {
+                shadow_cal[row][col] = 4;
+                cloud_count++;
+            }
+            else if (shadow_mask[row][col] == 1)
+            {
+	        shadow_cal[row][col] = 2;
+                shadow_count++;
+            }
+            else if (cloud_cal[row][col] == 1)
+                shadow_cal[row][col] = 3;
+            else if (water_mask[row][col] == 1)
+	        shadow_cal[row][col] = 1;
+            else 
+                shadow_cal[row][col] = 0;
+        }
+    }
 
-     /* Copy back to use cloud_mask as final mask */
-     for (row = 0; row < nrows; row++)
-     {
-         for (col = 0; col < ncols; col++)
-         {
-             cloud_mask[row][col] = shadow_cal[row][col];
-         }
-     }
+    /* Copy back to use cloud_mask as final mask */
+    for (row = 0; row < nrows; row++)
+    {
+        for (col = 0; col < ncols; col++)
+        {
+            cloud_mask[row][col] = shadow_cal[row][col];
+        }
+    }
 
-     /* Release the memory */
-     status = free_2d_array((void **)cloud_cal);
-     if (status != SUCCESS)
-     {
-         sprintf (errstr, "Freeing memory: cloud_cal\n");
-         RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
-     }
-     status = free_2d_array((void **)shadow_cal);
-     if (status != SUCCESS)
-     {
-         sprintf (errstr, "Freeing memory: shadow_cal\n");
-         RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
-     }
-     status = free_2d_array(( void **)boundary_test);
-     if (status != SUCCESS)
-     {
-         sprintf (errstr, "Freeing memory: boundary_cal\n");
-         RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
-     }
+    /* Release the memory */
+    status = free_2d_array((void **)cloud_cal);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing memory: cloud_cal\n");
+        RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
+    }
+    status = free_2d_array((void **)shadow_cal);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing memory: shadow_cal\n");
+        RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
+    }
+    status = free_2d_array(( void **)boundary_test);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing memory: boundary_cal\n");
+        RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
+    }
 
-     if (verbose)
-     {
-         printf("cloud_count, shadow_count, boundary_counter = %d,%d,%d\n",
+    if (verbose)
+    {
+        printf("cloud_count, shadow_count, boundary_counter = %d,%d,%d\n",
               cloud_count, shadow_count, boundary_counter);
 
-         /* record cloud and cloud shadow percent; */
-         cloud_shadow_percent = (float)(cloud_count + shadow_count)
+        /* record cloud and cloud shadow percent; */
+        cloud_shadow_percent = (float)(cloud_count + shadow_count)
                          / (float)boundary_counter;
-         printf("The cloud and shadow percentage is %f\n", cloud_shadow_percent);
-     }
+        printf("The cloud and shadow percentage is %f\n", cloud_shadow_percent);
+    }
 
-      return SUCCESS;
+    return SUCCESS;
 }

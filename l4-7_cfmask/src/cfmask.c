@@ -59,16 +59,16 @@ int main (int argc, char *argv[])
     int status;                    /* return value from function call */
     FILE *fd = NULL;               /* file pointer */
     float ptm;                     /* percent of clear-sky pixels */
-    float t_templ;     /* percentile of low background temperature */
-    float t_temph;     /* percentile of high background temperature */
+    float t_templ = 0.0;     /* percentile of low background temperature */
+    float t_temph = 0.0;     /* percentile of high background temperature */
     int out_sds_types[NUM_OUT_SDS];     /* array of image SDS types */
     char *sds_name="fmask_band";        /* Fmask hdf SDS name */
     Output_t *output = NULL;            /* output structure and metadata */
     bool verbose;            /* verbose flag for printing messages */
     bool write_binary;       /* should we write raw binary output? */
     bool no_hdf_output;      /* should we don't write HDF4 output file? */
-    int cldpix;              /* Default buffer for cloud pixel dilate */
-    int sdpix;               /* Default buffer for shadow pixel dilate */
+    int cldpix = 2;          /* Default buffer for cloud pixel dilate */
+    int sdpix = 2;           /* Default buffer for shadow pixel dilate */
     float cloud_prob;        /* Default cloud probability */
     Space_def_t space_def;   /* spatial definition information */
     float sun_azi_temp = 0.0;/* Keep the original sun azimuth angle */
