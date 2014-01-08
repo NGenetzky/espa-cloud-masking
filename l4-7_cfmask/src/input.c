@@ -238,7 +238,7 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name)
   if (this == NULL) 
     RETURN_ERROR("allocating Input data structure", "OpenInput", NULL);
 
-  /* Set the structure contents to zero for memory sceurity */
+  /* Initializing to zero */
   memset(this, 0, sizeof(Input_t));
 
   /* Populate the data structure */

@@ -73,6 +73,20 @@ def mainRoutine(logfile=None):
     b4 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
     f.close()
 
+    # Call the fillMinima routine for band 4 
+    filled_b4 = fillminima.fillMinima(b4, nullval, b4_17)
+
+    # Release memory for b4 array
+    del b4
+
+    # Output filled image to band 4 binary output file 
+    f = open('filled_b4.bin', 'wb')
+    np.ndarray.tofile(filled_b4.flatten(), f)
+    f.close()
+
+    # Release memory for filled_b4 array
+    del filled_b4
+
     # check the existenece of the input band 5 binary file
     if not os.path.isfile(fname_b5): 
         msg = 'Input file does not exist: ' + fname_b5
@@ -84,19 +98,19 @@ def mainRoutine(logfile=None):
     b5 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
     f.close()
 
-    # Call the fillMinima routine for both band 4 and band 5
-    filled_b4 = fillminima.fillMinima(b4, nullval, b4_17)
+    # Call the fillMinima routine for band 5
     filled_b5 = fillminima.fillMinima(b5, nullval, b5_17)
 
-    # Output filled image to band 4 binary output file 
-    f = open('filled_b4.bin', 'wb')
-    np.ndarray.tofile(filled_b4.flatten(), f)
-    f.close()
+    # Release memory for b5 array
+    del b5
 
     # Output filled image to band 5 binary output file 
     f = open('filled_b5.bin', 'wb')
     np.ndarray.tofile(filled_b5.flatten(), f)
     f.close()
+
+    # Release memory for filled_b5 array
+    del filled_b5
 
     print "Success running fillminima"
     return SUCCESS
