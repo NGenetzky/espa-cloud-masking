@@ -7,8 +7,6 @@ EXTRA = -Wall -g
 # Define the include files
 INC = const.h date.h error.h mystring.h input.h myhdf.h 2d_array.h \
       cfmask.h output.h space.h myproj.h myproj_const.h
-#INCDIR  = -I. -I$(JPEGINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) \
-#          -I$(HDFINC)
 INCDIR  = -I. -I$(JPEGINC) -I$(HDFEOS_INC) -I$(HDFEOS_GCTPINC) -I$(HDFINC)
 NCFLAGS = $(EXTRA) $(INCDIR)
 
