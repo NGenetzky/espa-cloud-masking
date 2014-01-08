@@ -1004,6 +1004,17 @@ bool GetInputMeta2(Input_t *this)
        this->meta.satu_value_ref[ib] = (int)dval[0];
   }
 
+  attr.type = DFNT_INT16;
+  attr.nval = 1;
+  attr.name = INPUT_SATU_VALUE;
+  if (!GetAttrDouble(this->sds[0].id, &attr, dval))
+     RETURN_ERROR("reading attribute (saturate value ref)", "GetInputMeta2",
+                  false);
+  if (attr.nval != 1) 
+     RETURN_ERROR("invalid number of values (saturate value ref)", 
+              "GetInputMeta2", false);
+  this->meta.therm_satu_value_ref = (int)dval[0];
+
   attr.type = DFNT_FLOAT64;
   attr.nval = 1;
   attr.name = INPUT_SCALE_FACTOR;

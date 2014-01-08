@@ -56,7 +56,6 @@ int main (int argc, char *argv[])
     unsigned char **shadow_mask;   /* shadow pixel mask */
     unsigned char **snow_mask;     /* snow pixel mask */
     unsigned char **water_mask;    /* water pixel mask */
-    unsigned char **final_mask;    /* final combined mask */
     int status;                    /* return value from function call */
     FILE *fd = NULL;               /* file pointer */
     float ptm;                     /* percent of clear-sky pixels */
@@ -72,7 +71,7 @@ int main (int argc, char *argv[])
     int sdpix;               /* Default buffer for shadow pixel dilate */
     float cloud_prob;        /* Default cloud probability */
     Space_def_t space_def;   /* spatial definition information */
-    float sun_azi_temp;      /* Keep the original sun azimuth angle */
+    float sun_azi_temp = 0.0;/* Keep the original sun azimuth angle */
   
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
@@ -109,6 +108,17 @@ int main (int argc, char *argv[])
         ERROR (errstr, "main");
     }
 
+    /* Get the projection and spatial information from the input TOA
+       reflectance product */
+    status = get_space_def_hdf(&space_def, lndcal_name, hdf_grid_name);
+    if (status != SUCCESS)
+    {
+        sprintf(errstr, "Reading spatial metadata from the HDF file: %s", 
+               lndcal_name);
+        ERROR (errstr, "main");
+    }
+    input->meta.zone = space_def.zone;
+
     if (verbose)
     {
         /* Print some info to show how the input metadata works */
@@ -141,7 +151,7 @@ int main (int argc, char *argv[])
         printf ("DEBUG: Thermal Band -->\n");
         printf ("DEBUG:   SDS name is %s\n", input->therm_sds.name);
         printf ("DEBUG:   SDS rank: %d\n", input->therm_sds.rank);
-        printf ("DEBUG:   therm_satu_value_ref: %f\n", 
+        printf ("DEBUG:   therm_satu_value_ref: %d\n", 
                    input->meta.therm_satu_value_ref);
         printf ("DEBUG:   therm_satu_value_max: %d\n", 
                    input->meta.therm_satu_value_max);
@@ -194,10 +204,8 @@ int main (int argc, char *argv[])
                  input->size.s, sizeof(unsigned char)); 
     water_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    final_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
     if (cloud_mask == NULL  || shadow_mask == NULL || snow_mask == NULL
-        || water_mask == NULL || final_mask == NULL)
+        || water_mask == NULL)
     {
         sprintf (errstr, "Allocating mask memory");
         ERROR (errstr, "main");
@@ -206,7 +214,7 @@ int main (int argc, char *argv[])
     /* Build the potential cloud, shadow, snow, water mask */
     status = potential_cloud_shadow_snow_mask(input, cloud_prob, &ptm,
              &t_templ, &t_temph, cloud_mask, shadow_mask, snow_mask, 
-             water_mask, final_mask, verbose);
+             water_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "calling potential_cloud_shadow_snow_mask");
@@ -220,44 +228,13 @@ int main (int argc, char *argv[])
        combine the final cloud, shadow, snow, water masks into fmask */
     status = object_cloud_shadow_match(input, ptm, t_templ, t_temph,
              cldpix, sdpix, cloud_mask, shadow_mask, snow_mask, water_mask,
-             final_mask, verbose);
+             verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "calling object_cloud_and_shadow_match");
         ERROR (errstr, "main");
     }    
 
-    if (verbose)
-    {
-        int cloud = 0;
-        int shadow = 0;
-        int water = 0;
-        int snow = 0;
-        int fill = 0;
-        int row,col;
-        int land_clear = 0;
-        for (row = 0; row < input->size.l; row++)
-        {
-            for (col = 0; col < input->size.s; col++)
-            {
-                if (final_mask[row][col] == 1)
-                    water++;
-                if (final_mask[row][col] == 2)
-                    shadow++;
-                if (final_mask[row][col] == 3)
-                    snow++;
-                if (final_mask[row][col] == 4)
-                    cloud++;
-                if (final_mask[row][col] == 255)
-                    fill++;
-                if (final_mask[row][col] == 0)
-                    land_clear++;
-            }
-        }
-        printf("water, shadow, snow, cloud, land_clear, fill,  "
-             "total_pixels=%d,%d, %d, %d, %d, %d, %d\n", water, shadow, snow,
-             cloud, land_clear, fill, input->size.l*input->size.s);
-    }
     status = free_2d_array((void **)shadow_mask);
     if (status != SUCCESS)
     {
@@ -276,12 +253,6 @@ int main (int argc, char *argv[])
         sprintf (errstr, "Freeing mask memory");
         ERROR (errstr, "main");
     }
-    status = free_2d_array((void **)cloud_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        ERROR (errstr, "main");
-    }
 
     /* Reassign solar azimuth angle for output purpose if south up north 
        down scene is involved */
@@ -290,17 +261,6 @@ int main (int argc, char *argv[])
         (input->meta.ul_corner.lat - input->meta.lr_corner.lat) < MINSIGMA)
         input->meta.sun_az = sun_azi_temp;
    
-
-    /* Get the projection and spatial information from the input TOA
-       reflectance product */
-    status = get_space_def_hdf (&space_def, lndcal_name, hdf_grid_name);
-    if (status != SUCCESS)
-    {
-        sprintf(errstr, "Reading spatial metadata from the HDF file: %s", 
-               lndcal_name);
-        ERROR (errstr, "main");
-    }
-
     if (write_binary)
     {
         /* Create an ENVI header file for the binary fmask */
@@ -320,7 +280,7 @@ int main (int argc, char *argv[])
         }
 
         /* Write out the mask file */
-        status = fwrite(&final_mask[0][0], sizeof(unsigned char), input->size.l *
+        status = fwrite(&cloud_mask[0][0], sizeof(unsigned char), input->size.l *
                  input->size.s, fd);
         if (status != input->size.l * input->size.s)
         {
@@ -353,7 +313,7 @@ int main (int argc, char *argv[])
             ERROR(errstr, "main");
         }
 
-        if (!PutOutput(output, final_mask))
+        if (!PutOutput(output, cloud_mask))
         {
             sprintf (errstr, "Writing output fmask in HDF files\n");
             ERROR (errstr, "main");
@@ -388,17 +348,17 @@ int main (int argc, char *argv[])
         }
     }
 
+    /* Free the final output cloud_mask */
+    status = free_2d_array((void **)cloud_mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing mask memory");
+        ERROR (errstr, "main");
+    }
+
     /* Close the input file and free the structure */
     CloseInput (input);
     FreeInput (input);
-
-    /* Free the final_mask buffer */
-    status = free_2d_array((void **)final_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing cloud mask memory");
-        ERROR (errstr, "main");
-    }
 
     free(lndcal_name);
     printf ("Processing complete.\n");
@@ -439,8 +399,8 @@ void usage ()
             "output from LEDAPS\n");
     printf ("\nwhere the following parameters are optional:\n");
     printf ("    -prob: cloud_probability, default value is 22.5\n");
-    printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 3\n");
-    printf ("    -sdpix: shadow_pixel_buffer for image dilate, default value is 3\n");
+    printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 2\n");
+    printf ("    -sdpix: shadow_pixel_buffer for image dilate, default value is 2\n");
     printf ("    -write_binary: should raw binary outputs and ENVI header "
             "files be written in addition to the HDF file? (default is false)"
             "\n");
@@ -454,7 +414,7 @@ void usage ()
             "--toarefl=/home/sguo/LEDAPS/ledaps-read-only/"
             "ledapsSrc/src/fmask2/lndcal.L5010054_05420110312.hdf "
             "--prob=22.5 "
-            "--cldpix=3 "
-            "--sdpix=3 "
+            "--cldpix=2 "
+            "--sdpix=2 "
             "--write_binary --verbose\n");
 }

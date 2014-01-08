@@ -1,24 +1,24 @@
 Installation Guide 
 
-1. Install dependent libraries - HDF4 and openCV 
+1. Install dependent libraries - HDF4 and HDFEOS
 
 2. Set uo the environment variables:
 HDFINC="path_to_HDF4_include_files"
 HDFLIB="path_to_HDF4_libraries"
-OPENCVLIB="path_to_openCV_include_files"
-OPENCVINC="path_to_openCV_libraries"
+HDFEOS_INC="path_to_HDFEOS_include_files"
+HDFEOS_LIB="path_to_HDFEOS_libraries"
+
 
 3. Check out the source code and compile the file:
 svn co svn://l8srlscp01.cr.usgs.gov/espa/fmask/trunk
 make
 
 4. Run Fmask:
-./cfmask <directory holding LEDAPS outputs>/<ledaps output metadata file> 
+./cfmask <directory holding LEDAPS outputs>/<ledaps output lndcal file> 
 
 Note:
-1. Right now, the Fmask code uses LEDAPS output files (metadata file and lndcal
-and lndth files), it uses LEDAPS output metadata file as command line input
-argument.
+1. Right now, the Fmask code uses LEDAPS output files (lndcal and lndth files), 
+it uses LEDAPS output metadata file as command line input argument.
 2. It's better to use the newly updated ESUN, K1/K2 and earth_sun_distance in
 the digital number (DN) to TOA reflectance and brightness temperature (BT)
 conversion in the LEDAPS lndcal code. But if old constant values are used, the

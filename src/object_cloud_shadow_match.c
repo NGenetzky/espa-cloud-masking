@@ -2,15 +2,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
-#include "cv.h"
-#include "ml.h"
-#include "cxcore.h"
-#include "highgui.h"
 #include "2d_array.h"
 #include "input.h"
 #include "const.h"
 
-#define MAX_CLOUD_TYPE 3000000
+#define MAX_CLOUD_TYPE 2000000
 #define MIN_CLOUD_OBJ 9
 #define PI (3.141592653589793238)
 
@@ -500,6 +496,70 @@ void label
 }      
 
 /******************************************************************************
+MODULE:  image_dilate
+
+PURPOSE: Dilate the image with a n x n rectagular buffer
+
+RETURN: None
+
+HISTORY:
+Date        Programmer       Reason
+--------    ---------------  -------------------------------------
+11/18/2013   Song Guo         Original Development
+
+NOTES: 
+******************************************************************************/
+void image_dilate
+(
+    unsigned char **in_mask,      /* I: Mask to be dilated */
+    int nrows,                    /* I: Number of rows in the mask */ 
+    int ncols,                    /* I: Number of columns in the mask */
+    int idx,                      /* I: pixel beffer 2 * idx + 1 */ 
+    unsigned char **out_mask      /* O: Mask after dilate */
+)
+{
+    int row, col, ir, ic;         /* loop indices */
+    unsigned char mask; 
+
+    for (row = 0; row < nrows; row++)
+    {
+        for (col = 0; col < ncols; col++)
+        {
+            mask = 0;
+            for (ir = 1; ir < idx + 1; ir++)
+            {
+                for (ic = 1; ic < idx + 1; ic++)
+                {
+                    if (((row-ir) > 0) && ((col-ic) > 0))
+                    {
+                        if (in_mask[row-ir][col-ic] == 1)
+                        mask = 1;
+                    }
+                    if (((row-ir) > 0) && ((col+ic) < (ncols-1)))
+                    {
+                        if (in_mask[row-ir][col+ic] == 1)
+                        mask = 1;
+                    }
+                    if (in_mask[row][col] == 1)
+                        mask = 1;
+                    if (((row+ir) < (nrows-1)) && ((col-ic) > 0))
+                    {
+                        if (in_mask[row+ir][col-ic] == 1)
+                        mask = 1;
+                    }
+                    if (((row+ir) < (nrows-1)) && ((col+ic) < (ncols-1)))
+                    {
+                        if (in_mask[row+ir][col+ic] == 1)
+                        mask = 1;
+                    }
+                }
+            }
+            out_mask[row][col] = mask;
+        }
+    }
+}
+
+/******************************************************************************
 MODULE:  object_cloud_shadow_match
 
 PURPOSE: Identify the final shadow pixels by doing a geometric cloud and shadow
@@ -527,7 +587,6 @@ int object_cloud_shadow_match
     unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
     unsigned char **snow_mask,  /*I/O: snow pixel mask */
     unsigned char **water_mask, /*I/O: water pixel mask */
-    unsigned char **final_mask, /*I/O: final combined pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */      
 )
@@ -550,7 +609,7 @@ int object_cloud_shadow_match
     float t_buffer=0.95;   /* threshold for matching buffering */
     float max_similar=0.95;/* max similarity threshold */
     int num_cldoj=9; /* minimum matched cloud object (pixels) */
-    int num_pix=8;   /* number of inward pixes (240m) for cloud base 
+    int num_pix=3;   /* number of inward pixes (240m) for cloud base 
                         temperature */
     float a, b, c, omiga_par, omiga_per; /* variables used for viewgeo 
                                             routine, see it for detail */ 
@@ -866,9 +925,9 @@ int object_cloud_shadow_match
                 {
                     temp_obj[index] = temp[node->row][node->col];
                     if (temp_obj[index] > temp_obj_max)
-                    temp_obj_max = temp_obj[index];
+                        temp_obj_max = temp_obj[index];
                     if (temp_obj[index] < temp_obj_min)
-                    temp_obj_min = temp_obj[index];
+                        temp_obj_min = temp_obj[index];
                     orin_xys[0][index] = node->col;
                     orin_xys[1][index] = node->row;
                     index++;  
@@ -886,7 +945,7 @@ int object_cloud_shadow_match
 
                 /* the base temperature for cloud
                    assume object is round r_obj is radium of object */
-                r_obj=sqrt((float)obj_num[cloud_type]/PI);
+                r_obj=sqrt((float)obj_num[cloud_type]/ (2.0 * PI));
 
                 /* number of inward pixes for correct temperature */
                 pct_obj=((r_obj-(float)num_pix)*(r_obj-(float)num_pix)) /
@@ -1067,142 +1126,93 @@ int object_cloud_shadow_match
                }
                free(temp_obj);
             }
-       }      
-       free(obj_num); 
-       status = free_2d_array((void **)temp);
-       status = free_2d_array((void **)cloud);
+         }      
+         free(obj_num); 
+         status = free_2d_array((void **)temp);
+         status = free_2d_array((void **)cloud);
+         status = free_2d_array((void **)cloud_first_node);
 
-       IplImage* src = cvCreateImage(cvSize(ncols, nrows), IPL_DEPTH_8U, 1);
-       IplImage* dst = cvCreateImage(cvSize(ncols, nrows), IPL_DEPTH_8U, 1);
-       if (!src || !dst)
-       {
-            sprintf (errstr, "Creating images\n");
-            RETURN_ERROR (errstr, "cloud/shadow match", false);
-       }
- 
-       IplConvKernel* element = cvCreateStructuringElementEx( 
-              cldpix, cldpix, 0, 0, CV_SHAPE_RECT, 0);
- 
-       for (row = 0; row < nrows; row++)
-       {
-           for (col = 0; col < ncols; col++)
-           {
-               src->imageData[row*ncols+col] = cloud_cal[row][col];
-           }
-       }
-
-       cvDilate(src, dst, element, 1);
-       for (row = 0; row < nrows; row++)
-       {
-           for (col = 0; col < ncols; col++)
-           {
-               cloud_cal[row][col] = dst->imageData[row*ncols+col];
-           }
-       }
-
-       element = cvCreateStructuringElementEx( 
-              sdpix, sdpix, 0, 0, CV_SHAPE_RECT, 0);
-
-       for (row = 0; row < nrows; row++)
-       {
-           for (col = 0; col < ncols; col++)
-           {
-               src->imageData[row*ncols+col] = shadow_cal[row][col];
-           }
-       }
-
-       cvDilate(src, dst, element, 1);
-       for (row = 0; row < nrows; row++)
-       {
-           for (col = 0; col < ncols; col++)
-           {
-               shadow_cal[row][col] = dst->imageData[row*ncols+col];
-           }
-       }
-
-       for (row = 0; row < nrows; row++)
-       {
-           for (col = 0; col < ncols; col++)
-           {
-               src->imageData[row*ncols+col] = snow_mask[row][col];
-           }
-        }
-
-        cvDilate(src, dst, element, 1);
-        for (row = 0; row < nrows; row++)
-        {
-            for (col = 0; col < ncols; col++)
-            {
-                snow_mask[row][col] = dst->imageData[row*ncols+col];
-            }
+         /* Set the output masks to zero before image dilate */
+         for (row = 0; row < nrows; row++)
+         {
+             for (col = 0; col < ncols; col++)
+             {
+                 cloud_mask[row][col] = 0;
+                 shadow_mask[row][col] = 0;
+             }
          }
 
-         /* Release image memory */
-         cvReleaseImage(&src);
-         cvReleaseImage(&dst);
+         /* Do image dilate for cloud, shadow, snow */
+         image_dilate(cloud_cal, nrows, ncols, cldpix, cloud_mask);
+         image_dilate(shadow_cal, nrows, ncols, cldpix, shadow_mask);
+         image_dilate(snow_mask, nrows, ncols, sdpix, cloud_cal);
      }
 
-     /* Do majority filters for all masks to remove the scan_lines */
-     majority_filter(cloud_cal, nrows, ncols);
-     majority_filter(shadow_cal, nrows, ncols);
-     majority_filter(snow_mask, nrows, ncols);
-
-     /* Use cloud mask as the final output mask */  
+     /* Use shadow_cal mask as the final output mask */  
      for (row = 0; row < nrows; row++)
      {
          for (col = 0; col < ncols; col++)
          {
              if (boundary_test[row][col] ==0)
-                 final_mask[row][col] = 255;
-             else if (cloud_cal[row][col] == 1)
+                 shadow_cal[row][col] = 255;
+             else if (cloud_mask[row][col] == 1)
              {
-	         final_mask[row][col] = 4;
+	         shadow_cal[row][col] = 4;
                  cloud_count++;
              }
-             else if (shadow_cal[row][col] == 1)
+             else if (shadow_mask[row][col] == 1)
              {
-	         final_mask[row][col] = 2;
+	         shadow_cal[row][col] = 2;
                  shadow_count++;
              }
-             else if (snow_mask[row][col] == 1)
-                 final_mask[row][col] = 3;
+             else if (cloud_cal[row][col] == 1)
+                 shadow_cal[row][col] = 3;
              else if (water_mask[row][col] == 1)
-	         final_mask[row][col] = 1;
+	         shadow_cal[row][col] = 1;
              else 
-                 final_mask[row][col] = 0;
+                 shadow_cal[row][col] = 0;
          }
-      }
+     }
 
-      /* Release the memory */
-      status = free_2d_array((void **)cloud_cal);
-      if (status != SUCCESS)
-      {
-          sprintf (errstr, "Freeing memory: cloud_cal\n");
-          RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
-      }
-      status = free_2d_array((void **)shadow_cal);
-      if (status != SUCCESS)
-      {
-          sprintf (errstr, "Freeing memory: shadow_cal\n");
-          RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
-      }
-      status = free_2d_array(( void **)boundary_test);
-      if (status != SUCCESS)
-      {
-          sprintf (errstr, "Freeing memory: boundary_cal\n");
-          RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
-      }
+     /* Copy back to use cloud_mask as final mask */
+     for (row = 0; row < nrows; row++)
+     {
+         for (col = 0; col < ncols; col++)
+         {
+             cloud_mask[row][col] = shadow_cal[row][col];
+         }
+     }
 
-      if (verbose)
-      {
-          printf("cloud_count, shadow_count, boundary_counter = %d,%d,%d\n",
+     /* Release the memory */
+     status = free_2d_array((void **)cloud_cal);
+     if (status != SUCCESS)
+     {
+         sprintf (errstr, "Freeing memory: cloud_cal\n");
+         RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
+     }
+     status = free_2d_array((void **)shadow_cal);
+     if (status != SUCCESS)
+     {
+         sprintf (errstr, "Freeing memory: shadow_cal\n");
+         RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
+     }
+     status = free_2d_array(( void **)boundary_test);
+     if (status != SUCCESS)
+     {
+         sprintf (errstr, "Freeing memory: boundary_cal\n");
+         RETURN_ERROR (errstr, "object_cloud_shadow_match", false);     
+     }
+
+     if (verbose)
+     {
+         printf("cloud_count, shadow_count, boundary_counter = %d,%d,%d\n",
               cloud_count, shadow_count, boundary_counter);
 
-          /* record cloud and cloud shadow percent; */
-          cloud_shadow_percent = (float)(cloud_count + shadow_count)
-                          / (float)boundary_counter;
-          printf("The cloud and shadow percentage is %f\n", cloud_shadow_percent);
-      }
+         /* record cloud and cloud shadow percent; */
+         cloud_shadow_percent = (float)(cloud_count + shadow_count)
+                         / (float)boundary_counter;
+         printf("The cloud and shadow percentage is %f\n", cloud_shadow_percent);
+     }
 
       return SUCCESS;
 }

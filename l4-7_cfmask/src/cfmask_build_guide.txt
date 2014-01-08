@@ -14,18 +14,16 @@ Installation:
     export HDFEOS_LIB="path_to_HDFEOS_libraries"
     export HDFEOS_GCTPINC="path_to_HDFEOS_GCTP_include_files"
     export HDFEOS_GCTPLIB="path_to_HDFEOS_GCTP_libraries"
-    export OPENCVINC="path_to_OpenCV_include_files"
-    export OPENCVLIB="path_to_OpenCV_libraries"
     export ESUN="path_to_EarthSunDistance.txt_file"
 Note: ESUN environment variable is needed to indicate the EarthSunDistance.txt
       file location.
 
 3. Check out code from: svn://l8srlscp01.cr.usgs.gov/espa/fmask/trunk
 
-4. usage: fmask --metadata=input_metadata_filename_with_full_path --prob=input_cloud_probability_value --cldpix=input_cloud_pixel_buffer --sdpix=input_shadow_pixel_buffer [--write_binary] [--verbose]
+4. usage: fmask --metadata=input_lndcal_filename_with_full_path --prob=input_cloud_probability_value --cldpix=input_cloud_pixel_buffer --sdpix=input_shadow_pixel_buffer [--write_binary] [--verbose]
 
 where the following parameters are required:
-    -metadata: name of the input metadata file (full path) output from LEDAPS
+    -metadata: name of the input lndcal (full path) output from LEDAPS
 
 where the following parameters are optional:
     -prob: cloud_probability, default value is 22.5
@@ -37,13 +35,13 @@ where the following parameters are optional:
 
 fmask --help will print the usage statement
 
-Example: fmask --metadata= --metadata=/home/sguo/LEDAPS/ledaps-read-only/ledapsSrc/src/fmask2/L5010054_05420110312.metadata.txt --prob=22.5 --cldpix=3 --sdpix=3 --write_binary --verbose
+Example: cfmask --toarefl=/home/sguo/LEDAPS/ledaps-read-only/ledapsSrc/src/fmask2/lndcal.L5010054_05420110312.hdf --prob=22.5 --cldpix=2 --sdpix=2 --write_binary --verbose
+
 
 5. Dependencies
    HDF4 libraries
    HDF-EOS GCTP libraries
    HDF-EOS2 libraries
-   OpenCV libraries
    Puthon 2.7 and associated Scipy 
 
 6. Associated use of newly updated ESUN, K1/K2 and earth_sun_distance in

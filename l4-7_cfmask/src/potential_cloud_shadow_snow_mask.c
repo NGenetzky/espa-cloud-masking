@@ -1,10 +1,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
-#include "cv.h"
-#include "ml.h"
-#include "cxcore.h"
-#include "highgui.h"
 #include "2d_array.h"
 #include "input.h"
 #include "const.h"
@@ -39,7 +35,6 @@ int potential_cloud_shadow_snow_mask
     unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
     unsigned char **snow_mask,  /*I/O: snow pixel mask */
     unsigned char **water_mask, /*I/O: water pixel mask */
-    unsigned char **final_mask, /*I/O: final combined pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */
 )
@@ -83,19 +78,21 @@ int potential_cloud_shadow_snow_mask
     int16 shadow_prob;   /* shadow probability */
     int status;          /* return value */
     int satu_bv;         /* sum of saturated bands 1, 2, 3 value */
+    unsigned char mask;  /* mask used for 1 pixel */
 
     /* Dynamic memory allocation */
-    unsigned char **mask = NULL;
     unsigned char **clear_mask = NULL;
     unsigned char **clear_land_mask = NULL;
+    unsigned char **clear_water_mask = NULL;
 
-    mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
     clear_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
     clear_land_mask = (unsigned char **)allocate_2d_array(
                  input->size.l, input->size.s, sizeof(unsigned char)); 
-    if (mask == NULL || clear_mask == NULL || clear_land_mask ==NULL)
+    clear_water_mask = (unsigned char **)allocate_2d_array(
+                 input->size.l, input->size.s, sizeof(unsigned char)); 
+    if (clear_mask == NULL || clear_land_mask == NULL
+        || clear_water_mask == NULL)
         RETURN_ERROR ("Allocating mask memory", "pcloud", false);
     
     if (verbose)
@@ -142,7 +139,7 @@ int potential_cloud_shadow_snow_mask
                  if (input->buf[ib][col] == input->meta.satu_value_ref[ib])
                  input->buf[ib][col] = input->meta.satu_value_max[ib]; 
             }
-            if (input->therm_buf[col] == input->meta.satu_value_ref[ib])
+            if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
                 input->therm_buf[col] = input->meta.therm_satu_value_max; 
 
             /* process non-fill pixels only */
@@ -150,22 +147,22 @@ int potential_cloud_shadow_snow_mask
                 || input->buf[1][col] == -9999 || input->buf[2][col] == -9999 
                 || input->buf[3][col] == -9999 || input->buf[4][col] == -9999
                 || input->buf[5][col] == -9999)
-                mask[row][col] = 0;
+                mask = 0;
             else
             {
-                 mask[row][col] = 1;
+                 mask = 1;
 	         mask_counter++;
             }
   
             if ((input->buf[2][col] +  input->buf[3][col]) != 0 
-                && mask[row][col] == 1)
+                && mask == 1)
                 ndvi = (float)(input->buf[3][col] - input->buf[2][col]) / 
                     (float)(input->buf[3][col] + input->buf[2][col]);
             else
                 ndvi = 0.01;
 
             if ((input->buf[1][col] +  input->buf[4][col]) != 0 
-                && mask[row][col] == 1)
+                && mask == 1)
                 ndsi = (float)(input->buf[1][col] - input->buf[4][col]) / 
                 (float)(input->buf[1][col] + input->buf[4][col]);
             else
@@ -180,7 +177,7 @@ int potential_cloud_shadow_snow_mask
 
            /* It takes every snow pixels including snow pixel under thin 
               clouds or icy clouds, equation 20 */
-           if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 380) && 
+           if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 380) &&
                (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
                snow_mask[row][col] = 1;
            else 
@@ -189,16 +186,16 @@ int potential_cloud_shadow_snow_mask
            /* Zhe's water test (works over thin cloud), equation 5 */
           if (((((ndvi - 0.01) < MINSIGMA) && (input->buf[3][col] < 1100)) || 
               (((ndvi - 0.1) < MINSIGMA) && (ndvi > MINSIGMA) && 
-              (input->buf[3][col] < 500))) && (mask[row][col]==1))
+              (input->buf[3][col] < 500))) && (mask == 1))
               water_mask[row][col] = 1;
           else 
               water_mask[row][col] = 0;
-          if (mask[row][col] == 0)
+          if (mask == 0)
               water_mask[row][col] = NO_VALUE;
 
           /* visible bands flatness (sum(abs)/mean < 0.6 => brigt and dark 
              cloud), equation 2 */
-          if (cloud_mask[row][col] == 1 && mask[row][col] == 1)
+          if (cloud_mask[row][col] == 1 && mask == 1)
           {
              visi_mean = (float)(input->buf[0][col] + input->buf[1][col] +
                   input->buf[2][col]) / 3.0;
@@ -252,7 +249,7 @@ int potential_cloud_shadow_snow_mask
               cloud_mask[row][col] = 0;
      
           /* Test whether use thermal band or not */
-          if (cloud_mask[row][col] == 0 && mask[row][col] == 1)
+          if (cloud_mask[row][col] == 0 && mask == 1)
           {
 	      clear_mask[row][col] = 1;
 	      clear_pixel_counter++;
@@ -264,9 +261,19 @@ int potential_cloud_shadow_snow_mask
           {
 	      clear_land_mask[row][col] = 1;
               clear_land_pixel_counter++;
+	      clear_water_mask[row][col] = 0;
+              
+          }
+          else if (water_mask[row][col] == 1 && clear_mask[row][col] == 1)
+          {
+	      clear_water_mask[row][col] = 1;
+              clear_land_mask[row][col] = 0;
           }
           else
-          clear_land_mask[row][col] = 0;
+          {
+              clear_land_mask[row][col] = 0;
+              clear_water_mask[row][col] = 0;
+          }
        }
     }
 
@@ -277,7 +284,6 @@ int potential_cloud_shadow_snow_mask
 
     if ((*ptm-0.1) <= MINSIGMA) /* No thermal test is needed, all clouds */
     {
-        majority_filter(cloud_mask, nrows, ncols);
         *t_templ = -1.0;
         *t_temph = -1.0; 
         for (row = 0; row < nrows; row++)
@@ -323,6 +329,19 @@ int potential_cloud_shadow_snow_mask
                 }
 	    }
 	 
+            /* For each of the image bands */
+            for (ib = 0; ib < input->nband; ib++)
+            {
+                /* Read each input reflective band -- data is read into
+                   input->buf[ib] */
+                if (!GetInputLine(input, ib, row))
+                {
+                    sprintf (errstr, "Reading input image data for line %d, "
+                        "band %d", row, ib);
+                    RETURN_ERROR (errstr, "pcloud", false);
+                }
+            }
+
             /* For the thermal band, read the input thermal band  */
 	    if (!GetInputThermLine(input, row))
 	    {
@@ -364,7 +383,7 @@ int potential_cloud_shadow_snow_mask
 	             }
 	         }
                  /* Equation 7 */
-        	 if (water_mask[row][col] == 1 && input->buf[5][col] <= 300)
+        	 if (clear_water_mask[row][col] == 1)
 	         {
 	             f_wtemp[index2] = input->therm_buf[col];
                      if (f_wtemp[index2] > f_wtemp_max)
@@ -475,6 +494,8 @@ int potential_cloud_shadow_snow_mask
 	            /* Temperature test over water */
                     wtemp_prob = (t_wtemp - (float)input->therm_buf[col]) / 
                                   400.0;
+                    if (wtemp_prob < MINSIGMA)
+                        wtemp_prob = 0.0;
 	    
                     /* Brightness test (over water) */
 	            t_bright = 1100;
@@ -482,6 +503,8 @@ int potential_cloud_shadow_snow_mask
                                       (float)t_bright;
 	            if ((brightness_prob - 1.0) > MINSIGMA)
 	                 brightness_prob = 1.0;
+	            if (brightness_prob < MINSIGMA)
+	                 brightness_prob = 0.0;
 	    
                     /*Final prob mask (water), cloud over water probability */
 	            wfinal_prob[row][col] =100.0 * wtemp_prob * brightness_prob;
@@ -493,8 +516,17 @@ int potential_cloud_shadow_snow_mask
 	            if (temp_prob < MINSIGMA)
 	                temp_prob = 0.0;
 	    
+                    /* label the non-fill pixels */
+                    if (input->therm_buf[col] <= -9999 || input->buf[0][col] == 
+                        -9999 || input->buf[1][col] == -9999 || input->buf[2][col] 
+                        == -9999 || input->buf[3][col] == -9999 || 
+                        input->buf[4][col] == -9999 || input->buf[5][col] == -9999)
+                        mask = 0;
+                    else
+                        mask = 1;
+
                     if ((input->buf[2][col] +  input->buf[3][col]) != 0 
-                         && mask[row][col] == 1)
+                         && mask == 1)
                         ndvi = (float)(input->buf[3][col] -  
                              input->buf[2][col]) / 
                              (float)(input->buf[3][col] +  input->buf[2][col]);
@@ -502,7 +534,7 @@ int potential_cloud_shadow_snow_mask
                         ndvi = 0.01;
 
                     if ((input->buf[1][col] +  input->buf[4][col]) != 0 
-                        && mask[row][col] == 1)
+                        && mask == 1)
                         ndsi = (float)(input->buf[1][col] -  
                             input->buf[4][col]) / 
                             (float)(input->buf[1][col] +  input->buf[4][col]);
@@ -592,15 +624,102 @@ int potential_cloud_shadow_snow_mask
         }
         clr_mask += cloud_prob_threshold;
 
+        float wprob_max = 0.0;
+        float wprob_min = 0.0;
+        int index4 = 0;
+        for (row = 0; row < nrows; row++)
+        {
+	    for (col = 0; col <ncols; col++)
+	    {	    
+	        if (clear_water_mask[row][col] == 1)
+	        {
+		    prob[index] = wfinal_prob[row][col];
+                    if ((prob[index4] - wprob_max) > MINSIGMA)
+                        wprob_max = prob[index4];
+                    if ((wprob_min - prob[index4]) > MINSIGMA)
+                        wprob_min = prob[index4];
+		    index4++;
+	        }
+            }
+        }
+
+        /*Dynamic threshold for water */
+        if (index4 != 0)
+        {
+            status = prctile2(prob, index4, wprob_min, wprob_max, 100.0*h_pt, 
+                              &wclr_mask);
+            if (status != SUCCESS)
+            {
+	        sprintf (errstr, "Error calling prctile2 routine");
+	        RETURN_ERROR (errstr, "pcloud", false);
+            }
+        }
+        else
+        {
+            wclr_mask = 50.0; /* no clear water pixel, make wclr_mask 50.0 */
+        }
+
         /* Relase memory for prob */
         free(prob);
-	     
-        /* Fixed threshold for water */
-        wclr_mask = 50.0;
-	    
+	     	    
         if (verbose)
+        {
             printf("pcloud probability threshold (land) = %.2f\n", clr_mask);
-    
+            printf("pcloud probability threshold (water) = %.2f\n", wclr_mask);
+        }
+        
+        if (verbose)
+            printf("The fourth pass\n");
+        /* Loop through each line in the image */
+        for (row = 0; row < nrows; row++)
+        {
+            /* Print status on every 1000 lines */
+            if (!(row%1000)) 
+            {
+                if (verbose)
+                {
+                    printf ("Processing line %d\r",row);
+                    fflush (stdout);
+                }
+            }
+
+            /* For the thermal band, data is read into input->therm_buf */
+	    if (!GetInputThermLine(input, row))
+            {
+	        sprintf (errstr, "Reading input thermal data for line %d", row);
+	        RETURN_ERROR (errstr, "pcloud", false);
+	    }
+
+            for (col =0; col < ncols; col++)
+            {
+                if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
+                   input->therm_buf[col] = input->meta.therm_satu_value_max; 
+
+                if ((cloud_mask[row][col] == 1 && final_prob[row][col] > 
+                     clr_mask && water_mask[row][col] == 0) || 
+                     (cloud_mask[row][col] == 1 && wfinal_prob[row][col] > 
+                     wclr_mask && water_mask[row][col] == 1) 
+                     || (input->therm_buf[col] < *t_templ + t_buffer - 3500))
+                    cloud_mask[row][col] = 1;
+                else
+                    cloud_mask[row][col] = 0;
+            }
+        }
+
+        /* Free the memory */
+        status = free_2d_array((void **)wfinal_prob);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: wfinal_prob\n");
+            RETURN_ERROR (errstr, "pcloud", false);              
+        }
+        status = free_2d_array((void **)final_prob);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: final_prob\n");
+            RETURN_ERROR (errstr, "pcloud", false);              
+        }
+
         /* Band 4 &5 flood fill */
         nir = malloc(input->size.l * input->size.s * sizeof(int16)); 
         swir = malloc(input->size.l * input->size.s * sizeof(int16)); 
@@ -609,21 +728,185 @@ int potential_cloud_shadow_snow_mask
             sprintf(errstr, "Allocating nir and swir memory");
             RETURN_ERROR (errstr, "pcloud", false);
         }
+
+        /* Open the intermediate file for writing */
+        FILE *fd1;
+        FILE *fd2;
+        fd1 = fopen("b4.bin", "wb"); 
+        if (fd1 == NULL)
+        {
+            sprintf (errstr, "Opening file: b4.bin\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+        fd2 = fopen("b5.bin", "wb"); 
+        if (fd2 == NULL)
+        {
+            sprintf (errstr, "Opening file: b5.bin\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+
         int16 nir_max = 0;
         int16 nir_min = 0;
         int16 swir_max = 0;
         int16 swir_min = 0;
-        index = 0;
-        index2 = 0;
+        int idx = 0;
+        int idx2 = 0;
+        if (verbose)
+            printf("The fifth pass\n");
+        /* Loop through each line in the image */
+        for (row = 0; row < nrows; row++)
+        {
+            /* Print status on every 1000 lines */
+            if (!(row%1000)) 
+            {
+                if (verbose)
+                {
+                    printf ("Processing line %d\r",row);
+                    fflush (stdout);
+                }
+            }
+
+            /* For each of the image bands */
+            for (ib = 0; ib < input->nband; ib++)
+            {
+                /* Read each input reflective band -- data is read into
+                   input->buf[ib] */
+                if (!GetInputLine(input, ib, row))
+                {
+                    sprintf (errstr, "Reading input image data for line %d, "
+                        "band %d", row, ib);
+                    RETURN_ERROR (errstr, "pcloud", false);
+                }
+            }
+
+            for (col =0; col < ncols; col++)
+            {
+                if (input->buf[3][col] == input->meta.satu_value_ref[3])
+                   input->buf[3][col] = input->meta.satu_value_max[3]; 
+                if (input->buf[4][col] == input->meta.satu_value_ref[4])
+                   input->buf[4][col] = input->meta.satu_value_max[4]; 
+
+                if (clear_land_mask[row][col] == 1)
+	        {
+                    nir[idx] = input->buf[3][col];
+                    if (nir[idx] > nir_max)
+                        nir_max = nir[idx];
+                    if (nir[idx] < nir_min)
+                        nir_min = nir[idx];
+	            idx++;
+	        }
+
+                if (clear_land_mask[row][col] == 1)
+	        {
+                    swir[idx2] = input->buf[4][col];
+                    if (swir[idx2] > swir_max)
+                        swir_max = swir[idx2];
+                    if (swir[idx2] < swir_min)
+                        swir_min = swir[idx2];
+	            idx2++;
+	        }
+            }
+
+            /* Write out the intermediate file */
+            status = fwrite(&input->buf[3], sizeof(int16), 
+                     input->size.s, fd1);
+            if (status != input->size.s)
+            {
+                sprintf (errstr, "Writing file: b4.bin\n");
+                RETURN_ERROR (errstr, "pcloud", false);
+            }
+            status = fwrite(&input->buf[4], sizeof(int16), 
+                     input->size.s, fd2);
+            if (status != input->size.s)
+            {
+                sprintf (errstr, "Writing file: b5.bin\n");
+                RETURN_ERROR (errstr, "pcloud", false);
+            }
+        }
+
+        /* Close the intermediate file */
+        status = fclose(fd1);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: b4.bin\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+        status = fclose(fd2);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: b5.bin\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+
+        /* Estimating background (land) Band 4 Ref */
+        status = prctile(nir, idx + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Calling prctile function\n");
+            RETURN_ERROR (errstr, "pcloud", false);              
+        }
+        status = prctile(swir, idx2 + 1, swir_min, swir_max, 100.0*l_pt, &backg_b5);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Calling prctile2 function\n");
+            RETURN_ERROR (errstr, "pcloud", false);              
+        }
+
+        /* Release the memory */
+        free(nir);
+        free(swir);
+
+        /* Write out the intermediate values */
+        fd1 = fopen("b4_b5.txt", "w"); 
+        if (fd1 == NULL)
+        {
+            sprintf (errstr, "Opening file: b4_b5.txt\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+
+        /* Write out the intermediate file */
+        fprintf(fd1, "%f\n", backg_b4);
+        fprintf(fd1, "%f\n", backg_b5);
+        fprintf(fd1, "%d\n", input->size.l);
+        fprintf(fd1, "%d\n", input->size.s);
+
+        /* Close the intermediate file */
+        status = fclose(fd1);
+        if ( status )
+        {
+            sprintf (errstr, "Closing file: b4_b5.txt\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+
+        /* Call the fill minima routine to do image fill */
+        status = system("run_fillminima.py");
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Running run_fillminima.py routine\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+
+        /* Open the intermediate file for reading */
+        fd1 = fopen("filled_b4.bin", "rb"); 
+        if (fd1 == NULL)
+        {
+            sprintf (errstr, "Opening file: filled_b4.bin\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
+
+        fd2 = fopen("filled_b5.bin", "rb"); 
+        if (fd2 == NULL)
+        {
+            sprintf (errstr, "Opening file: filled_b5.bin\n");
+            RETURN_ERROR (errstr, "pcloud", false);
+        }
 
         /* May need allocate two memory for new band 4 and 5 */
-        int16 **new_nir;
-        int16 **new_swir;   
+        int16 *new_nir;
+        int16 *new_swir;   
 
-        new_nir = (int16 **)allocate_2d_array(input->size.l, 
-              input->size.s, sizeof(int16)); 
-        new_swir = (int16 **)allocate_2d_array(input->size.l, 
-              input->size.s, sizeof(int16)); 
+        new_nir = (int16 *)malloc(input->size.s * sizeof(int16)); 
+        new_swir = (int16 *)malloc(input->size.s * sizeof(int16)); 
         if (new_nir == NULL  || new_swir == NULL)
         {
             sprintf (errstr, "Allocating new_nir/new_swir memory");
@@ -631,8 +914,7 @@ int potential_cloud_shadow_snow_mask
         }
 
         if (verbose)
-            printf("The fourth pass\n");
-        /* Loop through each line in the image */
+            printf("The sixth pass\n");
         for (row = 0; row < nrows; row++)
         {
             /* Print status on every 1000 lines */
@@ -665,198 +947,74 @@ int potential_cloud_shadow_snow_mask
 	        RETURN_ERROR (errstr, "pcloud", false);
 	    }
 
-            for (col =0; col < ncols; col++)
+            /* Read out the intermediate file */
+            fread(&new_nir[0], sizeof(int16), input->size.s, fd1);
+            fread(&new_swir[0], sizeof(int16), input->size.s, fd2);
+
+            for (col = 0; col < ncols; col++)
             {
                 if (input->buf[3][col] == input->meta.satu_value_ref[3])
-                   input->buf[3][col] = input->meta.satu_value_max[3]; 
+                    input->buf[3][col] = input->meta.satu_value_max[3]; 
                 if (input->buf[4][col] == input->meta.satu_value_ref[4])
-                   input->buf[4][col] = input->meta.satu_value_max[4]; 
-                if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
-                   input->therm_buf[col] = input->meta.therm_satu_value_max; 
+                    input->buf[4][col] = input->meta.satu_value_max[4]; 
 
-                if ((cloud_mask[row][col] == 1 && final_prob[row][col] > 
-                     clr_mask && water_mask[row][col] == 0) || 
-                     (cloud_mask[row][col] == 1 && wfinal_prob[row][col] > 
-                     wclr_mask && water_mask[row][col] == 1) 
-                     || (final_prob[row][col] > 99 && water_mask[row][col] == 
-                     0) || (input->therm_buf[col] < *t_templ + t_buffer - 3500))
-                    cloud_mask[row][col] = 1;
+                /* process non-fill pixels only */
+                if (input->therm_buf[col] <= -9999 || input->buf[0][col] == -9999 
+                    || input->buf[1][col] == -9999 || input->buf[2][col] == -9999 
+                    || input->buf[3][col] == -9999 || input->buf[4][col] == -9999
+                    || input->buf[5][col] == -9999)
+                    mask = 0;
                 else
-                    cloud_mask[row][col] = 0;
+                    mask = 1;
 
-                if (clear_land_mask[row][col] == 1)
-	        {
-                    nir[index] = input->buf[3][col];
-                    if (nir[index] > nir_max)
-                        nir_max = nir[index];
-                    if (nir[index] < nir_min)
-                        nir_min = nir[index];
-	            index++;
-	        }
+                if (mask == 1)
+                { 
+                     new_nir[col] -= input->buf[3][col];
+                     new_swir[col] -= input->buf[4][col];
 
-                if (clear_land_mask[row][col] == 1)
-	        {
-                    swir[index2] = input->buf[4][col];
-                    if (swir[index2] > swir_max)
-                        swir_max = swir[index2];
-                    if (swir[index2] < swir_min)
-                        swir_min = swir[index2];
-	            index2++;
-	        }
-                new_nir[row][col] = input->buf[3][col];
-                new_swir[row][col] = input->buf[4][col];
+                     if (new_nir[col] < new_swir[col])
+	                 shadow_prob = new_nir[col];
+                     else
+	                 shadow_prob = new_swir[col];
+
+                     if (shadow_prob > 200)
+	                 shadow_mask[row][col] = 1;
+                     else
+	                 shadow_mask[row][col] = 0;
+                }
+                else
+                {
+        	    cloud_mask[row][col] = NO_VALUE;
+	            shadow_mask[row][col] = NO_VALUE;                 
+                }
+
+                /* refine Water mask (no confusion water/cloud) */
+                if (water_mask[row][col] == 1 && cloud_mask[row][col] == 0)
+                    water_mask[row][col] = 1;
+                else
+	            water_mask[row][col] = 0;
             }
         }
 
-        /* Free the memory */
-        status = free_2d_array((void **)wfinal_prob);
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Freeing memory: wfinal_prob\n");
-            RETURN_ERROR (errstr, "pcloud", false);              
-        }
-        status = free_2d_array((void **)final_prob);
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Freeing memory: final_prob\n");
-            RETURN_ERROR (errstr, "pcloud", false);              
-        }
-      
-        /* Improve cloud mask by majority filtering */
-        majority_filter(cloud_mask, nrows, ncols);
-
-        /* Estimating background (land) Band 4 Ref */
-        status = prctile(nir, index + 1, nir_min, nir_max, 100.0*l_pt, &backg_b4);
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Calling prctile function\n");
-            RETURN_ERROR (errstr, "pcloud", false);              
-        }
-        status = prctile(swir, index2 + 1, swir_min, swir_max, 100.0*l_pt, &backg_b5);
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Calling prctile2 function\n");
-            RETURN_ERROR (errstr, "pcloud", false);              
-        }
-
-        /* Release the memory */
-        free(nir);
-        free(swir);
-
-        /* Open the intermediate file for writing */
-        FILE *fd;
-        fd = fopen("b4.bin", "wb"); 
-        if (fd == NULL)
-        {
-            sprintf (errstr, "Opening file: b4.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Write out the intermediate file */
-        status = fwrite(&new_nir[0][0], sizeof(int16), input->size.l *
-                 input->size.s, fd);
-        if (status != input->size.l * input->size.s)
-        {
-            sprintf (errstr, "Writing file: b4.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
+        /* Release the memory */ 
+        free(new_nir);
+        free(new_swir);
 
         /* Close the intermediate file */
-        status = fclose(fd);
-        if ( status )
-        {
-            sprintf (errstr, "Closing file: b4.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-        fd = fopen("b5.bin", "wb"); 
-        if (fd == NULL)
-        {
-            sprintf (errstr, "Opening file: b5.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Write out the intermediate file */
-        status = fwrite(&new_swir[0][0], sizeof(int16), input->size.l *
-                 input->size.s, fd);
-        if (status != input->size.l * input->size.s)
-        {
-            sprintf (errstr, "Writing file: b5.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Close the intermediate file */
-        status = fclose(fd);
-        if ( status )
-        {
-            sprintf (errstr, "Closing file: b5.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-        fd = fopen("b4_b5.txt", "w"); 
-        if (fd == NULL)
-        {
-            sprintf (errstr, "Opening file: b4_b5.txt\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Write out the intermediate file */
-        fprintf(fd, "%f\n", backg_b4);
-        fprintf(fd, "%f\n", backg_b5);
-        fprintf(fd, "%d\n", input->size.l);
-        fprintf(fd, "%d\n", input->size.s);
-
-        /* Close the intermediate file */
-        status = fclose(fd);
-        if ( status )
-        {
-            sprintf (errstr, "Closing file: b4_b5.txt\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        status = system("run_fillminima.py");
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Running run_fillminima.py routine\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Open the intermediate file for reading */
-        fd = fopen("filled_b4.bin", "rb"); 
-        if (fd == NULL)
-        {
-            sprintf (errstr, "Opening file: filled_b4.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Read out the intermediate file */
-        fread(&new_nir[0][0], sizeof(int16), input->size.l *
-                 input->size.s, fd);
-
-        /* Close the intermediate file */
-        status = fclose(fd);
+        status = fclose(fd1);
         if ( status )
         {
             sprintf (errstr, "Closing file: filled_b4.bin\n");
             RETURN_ERROR (errstr, "pcloud", false);
         }
-        fd = fopen("filled_b5.bin", "rb"); 
-        if (fd == NULL)
-        {
-            sprintf (errstr, "Opening file: filled_b5.bin\n");
-            RETURN_ERROR (errstr, "pcloud", false);
-        }
-
-        /* Read out the intermediate file */
-        fread(&new_swir[0][0], sizeof(int16), input->size.l *
-                 input->size.s, fd);
-
-        /* Close the intermediate file */
-        status = fclose(fd);
+        status = fclose(fd2);
         if ( status )
         {
             sprintf (errstr, "Closing file: filled_b5.bin\n");
             RETURN_ERROR (errstr, "pcloud", false);
         }
 
+        /* Remove the intermediate files */
         status = system("rm b4_b5.txt");
         if (status != SUCCESS)
         {
@@ -887,70 +1045,6 @@ int potential_cloud_shadow_snow_mask
             sprintf (errstr, "Removing filled_b5.bin file\n");
             RETURN_ERROR (errstr, "pcloud", false);
         }
-
-        if (verbose)
-            printf("The fifth pass\n");
-        for (row = 0; row < nrows; row++)
-        {
-            /* Print status on every 1000 lines */
-            if (!(row%1000)) 
-            {
-                if (verbose)
-                {
-                    printf ("Processing line %d\r",row);
-                    fflush (stdout);
-                }
-            }
-
-            /* For each of the image bands */
-            for (ib = 0; ib < input->nband; ib++)
-            {
-                /* Read each input reflective band -- data is read into
-                   input->buf[ib] */
-                if (!GetInputLine(input, ib, row))
-                {
-                    sprintf (errstr, "Reading input image data for line %d, "
-                        "band %d", row, ib);
-                    RETURN_ERROR (errstr, "pcloud", false);
-                }
-            }
-
-            for (col = 0; col < ncols; col++)
-            {
-                if (input->buf[3][col] == input->meta.satu_value_ref[3])
-                    input->buf[3][col] = input->meta.satu_value_max[3]; 
-                if (input->buf[4][col] == input->meta.satu_value_ref[4])
-                    input->buf[4][col] = input->meta.satu_value_max[4]; 
-
-                if (mask[row][col] == 1)
-                { 
-                     new_nir[row][col] -= input->buf[3][col];
-                     new_swir[row][col] -= input->buf[4][col];
-
-                     if (new_nir[row][col] < new_swir[row][col])
-	                 shadow_prob = new_nir[row][col];
-                     else
-	                 shadow_prob = new_swir[row][col];
-
-                     if (shadow_prob > 200)
-	                 shadow_mask[row][col] = 1;
-                     else
-	                 shadow_mask[row][col] = 0;
-                }
-            }
-        }
-        status = free_2d_array((void **)new_nir);
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Freeing memory: new_nir\n");
-            RETURN_ERROR (errstr, "pcloud", false);              
-        }
-        status = free_2d_array((void **)new_swir);
-        if (status != SUCCESS)
-        {
-            sprintf (errstr, "Freeing memory: new_swir\n");
-            RETURN_ERROR (errstr, "pcloud", false);              
-        }
     }    
     status = free_2d_array((void **)clear_mask);
     if (status != SUCCESS)
@@ -964,29 +1058,10 @@ int potential_cloud_shadow_snow_mask
         sprintf (errstr, "Freeing memory: clear_land_mask\n");
         RETURN_ERROR (errstr, "pcloud", false);              
     }
-
-    /* Loop through each line in the image */
-    for (row = 0; row < nrows; row++)
-    {
-        for (col = 0; col < ncols; col++)
-        {
-            /* refine Water mask (no confusion water/cloud) */
-            if (water_mask[row][col] == 1 && cloud_mask[row][col] == 0)
-                water_mask[row][col] = 1;
-            else
-	        water_mask[row][col] = 0;
-
-            if (mask[row][col] == 0)
-	    {
-	        cloud_mask[row][col] = NO_VALUE;
-	        shadow_mask[row][col] = NO_VALUE;
-	    }
-        }
-    }
-    status = free_2d_array((void **)mask);
+    status = free_2d_array((void **)clear_water_mask);
     if (status != SUCCESS)
     {
-        sprintf (errstr, "Freeing memory: mask\n");
+        sprintf (errstr, "Freeing memory: clear_water_mask\n");
         RETURN_ERROR (errstr, "pcloud", false);              
     }
 
