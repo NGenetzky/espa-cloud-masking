@@ -1,0 +1,55 @@
+Updates on March 20, 2013 - USGS EROS
+
+Fmask:
+- The current Fmask code in C is basically a rewriting of Fmask matlab code, 
+the sequence of the two code is basically the same: 
+"potential_cloud_shadow_snow_mask.c" is a rewriting of "plcloud.m" matlab code
+in C and "object_cloud_shadow_match.c" is a rewriting of "fcssm.m" matlab code
+in C.
+
+1. The matlab image dilute routine is recoded in C now.
+
+2. The matlab imfill routine is simulated using the Australian Python code:
+fillminima.py in which the algorithm is based on paper:
+Soille, P., and Gratin, C. (1994). An efficient algorithm for drainage network
+        extraction on DEMs. J. Visual Communication and Image Representation. 
+        5(2). 181-189. 
+
+3. The segmentation of each cloud part in fcssm.m file with serial of matlab
+image processing routines used (e.g. bwlabel, regionprops, ismember, find) are
+coded as a subroutine named "label" in "object_cloud_shadow_match.c". 
+
+- Right now, the Fmask code uses LEDAPS output files (lndcal and lndth files), 
+it uses LEDAPS output metadata file as command line input argument.
+
+- It's better to use the newly updated ESUN, K1/K2 and earth_sun_distance in
+the digital number (DN) to TOA reflectance and brightness temperature (BT)
+conversion in the LEDAPS lndcal code. But if old constant values are used, the
+result differences are minor because Fmask code has taken care of the saturated
+pixel conversion in its processing. 
+
+- If new constant values are needed in the DN to TOA reflectance and BT 
+conversion, then the updated new lndcal code can be checked out from:
+svn co svn://l8srlscp01.cr.usgs.gov/espa/fmask/lndcal2 (Note: An ESUN
+environment variable needs to be set to indicate location of the
+EarthSunDistance.txt file).
+
+- If the new lndcal needs to be run, just run the original LEDAPS lndpm first,
+and then run lndcal the second, all the needed input files to Fmask will be
+generated.
+
+- Now in the standard LEDAPS code, the saturated pixel values are set to be 
+20000 for all bands. 20000 is saved for all satu_value_ref values for each band.
+Now in the Fmask, the satu_value_max is calculated based on the same DN to TOA
+reflectance and DN to BT conversions when DN is 255. In Fmask, when any pixel 
+value is 20000, it is replaced with the satu_value_max of the band calculated 
+as above. Therefore, the actual satu_value_max values are used for each 
+saturated pixle instead of 20000 in Fmask. The lndcal2 code above actually set
+saturated pixel values as satu_value_max values calculated above. Then the 
+saturated pixel value replacement may not be needed in Fmask code, but it 
+doesn't hurt to keep the replacement code in Fmask as it will simply do nothing
+if the equivalent saturated TOA reflectance and BT values are saved in LEDAPS
+output files (therefore the input files for Fmask) instead of 20000 is saved. 
+Our long-term goal is simply use LEDAPS output files as inputs to the Fmask 
+after all constant updates are taken in place. Also note that the ESUN environment 
+variable is needed to be set to indicate location of the EarthSunDistance.txt file.    
