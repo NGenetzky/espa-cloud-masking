@@ -746,7 +746,7 @@ int object_cloud_shadow_match
             printf("Shadow match for cloud object >= %d pixels\n", num_cldoj);
         }
         i_step=rint(2.0*(float)sub_size*tan(sun_ele_rad)); 
-                                     /* move 2 pixel at a time */
+                              /* move 2 pixel at a time */
         if (i_step < (2 * sub_size))
             i_step = 2 * sub_size;   /* Make i_step = 2 * sub_size for polar
                                         large solar zenith angle case */
