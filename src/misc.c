@@ -111,7 +111,7 @@ int prctile2
     start = (int)rint(min);
     end = (int)rint(max);
 
-    loops = end - start + 1;
+    loops = end - start + 2;
 
     interval = calloc(loops, sizeof(int));
     if (interval == NULL)
