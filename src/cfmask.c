@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 #include "input.h"
 #include "output.h"
 #include "cfmask.h"
@@ -73,6 +74,10 @@ int main (int argc, char *argv[])
     Space_def_t space_def;   /* spatial definition information */
     float sun_azi_temp = 0.0;/* Keep the original sun azimuth angle */
   
+    time_t now;
+    time(&now);
+    printf("CFmask start_time=%s\n",ctime(&now));
+
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
     status = get_args (argc, argv, &lndcal_name, &cloud_prob, &cldpix,
@@ -362,6 +367,8 @@ int main (int argc, char *argv[])
 
     free(lndcal_name);
     printf ("Processing complete.\n");
+    time(&now);
+    printf("CFmask end_time=%s\n",ctime(&now));
     return (SUCCESS);
 }
 
@@ -414,7 +421,7 @@ void usage ()
             "--toarefl=/home/sguo/LEDAPS/ledaps-read-only/"
             "ledapsSrc/src/fmask2/lndcal.L5010054_05420110312.hdf "
             "--prob=22.5 "
-            "--cldpix=2 "
-            "--sdpix=2 "
+            "--cldpix=3 "
+            "--sdpix=3 "
             "--write_binary --verbose\n");
 }

@@ -111,7 +111,7 @@ int prctile2
     start = (int)rint(min);
     end = (int)rint(max);
 
-    loops = end - start + 1;
+    loops = end - start + 2;
 
     interval = calloc(loops, sizeof(int));
     if (interval == NULL)
@@ -188,8 +188,8 @@ int get_args
     static int verbose_flag=0;     /* verbose flag */
     static int binary_flag=0;      /* write binary flag */
     static int no_hdf_flag=0;         /* write binary flag */
-    static int cldpix_default = 2; /* Default buffer for cloud pixel dilate */
-    static int sdpix_default = 2;  /* Default buffer for shadow pixel dilate */
+    static int cldpix_default = 3; /* Default buffer for cloud pixel dilate */
+    static int sdpix_default = 3;  /* Default buffer for shadow pixel dilate */
     static float cloud_prob_default = 22.5;   /* Default cloud probability */
     char errmsg[MAX_STR_LEN];      /* error message */
     char FUNC_NAME[] = "get_args"; /* function name */
