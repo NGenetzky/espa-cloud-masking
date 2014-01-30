@@ -514,7 +514,7 @@ void image_dilate
     unsigned char **in_mask,      /* I: Mask to be dilated */
     int nrows,                    /* I: Number of rows in the mask */ 
     int ncols,                    /* I: Number of columns in the mask */
-    int idx,                      /* I: pixel beffer 2 * idx + 1 */ 
+    int idx,                      /* I: pixel buffer 2 * idx + 1 */ 
     unsigned char **out_mask      /* O: Mask after dilate */
 )
 {
@@ -526,28 +526,26 @@ void image_dilate
         for (col = 0; col < ncols; col++)
         {
             mask = 0;
-            for (ir = 1; ir < idx + 1; ir++)
+            for (ir = 0; ir < idx + 1; ir++)
             {
-                for (ic = 1; ic < idx + 1; ic++)
+                for (ic = 0; ic < idx + 1; ic++)
                 {
-                    if (((row-ir) > 0) && ((col-ic) > 0))
+                    if (((row-ir) > 0) && ((col-ic) > 0) && mask != 1)
                     {
                         if (in_mask[row-ir][col-ic] == 1)
                         mask = 1;
                     }
-                    if (((row-ir) > 0) && ((col+ic) < (ncols-1)))
+                    if (((row-ir) > 0) && ((col+ic) < (ncols-1)) && mask != 1)
                     {
                         if (in_mask[row-ir][col+ic] == 1)
                         mask = 1;
                     }
-                    if (in_mask[row][col] == 1)
-                        mask = 1;
-                    if (((row+ir) < (nrows-1)) && ((col-ic) > 0))
+                    if (((row+ir) < (nrows-1)) && ((col-ic) > 0) && mask != 1)
                     {
                         if (in_mask[row+ir][col-ic] == 1)
                         mask = 1;
                     }
-                    if (((row+ir) < (nrows-1)) && ((col+ic) < (ncols-1)))
+                    if (((row+ir) < (nrows-1)) && ((col+ic) < (ncols-1)) && mask != 1)
                     {
                         if (in_mask[row+ir][col+ic] == 1)
                         mask = 1;
@@ -1109,6 +1107,8 @@ int object_cloud_shadow_match
                 }
                 free(h);
                 free(record_h);
+                h = NULL;
+                record_h = NULL;
 
                 /* Free all the memory */
                 status = free_2d_array((void **)xy_type);
@@ -1136,12 +1136,29 @@ int object_cloud_shadow_match
                     RETURN_ERROR (errstr, "pcloud", false);              
                 }
                 free(temp_obj);
+                temp_obj = NULL;
             }
         }      
         free(obj_num); 
+        obj_num = NULL;
         status = free_2d_array((void **)temp);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: temp\n");
+            RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
+        }
         status = free_2d_array((void **)cloud);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: cloud\n");
+            RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
+        }
         status = free_2d_array((void **)cloud_first_node);
+        if (status != SUCCESS)
+        {
+            sprintf (errstr, "Freeing memory: cloud_first_node\n");
+            RETURN_ERROR (errstr, "object_cloud_shadow_match", false);       
+        }
 
         /* Set the output masks to zero before image dilate */
         for (row = 0; row < nrows; row++)
@@ -1156,7 +1173,6 @@ int object_cloud_shadow_match
         /* Do image dilate for cloud, shadow, snow */
         image_dilate(cloud_cal, nrows, ncols, cldpix, cloud_mask);
         image_dilate(shadow_cal, nrows, ncols, cldpix, shadow_mask);
-        image_dilate(snow_mask, nrows, ncols, sdpix, cloud_cal);
     }
 
     /* Use shadow_cal mask as the final output mask */  
@@ -1176,7 +1192,7 @@ int object_cloud_shadow_match
 	        shadow_cal[row][col] = 2;
                 shadow_count++;
             }
-            else if (cloud_cal[row][col] == 1)
+            else if (snow_mask[row][col] == 1)
                 shadow_cal[row][col] = 3;
             else if (water_mask[row][col] == 1)
 	        shadow_cal[row][col] = 1;
