@@ -38,7 +38,7 @@ INPUTS: Right now Fmask takes LEDAPS outputs as inputs. Two files are needed
 Only Metadata file is needed as command line argument to run the Fmask:
 ./cfmask <directory of meatadata file>/Metadata file (*.carbon_met.txt)
 
-usage: fmask --metadata=input_lndcal_filename_with_full_path --prob=input_cloud_probability_value --cldpix=input_cloud_pixel_buffer --sdpix=input_shadow_pixel_buffer [--write_binary] [--verbose]
+usage: ./fmask --toarefl=input_lndcal_with_full_path --prob=input_cloud_probability_value --cldpix=input_cloud_pixel_buffer --sdpix=input_shadow_pixel_buffer [--write_binary] [--verbose]
 
 where the following parameters are required:
     -metadata: name of the input metadata file (full path) output from LEDAPS

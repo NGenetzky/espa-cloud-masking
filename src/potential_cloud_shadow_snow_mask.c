@@ -69,6 +69,7 @@ int potential_cloud_shadow_snow_mask
     float vari_prob;  /* probability from NDVI, NDSI, and whiteness */
     float max_value;  /* maximum value */
     float *prob = NULL;  /* probability value */
+    float *wprob = NULL; /* probability value */
     float clr_mask = 0.0;/* clear sky pixel threshold */
     float wclr_mask = 0.0;/* water pixel threshold */
     int16 *nir = NULL;   /* near infrared band (band 4) data */
@@ -177,7 +178,7 @@ int potential_cloud_shadow_snow_mask
 
             /* It takes every snow pixels including snow pixel under thin 
                clouds or icy clouds, equation 20 */
-            if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 380) &&
+            if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 1000) &&
                 (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
                 snow_mask[row][col] = 1;
             else 
@@ -431,6 +432,8 @@ int potential_cloud_shadow_snow_mask
         /* Relase f_temp memory */
         free(f_wtemp);
         free(f_temp);
+        f_wtemp = NULL;
+        f_temp = NULL;
 
         wfinal_prob = (float **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(float)); 
@@ -582,6 +585,7 @@ int potential_cloud_shadow_snow_mask
             }
         }
 
+        /* Allocate memory for prob */
         prob = malloc(input->size.l * input->size.s * sizeof(float));
         if(prob == NULL)
         {
@@ -626,6 +630,18 @@ int potential_cloud_shadow_snow_mask
         }
         clr_mask += cloud_prob_threshold;
 
+        /* Relase memory for prob */
+        free(prob);
+        prob = NULL;
+
+        /* Allocate memory for wprob */
+        wprob = malloc(input->size.l * input->size.s * sizeof(float));
+        if(wprob == NULL)
+        {
+            sprintf (errstr, "Allocating wprob memory");
+	    RETURN_ERROR (errstr, "pcloud", false);
+        }
+
         float wprob_max = 0.0;
         float wprob_min = 0.0;
         int index4 = 0;
@@ -635,11 +651,11 @@ int potential_cloud_shadow_snow_mask
 	    {	    
 	        if (clear_water_mask[row][col] == 1)
 	        {
-		    prob[index] = wfinal_prob[row][col];
-                    if ((prob[index4] - wprob_max) > MINSIGMA)
-                        wprob_max = prob[index4];
-                    if ((wprob_min - prob[index4]) > MINSIGMA)
-                        wprob_min = prob[index4];
+		    wprob[index4] = wfinal_prob[row][col];
+                    if ((wprob[index4] - wprob_max) > MINSIGMA)
+                        wprob_max = wprob[index4];
+                    if ((wprob_min - wprob[index4]) > MINSIGMA)
+                        wprob_min = wprob[index4];
 		    index4++;
 	        }
             }
@@ -648,7 +664,7 @@ int potential_cloud_shadow_snow_mask
         /*Dynamic threshold for water */
         if (index4 != 0)
         {
-            status = prctile2(prob, index4, wprob_min, wprob_max, 100.0*h_pt, 
+            status = prctile2(wprob, index4, wprob_min, wprob_max, 100.0*h_pt, 
                               &wclr_mask);
             if (status != SUCCESS)
             {
@@ -658,11 +674,13 @@ int potential_cloud_shadow_snow_mask
         }
         else
         {
-            wclr_mask = 50.0; /* no clear water pixel, make wclr_mask 50.0 */
+            wclr_mask = 27.5; /* no clear water pixel, make wclr_mask 27.5 */
         }
+        wclr_mask += cloud_prob_threshold;
 
-        /* Relase memory for prob */
-        free(prob);
+        /* Relase memory for wprob */
+        free(wprob);
+        wprob = NULL;
 	     	    
         if (verbose)
         {
@@ -857,6 +875,8 @@ int potential_cloud_shadow_snow_mask
         /* Release the memory */
         free(nir);
         free(swir);
+        nir = NULL;
+        swir = NULL;
 
         /* Write out the intermediate values */
         fd1 = fopen("b4_b5.txt", "w"); 
@@ -1001,6 +1021,8 @@ int potential_cloud_shadow_snow_mask
         /* Release the memory */ 
         free(new_nir);
         free(new_swir);
+        new_nir = NULL;
+        new_swir = NULL;
 
         /* Close the intermediate file */
         status = fclose(fd1);
