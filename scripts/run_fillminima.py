@@ -1,14 +1,17 @@
 #! /usr/bin/env python
 
 import sys
+import traceback
 import numpy as np
 import fillminima
 import os.path
 from numpy import zeros , int16 , int32
 
+
 ### Error/Success codes ###
 ERROR = 1
 SUCCESS = 0
+
 
 ############################################################################
 # Description: logIt logs the information to the logfile (if valid) or to
@@ -28,6 +31,7 @@ def logIt (msg, log_handler):
     else:
         log_handler.write (msg + '\n')
 
+
 #############################################################################
 # Created on January 25, 2013 by Song Guo, USGS/EROS
 #
@@ -35,21 +39,20 @@ def logIt (msg, log_handler):
 # and then write the output to binary files for cfmask to read
 #
 ############################################################################
-
 def mainRoutine(logfile=None):
     nullval = -9999
     fname_txt = 'b4_b5.txt' # input text file
     fname_b4 = 'b4.bin'     # input band 4 binary file
     fname_b5 = 'b5.bin'     # input band 5 binary file
 
-    print "Start running fillminima"    
+    print "Start running fillminima"
     # open the log file if it exists; use line buffering for the output
     log_handler = None
     if logfile != None:
         log_handler = open (logfile, 'w', buffering=1)
 
     # check the existenece of the input text file
-    if not os.path.isfile(fname_txt): 
+    if not os.path.isfile(fname_txt):
         msg = 'Input file does not exist: ' + fname_txt
         logIt (msg, log_handler)
         return ERROR
@@ -63,7 +66,7 @@ def mainRoutine(logfile=None):
     f.close()
 
     # check the existenece of the input band 4 binary file
-    if not os.path.isfile(fname_b4): 
+    if not os.path.isfile(fname_b4):
         msg = 'Input file does not exist: ' + fname_b4
         logIt (msg, log_handler)
         return ERROR
@@ -73,13 +76,19 @@ def mainRoutine(logfile=None):
     b4 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
     f.close()
 
-    # Call the fillMinima routine for band 4 
-    filled_b4 = fillminima.fillMinima(b4, nullval, b4_17)
+    # Call the fillMinima routine for band 4
+    try:
+        filled_b4 = fillminima.fillMinima(b4, nullval, b4_17)
+    except:
+        logIt ("Error: Processing band 4 fillminima", log_handler)
+        tb = traceback.format_exc()
+        logIt ("Traceback: [%s]" % tb, log_handler)
+        return ERROR
 
     # Release memory for b4 array
     del b4
 
-    # Output filled image to band 4 binary output file 
+    # Output filled image to band 4 binary output file
     f = open('filled_b4.bin', 'wb')
     np.ndarray.tofile(filled_b4.flatten(), f)
     f.close()
@@ -88,7 +97,7 @@ def mainRoutine(logfile=None):
     del filled_b4
 
     # check the existenece of the input band 5 binary file
-    if not os.path.isfile(fname_b5): 
+    if not os.path.isfile(fname_b5):
         msg = 'Input file does not exist: ' + fname_b5
         logIt (msg, log_handler)
         return ERROR
@@ -99,12 +108,18 @@ def mainRoutine(logfile=None):
     f.close()
 
     # Call the fillMinima routine for band 5
-    filled_b5 = fillminima.fillMinima(b5, nullval, b5_17)
+    try:
+        filled_b5 = fillminima.fillMinima(b5, nullval, b5_17)
+    except:
+        logIt ("Error: Processing band 5 fillminima", log_handler)
+        tb = traceback.format_exc()
+        logIt ("Traceback: [%s]" % tb, log_handler)
+        return ERROR
 
     # Release memory for b5 array
     del b5
 
-    # Output filled image to band 5 binary output file 
+    # Output filled image to band 5 binary output file
     f = open('filled_b5.bin', 'wb')
     np.ndarray.tofile(filled_b5.flatten(), f)
     f.close()
@@ -114,6 +129,7 @@ def mainRoutine(logfile=None):
 
     print "Success running fillminima"
     return SUCCESS
+
 
 if __name__ == "__main__":
     sys.exit(mainRoutine())
