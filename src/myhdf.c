@@ -167,11 +167,12 @@ bool GetSDSDimInfo(int32 sds_id, Myhdf_dim_t *dim, int irank)
       RETURN_ERROR("getting dimension information", "GetSDSDimInfo", false);
 
   dim->name = DupString(dim_name);
-  if (dim->name == (char *)NULL)
+  if (dim->name == NULL)
     RETURN_ERROR("copying dimension name", "GetSDSDimInfo", false);
 
   return true;
 }
+
 
 bool PutSDSInfo(int32 sds_file_id, Myhdf_sds_t *sds)
 /* 

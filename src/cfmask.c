@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
        Landsat TOA reflectance product and the DEM */
     status = get_args (argc, argv, &lndcal_name, &cloud_prob, &cldpix,
                        &sdpix, &write_binary, &no_hdf_output, &verbose);
-    if (status != 0)
+    if (status != SUCCESS)
     { 
         sprintf (errstr, "calling get_args");
         ERROR (errstr, "main");
@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
 
     /* Open input file, read metadata, and set up buffers */
     input = OpenInput(lndth_name, lndcal_name);
-    if (input == (Input_t *)NULL)
+    if (input == NULL)
     {
         sprintf (errstr, "opening the input files: %s & %s", lndth_name,
                  lndcal_name);
@@ -222,7 +222,7 @@ int main (int argc, char *argv[])
              water_mask, verbose);
     if (status != SUCCESS)
     {
-        sprintf (errstr, "calling potential_cloud_shadow_snow_mask");
+        sprintf (errstr, "processing potential_cloud_shadow_snow_mask");
         ERROR (errstr, "main");
     }
 
@@ -236,7 +236,7 @@ int main (int argc, char *argv[])
              verbose);
     if (status != SUCCESS)
     {
-        sprintf (errstr, "calling object_cloud_and_shadow_match");
+        sprintf (errstr, "processing object_cloud_and_shadow_match");
         ERROR (errstr, "main");
     }    
 
@@ -269,7 +269,7 @@ int main (int argc, char *argv[])
     if (write_binary)
     {
         /* Create an ENVI header file for the binary fmask */
-     status = write_envi_hdr(fmask_header, BINARY_FILE, input, &space_def);
+        status = write_envi_hdr(fmask_header, BINARY_FILE, input, &space_def);
         if (status != SUCCESS)
         {
             sprintf(errstr, "Creating ENVI header for binary fmask");
@@ -285,8 +285,8 @@ int main (int argc, char *argv[])
         }
 
         /* Write out the mask file */
-        status = fwrite(&cloud_mask[0][0], sizeof(unsigned char), input->size.l *
-                 input->size.s, fd);
+        status = fwrite(&cloud_mask[0][0], sizeof(unsigned char),
+            input->size.l * input->size.s, fd);
         if (status != input->size.l * input->size.s)
         {
             sprintf(errstr, "Writing to %s", fmask_name);
@@ -295,7 +295,7 @@ int main (int argc, char *argv[])
 
         /* Close the mask file */
         status = fclose(fd);
-        if ( status )
+        if (status)
         {
             sprintf(errstr, "Closing file %s", fmask_name);
             ERROR (errstr, "main");
@@ -305,8 +305,7 @@ int main (int argc, char *argv[])
     if (!no_hdf_output)
     {
         /* Create and open fmask HDF output file */
-        status = CreateOutput(fmask_hdf_name);
-        if (status != true)
+        if (!CreateOutput(fmask_hdf_name))
         {
             sprintf(errstr, "Creating HDF fmask output file");
             ERROR (errstr, "main");
@@ -331,13 +330,22 @@ int main (int argc, char *argv[])
         }
 
         /* Close the output file and free the structure */
-        CloseOutput (output);
-        FreeOutput (output);
+        if (!CloseOutput (output))
+        {
+            sprintf (errstr, "closing output file - %s", fmask_hdf_name);
+            ERROR(errstr, "main");
+        }
+        if (!FreeOutput (output))
+        {
+            sprintf (errstr, "freeing output file - %s", fmask_hdf_name);
+            ERROR(errstr, "main");
+        }
 
         /* Write the spatial information, after the file has been closed */
         out_sds_types[0] = DFNT_UINT8;
-        if (put_space_def_hdf (&space_def, fmask_hdf_name, NUM_OUT_SDS, 
-            out_sds_names, out_sds_types, hdf_grid_name) != SUCCESS)
+        status = put_space_def_hdf (&space_def, fmask_hdf_name, NUM_OUT_SDS, 
+            out_sds_names, out_sds_types, hdf_grid_name);
+        if (status != SUCCESS)
         {
             sprintf("Putting spatial metadata to the HDF file: "
             "%s", lndcal_name);
@@ -346,7 +354,8 @@ int main (int argc, char *argv[])
 
         /* Write CFmask HDF header to add in envi map info */
         sprintf (fmask_hdf_hdr, "%s.hdr", fmask_hdf_name);
-        if (write_envi_hdr (fmask_hdf_hdr, HDF_FILE, input, &space_def) != SUCCESS)
+        status = write_envi_hdr (fmask_hdf_hdr, HDF_FILE, input, &space_def);
+        if (status != SUCCESS)
         {
             sprintf(errstr, "Error writing the ENVI header for CFmask HDF hdr");
             ERROR (errstr, "main");

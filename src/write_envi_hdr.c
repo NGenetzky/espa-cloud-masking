@@ -57,7 +57,7 @@ int write_envi_hdr
     if (hdr_fptr == NULL)
     {
         sprintf (errmsg, "Error opening %s for write access.", hdr_file);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
     /* Verify the projection is UTM or PS and sphere is WGS-84 */
@@ -66,13 +66,13 @@ int write_envi_hdr
     {
         sprintf (errmsg, "Error UTM projection code (%d) or PS projection "
             "code (%d) expected.", GCTP_UTM_PROJ, GCTP_PS_PROJ);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
     if (space_def->sphere != 12)
     {
         sprintf (errmsg, "Error WGS-84 sphere code (12) expected.");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
     /* Create the name of the associated raw binary file by replacing the

@@ -255,7 +255,7 @@ int get_args
             default:
                 sprintf (errmsg, "Unknown option %s", argv[optind-1]);
                 usage ();
-                RETURN_ERROR(errmsg, FUNC_NAME, false);
+                RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
                 break;
         }
     }
@@ -265,7 +265,7 @@ int get_args
     {
         sprintf (errmsg, "TOA input file is a required argument");
         usage();
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
     /* Check the write HDF flag */
