@@ -186,7 +186,7 @@ bool dn_to_toa(Input_t *input)
     else
     {
         sprintf (errmsg, "Unsupported satellite sensor");
-        RETURN_ERROR(errmsg, "dn_to_bt", false);
+        RETURN_ERROR(errmsg, "dn_to_toa", false);
     }
 
     for (ib = 0; ib < NBAND_REFL_MAX; ib++)
@@ -356,9 +356,9 @@ Input_t *OpenInput(char *lndth_name, char *lndcal_name)
     attr.name = INPUT_FILL_VALUE;
     if (!GetAttrDouble(this->sds[ib].id, &attr, dval))
       RETURN_ERROR("reading band SDS attribute (fill value)", "OpenInput",
-        false);
+        NULL);
     if (attr.nval != 1) 
-      RETURN_ERROR("invalid number of values (fill value)", "OpenInput", false);
+      RETURN_ERROR("invalid number of values (fill value)", "OpenInput", NULL);
     this->meta.fill = dval[0];
   }  /* for ib */
 
@@ -788,7 +788,7 @@ bool GetInputMeta(Input_t *this)
     attr.type = DFNT_FLOAT32;
     attr.nval = 2;
     attr.name = INPUT_UL_LAT_LONG;
-    if (GetAttrDouble(this->sds_cal_file_id, &attr, dval) != SUCCESS)
+    if (!GetAttrDouble(this->sds_cal_file_id, &attr, dval))
     {
         printf ("Unable to read the UL lat/long coordinates.\n");
         meta->ul_corner.is_fill = true;
@@ -805,7 +805,7 @@ bool GetInputMeta(Input_t *this)
     attr.type = DFNT_FLOAT32;
     attr.nval = 2;
     attr.name = INPUT_LR_LAT_LONG;
-    if (GetAttrDouble(this->sds_cal_file_id, &attr, dval) != SUCCESS)
+    if (!GetAttrDouble(this->sds_cal_file_id, &attr, dval))
     {
         printf ("Unable to read the LR lat/long coordinates.\n");
         meta->lr_corner.is_fill = true;
@@ -951,7 +951,7 @@ bool GetInputMeta(Input_t *this)
     meta->bias_th = (float) dval[0];
 
   /* Check WRS path/rows */
-  error_string = (char *)NULL;
+  error_string = NULL;
 
   if (!strcmp (meta->wrs_sys, "1")) {
     if (meta->path > N_LSAT_WRS1_PATHS)
@@ -966,11 +966,12 @@ bool GetInputMeta(Input_t *this)
   } else
     error_string = "invalid WRS system";
 
-  if (error_string != (char *)NULL)
+  if (error_string != NULL)
     RETURN_ERROR(error_string, "GetInputMeta", false);
 
   return true;
 }
+
 
 bool GetInputMeta2(Input_t *this) 
 {

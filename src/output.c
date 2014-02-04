@@ -149,7 +149,7 @@ Output_t *OpenOutput(char *file_name, char sds_names[MAX_STR_LEN],
 
   /* Populate the data structure */
   this->file_name = DupString(file_name);
-  if (this->file_name == (char *)NULL) {
+  if (this->file_name == NULL) {
     free(this);
     RETURN_ERROR("duplicating file name", "OpenOutput", NULL);
   }
@@ -183,7 +183,7 @@ Output_t *OpenOutput(char *file_name, char sds_names[MAX_STR_LEN],
       sds->name = DupString(sds_names);
       if (sds->name == NULL) {
           error_string = "duplicating sds name";
-          RETURN_ERROR(error_string, "CreateOutput", false); 
+          RETURN_ERROR(error_string, "CreateOutput", NULL); 
       }
 
      dim[0] = &sds->dim[0];
@@ -197,23 +197,23 @@ Output_t *OpenOutput(char *file_name, char sds_names[MAX_STR_LEN],
      dim[0]->name = DupString("YDim_Grid");
      if (dim[0]->name == NULL) {
           error_string = "duplicating dim name (l)";
-          RETURN_ERROR(error_string, "CreateOutput", false); 
+          RETURN_ERROR(error_string, "CreateOutput", NULL); 
      }
      dim[1]->name = DupString("XDim_Grid");
      if (dim[1]->name == NULL) {
          error_string = "duplicating dim name (s)";
-         RETURN_ERROR(error_string, "CreateOutput", false); 
+         RETURN_ERROR(error_string, "CreateOutput", NULL); 
     }
 
     if (!PutSDSInfo(this->sds_file_id, sds)) {
       error_string = "setting up the SDS";
-      RETURN_ERROR(error_string, "CreateOutput", false); 
+      RETURN_ERROR(error_string, "CreateOutput", NULL); 
     }
 
     for (ir = 0; ir < sds->rank; ir++) {
       if (!PutSDSDimInfo(sds->id, dim[ir], ir)) {
         error_string = "setting up the dimension";
-        RETURN_ERROR(error_string, "CreateOutput", false); 
+        RETURN_ERROR(error_string, "CreateOutput", NULL); 
       }
     }
   }
@@ -352,6 +352,7 @@ bool PutOutput(Output_t *this, unsigned char **final_mask)
   return true;
 }
 
+
 bool PutMetadata(Output_t *this, Input_t *input)
 {
   Myhdf_attr_t attr;
@@ -395,6 +396,7 @@ bool PutMetadata(Output_t *this, Input_t *input)
 
   if (!FormatDate(&input->meta.acq_date, DATE_FORMAT_DATEA_TIME, date))
     RETURN_ERROR("formating acquisition date", "PutMetadata", false);
+
   attr.type = DFNT_CHAR8;
   attr.nval = strlen(date);
   attr.name = OUTPUT_ACQ_DATE;
@@ -403,16 +405,17 @@ bool PutMetadata(Output_t *this, Input_t *input)
 
   if (!FormatDate(&input->meta.prod_date, DATE_FORMAT_DATEA_TIME, date))
     RETURN_ERROR("formating production date", "PutMetadata", false);
+
   attr.type = DFNT_CHAR8;
   attr.nval = strlen(date);
   attr.name = OUTPUT_L1_PROD_DATE;
   if (!PutAttrString(this->sds_file_id, &attr, date))
     RETURN_ERROR("writing attribute (production date)", "PutMetadata", false);
 
-    sprintf (process_ver, "%s", CFMASK_VERSION);
-    attr.type = DFNT_CHAR8;
-    attr.nval = strlen(process_ver);
-    attr.name = OUTPUT_CFMASK_VERSION;
+  sprintf (process_ver, "%s", CFMASK_VERSION);
+  attr.type = DFNT_CHAR8;
+  attr.nval = strlen(process_ver);
+  attr.name = OUTPUT_CFMASK_VERSION;
   if (!PutAttrString(this->sds_file_id, &attr, process_ver))
     RETURN_ERROR("writing attribute (CFmask Version)", "PutMetadata", false);
 
