@@ -147,8 +147,8 @@ RETURN VALUE:
 Type = int
 Value      Description
 -----      -----------
--1         Error occurred writing the metadata to the HDF file
-0          Successful completion
+FAILURE    Error occurred writing the metadata to the HDF file
+SUCCESS    Successful completion
 
 PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
 at the USGS EROS
@@ -198,20 +198,20 @@ int put_space_def_hdf
     if (nsds <= 0) 
     {
         sprintf (errmsg, "Invalid number of SDSs for writing (less than 0)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     for (isds = 0; isds < nsds; isds++)
     {
         if (strlen(sds_names[isds]) < 1)  
         {
             sprintf (errmsg, "Invalid SDS name: %s", sds_names[isds]);
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
     }
     if (strlen(grid_name) < 1)  
     {
         sprintf (errmsg, "Invalid grid name (empty string)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Put header */
@@ -225,7 +225,7 @@ int put_space_def_hdf
     if (!append_meta (struct_meta, &ic, cbuf))
     {
         sprintf (errmsg, "Error appending to the start of the metadata string");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Compute lower right corner */
@@ -254,7 +254,7 @@ int put_space_def_hdf
     if (cproj == (char *)NULL)
     {
         sprintf (errmsg, "Error getting the projection name string");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Put Grid information */
@@ -275,7 +275,7 @@ int put_space_def_hdf
     {
         sprintf (errmsg, "Error appending to metadata string (grid information "
             "start)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     if (this->proj_num == PROJ_UTM  ||  this->proj_num == PROJ_SPCS)
@@ -285,7 +285,7 @@ int put_space_def_hdf
         {
             sprintf (errmsg, "Error appending to metadata string (zone "
                 "number)");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
     }
     else
@@ -295,7 +295,7 @@ int put_space_def_hdf
         {
             sprintf (errmsg, "Error appending to metadata string (grid "
                 "projection parameters start)");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
   
         for (ip = 0; ip < NPROJ_PARAM_HDFEOS; ip++)
@@ -320,7 +320,7 @@ int put_space_def_hdf
             {
                 sprintf (errmsg, "Error appending to metadata string ("
                     "individual grid projection parameters)");
-                RETURN_ERROR(errmsg, FUNC_NAME, false);
+                RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
             }
         }
         sprintf(cbuf, "\n");
@@ -329,7 +329,7 @@ int put_space_def_hdf
         {
             sprintf (errmsg, "Error appending to metadata string (grid "
                 "projection parameters end)");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
     }
   
@@ -342,7 +342,7 @@ int put_space_def_hdf
     {
         sprintf (errmsg, "Error appending to metadata string (grid information "
             "end)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Put SDS group */
@@ -355,7 +355,7 @@ int put_space_def_hdf
     {
         sprintf (errmsg, "Error appending to metadata string (SDS group "
             "start)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     for (isds = 0; isds < nsds; isds++)
@@ -374,7 +374,7 @@ int put_space_def_hdf
         if (ctype == (char *)NULL)
         {
               sprintf (errmsg, "Error getting hdf type name string");
-              RETURN_ERROR(errmsg, FUNC_NAME, false);
+              RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
   
         sprintf (cbuf, 
@@ -388,7 +388,7 @@ int put_space_def_hdf
         if (!append_meta (struct_meta, &ic, cbuf))
         {
             sprintf (errmsg, "Error appending to metadata string (SDS group)");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
     }
   
@@ -400,7 +400,7 @@ int put_space_def_hdf
     if (!append_meta (struct_meta, &ic, cbuf))
     {
         sprintf (errmsg, "Error appending to metadata string (SDS group end)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Put trailer */
@@ -414,7 +414,7 @@ int put_space_def_hdf
     if (!append_meta (struct_meta, &ic, cbuf))
     {
         sprintf (errmsg, "Error appending to metadata string (tail)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Write file attributes */
@@ -422,7 +422,7 @@ int put_space_def_hdf
     if (sds_file_id == HDF_ERROR) 
     {
         sprintf (errmsg, "Error opening file for SD access: %s", file_name);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     
     attr.type = DFNT_FLOAT64;
@@ -432,7 +432,7 @@ int put_space_def_hdf
     if (!PutAttrDouble(sds_file_id, &attr, dval))
     {
         sprintf (errmsg, "Error writing attribute (orientation angle)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     attr.type = DFNT_FLOAT64;
@@ -442,7 +442,7 @@ int put_space_def_hdf
     if (!PutAttrDouble(sds_file_id, &attr, dval))
     {
         sprintf (errmsg, "Error writing attribute (pixel_size)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     attr.type = DFNT_CHAR8;
@@ -451,13 +451,13 @@ int put_space_def_hdf
     if (!PutAttrString(sds_file_id, &attr, struct_meta))
     {
         sprintf (errmsg, "Error writing attribute (struct_meta)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     if (SDend (sds_file_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error ending SD access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Setup the HDF Vgroup */
@@ -466,14 +466,14 @@ int put_space_def_hdf
     {
         sprintf (errmsg, "Error opening the HDF file for Vgroup access: %s",
             file_name);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Start the Vgroup access */
     if (Vstart (hdf_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error starting Vgroup access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Create Root Vgroup for Grid */
@@ -481,17 +481,17 @@ int put_space_def_hdf
     if (vgroup_id[0] == HDF_ERROR) 
     {
         sprintf (errmsg, "Error getting Grid Vgroup ID");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vsetname (vgroup_id[0], grid_name) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error setting Grid Vgroup name");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vsetclass (vgroup_id[0], "GRID") == HDF_ERROR) 
     {
         sprintf (errmsg, "Error setting Grid Vgroup class");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Create Data Fields Vgroup */
@@ -499,22 +499,22 @@ int put_space_def_hdf
     if (vgroup_id[1] == HDF_ERROR) 
     {
         sprintf (errmsg, "Error getting Data Fields Vgroup ID");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vsetname (vgroup_id[1], "Data Fields") == HDF_ERROR) 
     {
         sprintf (errmsg, "Error setting Data Fields Vgroup name");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vsetclass (vgroup_id[1], "GRID Vgroup") == HDF_ERROR) 
     {
         sprintf (errmsg, "Error setting Data Fields Vgroup class");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vinsert (vgroup_id[0], vgroup_id[1]) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error inserting Data Fields Vgroup");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Create Attributes Vgroup */
@@ -522,22 +522,22 @@ int put_space_def_hdf
     if (vgroup_id[2] == HDF_ERROR) 
     {
         sprintf (errmsg, "Error getting attributes Vgroup ID");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vsetname (vgroup_id[2], "Grid Attributes") == HDF_ERROR) 
     {
         sprintf (errmsg, "Error setting attributes Vgroup name");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vsetclass (vgroup_id[2], "GRID Vgroup") == HDF_ERROR) 
     {
         sprintf (errmsg, "Error setting attributes Vgroup class");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vinsert (vgroup_id[0], vgroup_id[2]) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error inserting attributes Vgroup");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Attach SDSs to Data Fields Vgroup */
@@ -545,7 +545,7 @@ int put_space_def_hdf
     if (sds_file_id == HDF_ERROR) 
     {
         sprintf (errmsg, "Error opening output file for SD access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     for (isds = 0; isds < nsds; isds++)
@@ -555,63 +555,63 @@ int put_space_def_hdf
         {
             sprintf (errmsg, "Error getting SDS index for SDS[%d]: %s", isds,
                 sds_names[isds]);
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
 
         sds_id = SDselect (sds_file_id, sds_index);
         if (sds_id == HDF_ERROR) 
         {
             sprintf (errmsg, "Error getting SDS ID");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
 
         if (Vaddtagref (vgroup_id[1], DFTAG_NDG, SDidtoref(sds_id)) == 
             HDF_ERROR) 
         {
             sprintf (errmsg, "Error adding reference tag to SDS");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
 
         if (SDendaccess (sds_id) == HDF_ERROR) 
         {
             sprintf (errmsg, "Error ending access to SDS");
-            RETURN_ERROR(errmsg, FUNC_NAME, false);
+            RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
         }
     }
     
     if (SDend (sds_file_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error ending SD access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Detach Vgroups */
     if (Vdetach (vgroup_id[0]) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error detaching from Grid Vgroup");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vdetach (vgroup_id[1]) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error detaching from Data Fields Vgroup");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Vdetach (vgroup_id[2]) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error detaching from Attributes Vgroup");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
     /* Close access */
     if (Vend (hdf_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error ending Vgroup access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (Hclose (hdf_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error ending HDF access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     return SUCCESS;
@@ -627,8 +627,8 @@ RETURN VALUE:
 Type = int
 Value      Description
 -----      -----------
--1         Error occurred reading the metadata from the HDF file
-0          Successful completion
+FAILURE    Error occurred reading the metadata from the HDF file
+SUCCESS    Successful completion
 
 PROJECT:  Land Satellites Data System Science Research and Development (LSRD)
 at the USGS EROS
@@ -688,7 +688,7 @@ int get_space_def_hdf
     if (gd_file_id == HDF_ERROR) 
     {
         sprintf (errmsg, "Error opening the HDF-EOS file: %s", file_name);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Attach to the grid */
@@ -696,7 +696,7 @@ int get_space_def_hdf
     if (gd_id == HDF_ERROR) 
     {
         sprintf (errmsg, "Error attaching to HDF-EOS grid: %s", grid_name);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Get grid information */
@@ -704,7 +704,7 @@ int get_space_def_hdf
         HDF_ERROR)
     {
         sprintf (errmsg, "Error getting the HDF-EOS grid information");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     this->img_size.l = ydim_size;
@@ -716,7 +716,7 @@ int get_space_def_hdf
     if (GDprojinfo (gd_id, &proj_num, &zone, &sphere, proj_param) == HDF_ERROR)
     {
         sprintf (errmsg, "Error getting HDF-EOS map projection information");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
     this->proj_num = proj_num;
@@ -733,7 +733,7 @@ int get_space_def_hdf
     if (GDclose (gd_file_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error closing the HDF-EOS file.");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     /* Read file attributes */
@@ -741,7 +741,7 @@ int get_space_def_hdf
     if (sds_file_id == HDF_ERROR) 
     {
         sprintf (errmsg, "Error opening HDF file for SD access: %s", file_name);
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     
     attr.type = DFNT_FLOAT64;
@@ -750,12 +750,12 @@ int get_space_def_hdf
     if (!GetAttrDouble(sds_file_id, &attr, dval))
     {
         sprintf (errmsg, "Error reading attribute (orientation angle)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (attr.nval != 1)
     {
         sprintf (errmsg, "Error invalid number of values (orientation angle)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     this->orientation_angle = dval[0] * RAD;   /* convert to radians */
   
@@ -765,19 +765,19 @@ int get_space_def_hdf
     if (!GetAttrDouble(sds_file_id, &attr, dval))
     {
         sprintf (errmsg, "Error reading attribute (pixel size)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     if (attr.nval != 1)
     {
         sprintf (errmsg, "Error invalid number of values (pixel size)");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
     this->pixel_size = (float)dval[0];
   
     if (SDend(sds_file_id) == HDF_ERROR) 
     {
         sprintf (errmsg, "Error ending SD access");
-        RETURN_ERROR(errmsg, FUNC_NAME, false);
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
   
     return SUCCESS;
