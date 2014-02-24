@@ -4,110 +4,57 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "myhdf.h"
-#include "const.h"
 #include "date.h"
-#include "error.h"
-#include "mystring.h"
 #include "cfmask.h"
-#include "space.h"
-
-/* Structure for bounding geographic coords */
-typedef struct {
-  double min_lon;  /* Geodetic longitude coordinate (degrees) */ 
-  double min_lat;  /* Geodetic latitude coordinate (degrees) */ 
-  double max_lon;  /* Geodetic longitude coordinate (degrees) */ 
-  double max_lat;  /* Geodetic latitude coordinate (degrees) */ 
-  bool is_fill;    /* Flag to indicate whether the point is a fill value; */
-} Geo_bounds_t;
-
-/* Structure for lat/long coordinates */
-typedef struct {
-  double lon;           /* Geodetic longitude coordinate (degrees) */ 
-  double lat;           /* Geodetic latitude coordinate (degrees) */ 
-  bool is_fill;         /* Flag to indicate whether the point is a fill value;
-                           'true' = fill; 'false' = not fill */
-} Geo_coord_t;
 
 /* Structure for the metadata */
 typedef struct {
-  char provider[MAX_STR_LEN];  /* Data provider type */
   char sat[MAX_STR_LEN];       /* Satellite */
-  char inst[MAX_STR_LEN];      /* Instrument */
   Date_t acq_date;             /* Acqsition date/time (scene center) */
-  Date_t prod_date;            /* Production date (must be available for ETM) */
-  float sun_zen;               /* Solar zenith angle (radians; scene center) */
-  float sun_az;                /* Solar azimuth angle (radians; scene center) */
-  char wrs_sys[MAX_STR_LEN];   /* WRS system */
-  char unit_ref[MAX_STR_LEN];  
-  char therm_unit_ref[MAX_STR_LEN];  
-  int path;                    /* WRS path number */
-  int row;                     /* WRS row number */
+  float sun_zen;               /* Solar zenith angle (degrees; scene center) */
+  float sun_az;                /* Solar azimuth angle (degrees; scene center) */
   int fill;                    /* Fill value for image data */
-  int zone;
-  float valid_range_ref[2];
-  int satu_value_ref[NBAND_REFL_MAX]; 
-  int satu_value_max[NBAND_REFL_MAX]; 
-  float scale_factor_ref; 
-  float add_offset_ref; 
-  float scale_factor_err_ref; 
-  float add_offset_err_ref; 
-  float calibrated_nt_ref; 
-  float therm_valid_range_ref[2];
-  int therm_satu_value_ref; 
-  int therm_satu_value_max; 
-  float therm_scale_factor_ref; 
-  float therm_add_offset_ref; 
-  float therm_scale_factor_err_ref; 
-  float therm_add_offset_err_ref; 
-  float therm_calibrated_nt_ref; 
-  float ul_lat;
-  float ul_lon;
-  int band[NBAND_REFL_MAX];    /* Band numbers */
-  float gain[NBAND_REFL_MAX];  /* Band gain (MSS and TM only) */
-  float bias[NBAND_REFL_MAX]; 
-  float gain_th;           /* Thermal band gain (MSS and TM only) */
-  float bias_th;           /* Thermal band bias (MSS and TM only) */
-  Geo_coord_t ul_corner;   /* UL lat/long corner coord */
-  Geo_coord_t lr_corner;   /* LR lat/long corner coord */
-  Geo_bounds_t bounds;     /* Geographic bounding coordinates */
+  float pixel_size[2];         /* pixel size (x,y) */
+  int satu_value_ref[NBAND_REFL_MAX];  /* saturation value of TOA products */
+  int satu_value_max[NBAND_REFL_MAX];  /* maximum TOA value */
+  int therm_satu_value_ref;    /* saturation value of thermal product */
+  int therm_satu_value_max;    /* maximum bt value (degrees Celsius) */
+  float gain[NBAND_REFL_MAX];  /* Band gain */
+  float bias[NBAND_REFL_MAX];  /* Band bias */
+  float gain_th;               /* Thermal band gain */
+  float bias_th;               /* Thermal band bias */
+  float therm_scale_fact;      /* Scale factor for the thermal band */
+  Geo_coord_t ul_corner;       /* UL lat/long corner coord */
+  Geo_coord_t lr_corner;       /* LR lat/long corner coord */
 } Input_meta_t;
 
 /* Structure for the 'input' data type */
 typedef struct {
-  char *lndth_name;        /* Input surface reflecetance image file name */
-  char *lndcal_name;       /* Input TOA reflectance image file name */
-  bool open;               /* Open file flag; open = true */
   Input_meta_t meta;       /* Input metadata */
-  int nband;               /* Number of input image bands */
+  int nband;               /* Number of input TOA reflectance bands */
   Img_coord_int_t size;    /* Input file size */
-  Img_coord_int_t toa_size;   /* Input file size */
-  int32 sds_th_file_id;       /* SDS file id */
-  int32 sds_cal_file_id;      /* SDS file id */
-  Myhdf_sds_t sds[NBAND_REFL_MAX];
-                           /* SDS data structures for TOA image data */
-  int16 *buf[NBAND_REFL_MAX];
-                           /* Input data buffer (one line of image data) */
-  Myhdf_sds_t therm_sds;   /* SDS data structure for thermal image data */
+  char *file_name[NBAND_REFL_MAX];  /* Name of the input TOA image files */
+  char *file_name_therm;   /* Name of the input thermal file */
+  FILE *fp_bin[NBAND_REFL_MAX];  /* File pointer for TOA refl binary files */
+  bool open[NBAND_REFL_MAX]; /* Flag to indicate whether the specific input TOA
+                                reflectance file is open for access;
+                                'true' = open, 'false' = not open */
+  int16 *buf[NBAND_REFL_MAX]; /* Input data buffer (one line of image data) */
+  FILE *fp_bin_therm;      /* File pointer for thermal binary file */
+  bool open_therm;         /* Flag to indicate whether the input thermal
+                              file is open for access */
   int16 *therm_buf;        /* Input data buffer (one line of thermal data) */
-  float dsun_doy[366];
+  float dsun_doy[366];     /* Array of earth/sun distances for each DOY; read
+                              from the EarthSunDistance.txt file */
 } Input_t;
 
-typedef enum
-{
-    HDF_FILE = 0,
-    BINARY_FILE
-}File_type;
-
 /* Prototypes */
-Input_t *OpenInput(char *lndth_name, char *lndcal_name);
+Input_t *OpenInput(Espa_internal_meta_t *metadata);
 bool GetInputLine(Input_t *this, int iband, int iline);
-bool GetInputQALine(Input_t *this, int iband, int iline);
 bool GetInputThermLine(Input_t *this, int iline);
 bool CloseInput(Input_t *this);
 bool FreeInput(Input_t *this);
-bool GetInputMeta(Input_t *this);
-bool GetInputMeta2(Input_t *this);
+bool GetXMLInput(Input_t *this, Espa_internal_meta_t *metadata);
 
 int potential_cloud_shadow_snow_mask
 (
@@ -138,14 +85,6 @@ int object_cloud_shadow_match
     unsigned char **water_mask, /*I/O: water pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */      
-);
-
-int write_envi_hdr
-(
-    char *hdr_file,        /* I: name of header file to be generated */
-    File_type ftype,       /* I: HDF or Binary header is needed */
-    Input_t *input,        /* I: input structure for cfmask products */
-    Space_def_t *space_def /* I: spatial definition information */
 );
 
 void split_filename 
@@ -180,12 +119,10 @@ int get_args
 (
     int argc,              /* I: number of cmd-line args */
     char *argv[],          /* I: string of cmd-line args */
-    char **toa_infile,     /* O: address of input TOA filename */
+    char **xml_infile,     /* O: address of input XML filename */
     float *cloud_prob,     /* O: cloud_probability input */
     int *cldpix,           /* O: cloud_pixel buffer used for image dilate */
     int *sdpix,            /* O: shadow_pixel buffer used for image dilate  */
-    bool *write_binary,    /* O: write raw binary flag */
-    bool *no_hdf_output,   /* O: No HDF4 output file flag */
     bool *verbose          /* O: verbose flag */
 );
 
