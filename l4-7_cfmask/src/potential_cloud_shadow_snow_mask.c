@@ -23,6 +23,9 @@ Date        Programmer       Reason
 3/15/2013   Song Guo         Original Development
 
 NOTES: 
+1. Thermal buffer is expected to be in degrees Celsius with a factor applied
+   of 100.  Many values which compare to the thermal buffer in this code are
+   hardcoded and assume degrees celsius * 100.
 ******************************************************************************/
 int potential_cloud_shadow_snow_mask
 (
@@ -293,6 +296,7 @@ int potential_cloud_shadow_snow_mask
             }
         }
     }
+    printf ("\n");
 
     *ptm = 100. * ((float)clear_pixel_counter / (float)mask_counter);
     lndptm = 100. * ((float)clear_land_pixel_counter / (float)mask_counter);
@@ -411,6 +415,7 @@ int potential_cloud_shadow_snow_mask
 	        }
             }
         }
+        printf ("\n");
     
         /* Tempearture for snow test */
         l_pt = 0.175;
@@ -613,6 +618,7 @@ int potential_cloud_shadow_snow_mask
                 }
             }
         }
+        printf ("\n");
 
         /* Allocate memory for prob */
         prob = malloc(input->size.l * input->size.s * sizeof(float));
@@ -754,6 +760,7 @@ int potential_cloud_shadow_snow_mask
                     cloud_mask[row][col] = 0;
             }
         }
+        printf ("\n");
 
         /* Free the memory */
         status = free_2d_array((void **)wfinal_prob);
@@ -872,6 +879,7 @@ int potential_cloud_shadow_snow_mask
                 RETURN_ERROR (errstr, "pcloud", FAILURE);
             }
         }
+        printf ("\n");
 
         /* Close the intermediate file */
         status = fclose(fd1);
@@ -1046,6 +1054,7 @@ int potential_cloud_shadow_snow_mask
 	            water_mask[row][col] = 0;
             }
         }
+        printf ("\n");
 
         /* Release the memory */ 
         free(new_nir);

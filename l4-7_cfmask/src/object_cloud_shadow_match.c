@@ -226,7 +226,7 @@ cloud_node* Find_child(cloud_node* node) {
 }
 
 /******************************************************************************
-MODULE:  find_min
+MODULE:  find_minimum
 
 PURPOSE: Find the minimum value and its location in an array
 
@@ -239,7 +239,7 @@ Date        Programmer       Reason
 
 NOTES:
 ******************************************************************************/
-void find_min
+void find_minimum
 (
     int *array, /*I: input array */
     int nums,   /*I: number of elements in input array */
@@ -325,7 +325,7 @@ void label
                 /* The cloud pixel will be labeled as a new cloud if neighboring
                    pixels before it are not cloud pixels, otherwise it will be
                    labeled as lowest cloud number neighboring it */
-                find_min(array, 4, &min, &index);
+                find_minimum(array, 4, &min, &index);
                 if (min == 0)
                 {
                     num_clouds++;
