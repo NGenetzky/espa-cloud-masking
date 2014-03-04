@@ -12,6 +12,22 @@
 #include "cfmask.h"
 #include "space.h"
 
+#define NO_VALUE 255
+
+typedef enum {
+  WATER_BIT = 0,
+  SHADOW_BIT,
+  SNOW_BIT,
+  CLOUD_BIT,
+  NON_FILL_BIT
+} Bits_t;
+
+typedef enum {
+  CLEAR_BIT = 0,
+  CLEAR_WATER_BIT,
+  CLEAR_LAND_BIT
+} Clear_Bits_t;
+
 /* Structure for bounding geographic coords */
 typedef struct {
   double min_lon;  /* Geodetic longitude coordinate (degrees) */ 
@@ -116,10 +132,7 @@ int potential_cloud_shadow_snow_mask
     float *ptm,                 /*O: percent of clear-sky pixels */
     float *t_templ,             /*O: percentile of low background temperature */
     float *t_temph,             /*O: percentile of high background temperature */
-    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
-    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
-    unsigned char **snow_mask,  /*I/O: snow pixel mask */
-    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **pixel_mask, /*I/O: pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages be 
                                      printed */
 );
@@ -132,10 +145,7 @@ int object_cloud_shadow_match
     float t_temph,              /*I: percentile of high background temperature */
     int cldpix,                 /*I: cloud buffer size */
     int sdpix,                  /*I: shadow buffer size */
-    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
-    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
-    unsigned char **snow_mask,  /*I/O: snow pixel mask */
-    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **pixel_mask, /*I/O:pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */      
 );

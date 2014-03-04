@@ -66,7 +66,7 @@
 #define OUTPUT_DATA_TYPE ("DataType")
 #define OUTPUT_DIM_LIST ("DimList")
 
-#define CFMASK_VERSION "1.2.1"
+#define CFMASK_VERSION "1.3.0"
 #define FMASK_BAND "fmask_band"
 #define DATA_TYPE "DFNT_UINT8"
 #define DIM_LIST "YDIM,XDIM"
