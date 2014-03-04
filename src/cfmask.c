@@ -53,10 +53,7 @@ int main (int argc, char *argv[])
     Input_t *input = NULL;              /* input data and meta data */
     char  scene_name[MAX_STR_LEN];      /* input data scene name */
     char *hdf_grid_name = "Grid";  /* name of the grid for HDF-EOS */
-    unsigned char **cloud_mask;    /* cloud pixel mask */
-    unsigned char **shadow_mask;   /* shadow pixel mask */
-    unsigned char **snow_mask;     /* snow pixel mask */
-    unsigned char **water_mask;    /* water pixel mask */
+    unsigned char **pixel_mask;    /* pixel mask */
     int status;                    /* return value from function call */
     FILE *fd = NULL;               /* file pointer */
     float ptm;                     /* percent of clear-sky pixels */
@@ -201,16 +198,9 @@ int main (int argc, char *argv[])
         strcpy (&sds_names[ib][0], input->sds[ib].name);
 
     /* Dynamic allocate the 2d mask memory */
-    cloud_mask = (unsigned char **)allocate_2d_array(input->size.l, 
+    pixel_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    shadow_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
-    snow_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
-    water_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
-    if (cloud_mask == NULL  || shadow_mask == NULL || snow_mask == NULL
-        || water_mask == NULL)
+    if (pixel_mask == NULL)
     {
         sprintf (errstr, "Allocating mask memory");
         ERROR (errstr, "main");
@@ -218,8 +208,7 @@ int main (int argc, char *argv[])
 
     /* Build the potential cloud, shadow, snow, water mask */
     status = potential_cloud_shadow_snow_mask(input, cloud_prob, &ptm,
-             &t_templ, &t_temph, cloud_mask, shadow_mask, snow_mask, 
-             water_mask, verbose);
+             &t_templ, &t_temph, pixel_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "processing potential_cloud_shadow_snow_mask");
@@ -232,32 +221,12 @@ int main (int argc, char *argv[])
     /* Build the final cloud shadow based on geometry matching and
        combine the final cloud, shadow, snow, water masks into fmask */
     status = object_cloud_shadow_match(input, ptm, t_templ, t_temph,
-             cldpix, sdpix, cloud_mask, shadow_mask, snow_mask, water_mask,
-             verbose);
+             cldpix, sdpix, pixel_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "processing object_cloud_and_shadow_match");
         ERROR (errstr, "main");
     }    
-
-    status = free_2d_array((void **)shadow_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        ERROR (errstr, "main");
-    }
-    status = free_2d_array((void **)snow_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        ERROR (errstr, "main");
-    }
-    status = free_2d_array((void **)water_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        ERROR (errstr, "main");
-    }
 
     /* Reassign solar azimuth angle for output purpose if south up north 
        down scene is involved */
@@ -285,7 +254,7 @@ int main (int argc, char *argv[])
         }
 
         /* Write out the mask file */
-        status = fwrite(&cloud_mask[0][0], sizeof(unsigned char),
+        status = fwrite(&pixel_mask[0][0], sizeof(unsigned char),
             input->size.l * input->size.s, fd);
         if (status != input->size.l * input->size.s)
         {
@@ -317,7 +286,7 @@ int main (int argc, char *argv[])
             ERROR(errstr, "main");
         }
 
-        if (!PutOutput(output, cloud_mask))
+        if (!PutOutput(output, pixel_mask))
         {
             sprintf (errstr, "Writing output fmask in HDF files\n");
             ERROR (errstr, "main");
@@ -362,8 +331,8 @@ int main (int argc, char *argv[])
         }
     }
 
-    /* Free the final output cloud_mask */
-    status = free_2d_array((void **)cloud_mask);
+    /* Free the pixel mask */
+    status = free_2d_array((void **)pixel_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
