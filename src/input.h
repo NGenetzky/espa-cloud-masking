@@ -145,6 +145,7 @@ int object_cloud_shadow_match
     float t_temph,              /*I: percentile of high background temperature */
     int cldpix,                 /*I: cloud buffer size */
     int sdpix,                  /*I: shadow buffer size */
+    int max_cloud_pixels,       /* I: Max cloud pixel number to divide cloud */
     unsigned char **pixel_mask, /*I/O:pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */      
@@ -194,6 +195,7 @@ int get_args
     float *cloud_prob,     /* O: cloud_probability input */
     int *cldpix,           /* O: cloud_pixel buffer used for image dilate */
     int *sdpix,            /* O: shadow_pixel buffer used for image dilate  */
+    int *max_cloud_pixels, /* O: Max cloud pixel number to divide cloud */
     bool *write_binary,    /* O: write raw binary flag */
     bool *no_hdf_output,   /* O: No HDF4 output file flag */
     bool *verbose          /* O: verbose flag */

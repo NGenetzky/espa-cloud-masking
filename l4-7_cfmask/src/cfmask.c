@@ -70,6 +70,7 @@ int main (int argc, char *argv[])
     float cloud_prob;        /* Default cloud probability */
     Space_def_t space_def;   /* spatial definition information */
     float sun_azi_temp = 0.0;/* Keep the original sun azimuth angle */
+    int max_cloud_pixels;    /* Maximum cloud pixel number in cloud division */
   
     time_t now;
     time(&now);
@@ -78,7 +79,8 @@ int main (int argc, char *argv[])
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
     status = get_args (argc, argv, &lndcal_name, &cloud_prob, &cldpix,
-                       &sdpix, &write_binary, &no_hdf_output, &verbose);
+                       &sdpix, &max_cloud_pixels, &write_binary, 
+                       &no_hdf_output, &verbose);
     if (status != SUCCESS)
     { 
         sprintf (errstr, "calling get_args");
@@ -217,11 +219,11 @@ int main (int argc, char *argv[])
 
     printf("Pcloud done, starting cloud/shadow match\n");
 
-
     /* Build the final cloud shadow based on geometry matching and
-       combine the final cloud, shadow, snow, water masks into fmask */
+       combine the final cloud, shadow, snow, water masks into fmask 
+       the pixel_mask is a bit mask as input and a value mask as output*/
     status = object_cloud_shadow_match(input, ptm, t_templ, t_temph,
-             cldpix, sdpix, pixel_mask, verbose);
+             cldpix, sdpix, max_cloud_pixels, pixel_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "processing object_cloud_and_shadow_match");
@@ -377,6 +379,7 @@ void usage ()
             "--prob=input_cloud_probability_value "
             "--cldpix=input_cloud_pixel_buffer "
             "--sdpix=input_shadow_pixel_buffer "
+            "--max_cloud_pixels=maximum_cloud_pixel_numbers_for_cloud_division "
             "[--write_binary] [--verbose]\n");
 
     printf ("\nwhere the following parameters are required:\n");
@@ -384,8 +387,10 @@ void usage ()
             "output from LEDAPS\n");
     printf ("\nwhere the following parameters are optional:\n");
     printf ("    -prob: cloud_probability, default value is 22.5\n");
-    printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 2\n");
-    printf ("    -sdpix: shadow_pixel_buffer for image dilate, default value is 2\n");
+    printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 3\n");
+    printf ("    -sdpix: shadow_pixel_buffer for image dilate, default value is 3\n");
+    printf ("    -max_cloud_pixels: maximum_cloud_pixel_number for cloud division,"
+            "    default value is 0\n");
     printf ("    -write_binary: should raw binary outputs and ENVI header "
             "files be written in addition to the HDF file? (default is false)"
             "\n");
@@ -401,5 +406,6 @@ void usage ()
             "--prob=22.5 "
             "--cldpix=3 "
             "--sdpix=3 "
+            "--max_cloud_pixels=5000000 "
             "--write_binary --verbose\n");
 }

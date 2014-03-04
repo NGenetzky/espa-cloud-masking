@@ -169,7 +169,7 @@ int potential_cloud_shadow_snow_mask
                 (input->buf[5][col] > 300) && (input->therm_buf[col] < 2700))
                  pixel_mask[row][col] |= 1 << CLOUD_BIT;
             else
-                 pixel_mask[row][col] |= 0 << CLOUD_BIT;
+                 pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
 
             /* It takes every snow pixels including snow pixel under thin 
                clouds or icy clouds, equation 20 */
@@ -177,7 +177,7 @@ int potential_cloud_shadow_snow_mask
                 (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
                 pixel_mask[row][col] |= 1 << SNOW_BIT;
             else 
-                pixel_mask[row][col] |= 0 << SNOW_BIT;
+                pixel_mask[row][col] &= ~(1 << SNOW_BIT);
 
             /* Zhe's water test (works over thin cloud), equation 5 */
             if (((((ndvi - 0.01) < MINSIGMA) && (input->buf[3][col] < 1100)) || 
@@ -185,7 +185,7 @@ int potential_cloud_shadow_snow_mask
                 (input->buf[3][col] < 500))) && (mask == 1))
                 pixel_mask[row][col] |= 1 << WATER_BIT;
             else 
-                pixel_mask[row][col] |= 0 << WATER_BIT;
+                pixel_mask[row][col] &= ~(1 << WATER_BIT);
             if (mask == 0)
                 pixel_mask[row][col] |= 1 << NON_FILL_BIT;
 
@@ -225,10 +225,7 @@ int potential_cloud_shadow_snow_mask
                 (whiteness - 0.7) < MINSIGMA)
                 pixel_mask[row][col] |= 1 << CLOUD_BIT;
             else
-            {
                 pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
-                pixel_mask[row][col] |= 0 << CLOUD_BIT;
-            }
 
             /* Haze test, equation 3 */
             hot = (float)input->buf[0][col] - 0.5 * (float)input->buf[2][col] 
@@ -237,10 +234,7 @@ int potential_cloud_shadow_snow_mask
                 (hot > MINSIGMA || satu_bv == 1))
                 pixel_mask[row][col] |= 1 << CLOUD_BIT;
             else
-            {
                 pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
-                pixel_mask[row][col] |= 0 << CLOUD_BIT;
-            }
 
             /* Ratio 4/5 > 0.75 test, equation 4 */
             if ((pixel_mask[row][col] & (1 << CLOUD_BIT)) && 
@@ -250,16 +244,10 @@ int potential_cloud_shadow_snow_mask
                     > MINSIGMA)
                     pixel_mask[row][col] |= 1 << CLOUD_BIT;
                 else
-                {
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
-                    pixel_mask[row][col] |= 0 << CLOUD_BIT;
-                }
             }
             else
-            {
                 pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
-                pixel_mask[row][col] |= 0 << CLOUD_BIT;
-            }
      
             /* Test whether use thermal band or not */
             if ((!(pixel_mask[row][col] & (1 << CLOUD_BIT))) && mask == 1)
@@ -268,30 +256,25 @@ int potential_cloud_shadow_snow_mask
 	        clear_pixel_counter++;
             }
             else
-                clear_mask[row][col] |= 0 << CLEAR_BIT;
+                clear_mask[row][col] &= ~(1 << CLEAR_BIT);
 
             if ((!(pixel_mask[row][col] & (1 << WATER_BIT))) && 
                 clear_mask[row][col] & (1 << CLEAR_BIT))
             {
                 clear_mask[row][col] |= 1 << CLEAR_LAND_BIT;
                 clear_land_pixel_counter++;
-	        clear_mask[row][col] |= 0 << CLEAR_WATER_BIT;
-              
+	        clear_mask[row][col] &= ~(1 << CLEAR_WATER_BIT);
             }
             else if ((pixel_mask[row][col] & (1  << WATER_BIT)) && 
                 clear_mask[row][col] & (1 << CLEAR_BIT))
             {
-                clear_mask[row][col] &= ~(1 << CLEAR_WATER_BIT);
                 clear_mask[row][col] |= 1 << CLEAR_WATER_BIT;
                 clear_mask[row][col] &= ~(1 << CLEAR_LAND_BIT);
-                clear_mask[row][col] |= 0 << CLEAR_LAND_BIT;
             }
             else
             {
                 clear_mask[row][col] &= ~(1 << CLEAR_WATER_BIT);
-                clear_mask[row][col] |= 0 << CLEAR_WATER_BIT;
                 clear_mask[row][col] &= ~(1 << CLEAR_LAND_BIT);
-                clear_mask[row][col] |= 0 << CLEAR_LAND_BIT;
             }
         }
     }
@@ -313,7 +296,7 @@ int potential_cloud_shadow_snow_mask
                 if (!(pixel_mask[row][col] & (1 << CLOUD_BIT)))
 	            pixel_mask[row][col] |= 1 << SHADOW_BIT;
                 else
-		    pixel_mask[row][col] |= 0 << SHADOW_BIT;
+                    pixel_mask[row][col] &= ~(1 << SHADOW_BIT);
             }
         }
     }
@@ -755,10 +738,7 @@ int potential_cloud_shadow_snow_mask
                     || (input->therm_buf[col] < *t_templ + t_buffer - 3500))
                     pixel_mask[row][col] |= 1 << CLOUD_BIT;
                 else
-                {
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
-                    pixel_mask[row][col] |= 0 << CLOUD_BIT;
-                }
             }
         }
 
@@ -1027,41 +1007,32 @@ int potential_cloud_shadow_snow_mask
 
                 if (mask == 1)
                 { 
-                     new_nir[col] -= input->buf[3][col];
-                     new_swir[col] -= input->buf[4][col];
+                    new_nir[col] -= input->buf[3][col];
+                    new_swir[col] -= input->buf[4][col];
 
-                     if (new_nir[col] < new_swir[col])
-	                 shadow_prob = new_nir[col];
-                     else
-	                 shadow_prob = new_swir[col];
+                    if (new_nir[col] < new_swir[col])
+	                shadow_prob = new_nir[col];
+                    else
+	                shadow_prob = new_swir[col];
 
-                     if (shadow_prob > 200)
-	                 pixel_mask[row][col] |= 1 << SHADOW_BIT;
-                     else
-	                 pixel_mask[row][col] |= 0 << SHADOW_BIT;
+                    if (shadow_prob > 200)
+	                pixel_mask[row][col] |= 1 << SHADOW_BIT;
+                    else
+                        pixel_mask[row][col] &= ~(1 << SHADOW_BIT);
                 }
                 else
                 {
-        	    pixel_mask[row][col] |= 1 << NON_FILL_BIT;
+                    pixel_mask[row][col] |= 1 << NON_FILL_BIT;
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
-                    pixel_mask[row][col] |= 0 << CLOUD_BIT;
                     pixel_mask[row][col] &= ~(1 << SHADOW_BIT);
-                    pixel_mask[row][col] |= 0 << SHADOW_BIT;
                     pixel_mask[row][col] &= ~(1 << WATER_BIT);
-                    pixel_mask[row][col] |= 0 << WATER_BIT;
                     pixel_mask[row][col] &= ~(1 << SNOW_BIT);
-                    pixel_mask[row][col] |= 0 << SNOW_BIT;
                 }
 
                 /* refine Water mask (no confusion water/cloud) */
                 if ((pixel_mask[row][col] & (1 << WATER_BIT)) && 
-                    (!(pixel_mask[row][col] & (1 << CLOUD_BIT))))
-                    pixel_mask[row][col] |= 1 << WATER_BIT;
-                else
-                {
+                    (pixel_mask[row][col] & (1 << CLOUD_BIT)))
                     pixel_mask[row][col] &= ~(1 << WATER_BIT);
-	            pixel_mask[row][col] |= 0 << WATER_BIT;
-                }
             }
         }
 
