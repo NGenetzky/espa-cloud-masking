@@ -370,10 +370,11 @@ void label
                          continue;
 
                     /* If two neighboring pixels are labeled as different cloud
-                       numbers, the two cloud pixels are relabeed as the same
+                       numbers, the two cloud pixels are relabeled as the same
                        cloud */
-                    if ((row > 0 && col > 0 && (pixel_mask[row-1][col-1] 
-                         & (1 << CLOUD_BIT))) && (cloud[row-1][col-1].value != min))
+                    if ((row > 0 && col > 0
+                        && (pixel_mask[row-1][col-1] & (1 << CLOUD_BIT)))
+                        && (cloud[row-1][col-1].value != min))
                     {
                        if (index == 1)
                        {
@@ -850,7 +851,7 @@ int object_cloud_shadow_match
                 obj_num[num] = 0;
             else
                 counter++;
-            if ((max_cloud_pixels != 0) && (obj_num[num] > max_cloud_pixels))
+            if ((max_cloud_pixels > 0) && (obj_num[num] > max_cloud_pixels))
             {
                 extra_clouds = (int) (obj_num[num] / max_cloud_pixels);
                 node = &cloud[cloud_first_node[0][num]][cloud_first_node[1][num]];

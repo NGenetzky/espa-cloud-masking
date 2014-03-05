@@ -256,7 +256,8 @@ int get_args
                 *sdpix = atoi(optarg);
                 break;
      
-            case 'x':  /* snow pixel value for image dilation */
+            case 'x': /* maxium cloud pixel number for cloud division,
+                         0 means no division */
                 *max_cloud_pixels = atoi(optarg);
                 break;
      
@@ -274,6 +275,13 @@ int get_args
     {
         sprintf (errmsg, "TOA input file is a required argument");
         usage();
+        RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
+    }
+
+    /* Make sure this is some positive value */
+    if (*max_cloud_pixels < 0)
+    {
+        sprintf (errmsg, "max_cloud_pixels must be >= 0");
         RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
