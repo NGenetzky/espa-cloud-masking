@@ -124,6 +124,8 @@ Output_t *OpenOutput
   bmeta[0].short_name[3] = '\0';
   strcat (bmeta[0].short_name, "FMSK");
   strcpy (bmeta[0].product, "cfmask");
+  strcpy (bmeta[0].source, "toa_refl");
+  strcpy (bmeta[0].category, "qa");
   bmeta[0].nlines = this->size.l;
   bmeta[0].nsamps = this->size.s;
   bmeta[0].pixel_size[0] = input->meta.pixel_size[0];
