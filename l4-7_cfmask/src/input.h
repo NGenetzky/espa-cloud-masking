@@ -7,6 +7,20 @@
 #include "date.h"
 #include "cfmask.h"
 
+typedef enum {
+  WATER_BIT = 0,
+  SHADOW_BIT,
+  SNOW_BIT,
+  CLOUD_BIT,
+  FILL_BIT
+} Bits_t;
+
+typedef enum {
+  CLEAR_BIT = 0,
+  CLEAR_WATER_BIT,
+  CLEAR_LAND_BIT
+} Clear_Bits_t;
+
 /* Structure for the metadata */
 typedef struct {
   char sat[MAX_STR_LEN];       /* Satellite */
@@ -63,10 +77,7 @@ int potential_cloud_shadow_snow_mask
     float *ptm,                 /*O: percent of clear-sky pixels */
     float *t_templ,             /*O: percentile of low background temperature */
     float *t_temph,             /*O: percentile of high background temperature */
-    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
-    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
-    unsigned char **snow_mask,  /*I/O: snow pixel mask */
-    unsigned char **water_mask, /*I/O: water pixel mask */
+    unsigned char **pixel_mask, /*I/O: pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages be 
                                      printed */
 );
@@ -79,10 +90,8 @@ int object_cloud_shadow_match
     float t_temph,              /*I: percentile of high background temperature */
     int cldpix,                 /*I: cloud buffer size */
     int sdpix,                  /*I: shadow buffer size */
-    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
-    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
-    unsigned char **snow_mask,  /*I/O: snow pixel mask */
-    unsigned char **water_mask, /*I/O: water pixel mask */
+    int max_cloud_pixels,       /* I: Max cloud pixel number to divide cloud */
+    unsigned char **pixel_mask, /*I/O:pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages 
                                      be printed */      
 );
@@ -123,6 +132,7 @@ int get_args
     float *cloud_prob,     /* O: cloud_probability input */
     int *cldpix,           /* O: cloud_pixel buffer used for image dilate */
     int *sdpix,            /* O: shadow_pixel buffer used for image dilate  */
+    int *max_cloud_pixels, /* O: Max cloud pixel number to divide cloud */
     bool *verbose          /* O: verbose flag */
 );
 

@@ -50,19 +50,31 @@ def fillMinima(img, nullval, boundaryval):
     """
     (nrows, ncols) = img.shape
     dtype = img.dtype
-    nullmask = (img == nullval)
-    nonNullmask = numpy.logical_not(nullmask)
+    nullmask = (img == nullval) # Generate mask of no data values
+    nonNullmask = numpy.logical_not(nullmask) # Convert it to a data mask
+    # Find the minimum and maximum values in the data
     (hMax, hMin) = (int(img[nonNullmask].max()), int(img[nonNullmask].min()))
+
+    # No longer need the nonNullmask
+    del nonNullmask;
+
+    # Generate an internal image initialized with zeros
     img2 = numpy.zeros((nrows, ncols), dtype=dtype)
+    # Fill it with the maximum value
     img2.fill(hMax)
 
+    # If boundary was set to zero use the maximum value.
     if boundaryval == 0.0:
        boundaryval = hMax
 
+    # If we have no_data(fill) values
     if nullmask.sum() > 0:
         nullmaskDilated = grey_dilation(nullmask, size=(3, 3))
         innerBoundary = nullmaskDilated - nullmask
         (boundaryRows, boundaryCols) = numpy.where(innerBoundary)
+
+        # No longer need the innerBoundary
+        del innerBoundary;
     else:
         img2[0, :] = img[0, :]
         img2[-1, :] = img[-1, :]
@@ -303,7 +315,8 @@ mainCcode = """
                     img2val = img2(r, c);
                     if (img2val == hMax) {
                         img2(r, c) = max(hCrt, imgval);
-                        PQ_add(pixQ, pNbr, img2(r, c));
+                        if (imgval < hMax)
+                            PQ_add(pixQ, pNbr, img2(r, c));
                     }
                 }
                 pNext = pNbr->next;

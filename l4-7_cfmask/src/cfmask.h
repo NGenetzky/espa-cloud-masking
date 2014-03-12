@@ -14,7 +14,7 @@
 #include "espa_geoloc.h"
 #include "raw_binary_io.h"
 
-#define CFMASK_VERSION "1.2.1"
+#define CFMASK_VERSION "1.4.0"
 
 typedef signed short int16;
 
