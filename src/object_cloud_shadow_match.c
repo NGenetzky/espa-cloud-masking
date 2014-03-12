@@ -1,9 +1,9 @@
-#include "input.h"
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
 #include "2d_array.h"
 #include "input.h"
+#include "output.h"
 #include "const.h"
 
 #define MAX_CLOUD_TYPE 2000000
@@ -286,7 +286,7 @@ NOTES:
 ******************************************************************************/
 void label
 (
-    unsigned char **cloud_mask, /*I: cloud mask */
+    unsigned char **pixel_mask, /*I: cloud pixel mask */
     int nrows,                  /*I: number of rows */
     int ncols,                  /*I: number of columns */
     cloud_node **cloud,         /*O: cloud pixel node */
@@ -303,21 +303,23 @@ void label
     {
         for (col = 0; col <ncols; col++)
         {
-            if (cloud_mask[row][col] == 1)
+            if (pixel_mask[row][col] & (1 << CLOUD_BIT))
             {
-                if (row > 0 && col > 0 && cloud_mask[row-1][col-1] == 1)
+                if (row > 0 && col > 0 && (pixel_mask[row-1][col-1] & 
+                                        (1 << CLOUD_BIT)))
                     array[0] = cloud[row-1][col-1].value;
                 else
                     array[0] = 0;
-                if ( row > 0 && cloud_mask[row-1][col] == 1)
+                if ( row > 0 && (pixel_mask[row-1][col] & (1 << CLOUD_BIT)))
                     array[1] = cloud[row-1][col].value;
                 else
                     array[1] = 0;
-                if (row > 0 && (col < ncols-1) && cloud_mask[row-1][col+1] == 1)
+                if (row > 0 && (col < ncols-1) && (pixel_mask[row-1][col+1] &
+                                                   (1 << CLOUD_BIT)))
                     array[2] = cloud[row-1][col+1].value;
                 else
                     array[2] = 0;
-                if (col > 0 && cloud_mask[row][col-1] == 1)
+                if (col > 0 && (pixel_mask[row][col-1] & (1 << CLOUD_BIT)))
                     array[3] = cloud[row][col-1].value;
                 else
                     array[3] = 0;
@@ -368,9 +370,10 @@ void label
                          continue;
 
                     /* If two neighboring pixels are labeled as different cloud
-                       numbers, the two cloud pixels are relaeled as the same
+                       numbers, the two cloud pixels are relabeled as the same
                        cloud */
-                    if ((row > 0 && col > 0 && cloud_mask[row-1][col-1] == 1)
+                    if ((row > 0 && col > 0
+                        && (pixel_mask[row-1][col-1] & (1 << CLOUD_BIT)))
                         && (cloud[row-1][col-1].value != min))
                     {
                        if (index == 1)
@@ -397,7 +400,7 @@ void label
                        else
                            continue;
                     }
-                    if ((row > 0 && cloud_mask[row-1][col] == 1)
+                    if ((row > 0 && (pixel_mask[row-1][col] & (1 << CLOUD_BIT)))
                         && (cloud[row-1][col].value != min))
                     {
                         if (index == 0)
@@ -425,7 +428,7 @@ void label
                             continue;
                     }
                     if ((row > 0 && (col < ncols-1)
-                         && cloud_mask[row-1][col+1] == 1)
+                         && (pixel_mask[row-1][col+1] & (1 << CLOUD_BIT)))
                         && (cloud[row-1][col+1].value != min))
                     {
                         if (index == 0)
@@ -452,7 +455,7 @@ void label
                         else
                             continue;
                     }
-                    if ((col > 0 && cloud_mask[row][col-1] == 1)
+                    if ((col > 0 && (pixel_mask[row][col-1] & (1 << CLOUD_BIT)))
                         && (cloud[row][col-1].value != min))
                     {
                         if (index == 0)
@@ -492,7 +495,7 @@ void label
     {
         for (col = 0; col < ncols; col++)
         {
-            if (cloud_mask[row][col] == 1)
+            if (pixel_mask[row][col] & (1 << CLOUD_BIT))
             {
                 cloud[row][col].value = Find(&cloud[row][col])->value;
                 obj_num[cloud[row][col].value]++;
@@ -522,6 +525,7 @@ void image_dilate
     int nrows,                    /* I: Number of rows in the mask */
     int ncols,                    /* I: Number of columns in the mask */
     int idx,                      /* I: pixel buffer 2 * idx + 1 */
+    int bit,                      /* I: type of image to dilute */
     unsigned char **out_mask      /* O: Mask after dilate */
 )
 {
@@ -539,28 +543,31 @@ void image_dilate
                 {
                     if (((row-ir) > 0) && ((col-ic) > 0) && mask != 1)
                     {
-                        if (in_mask[row-ir][col-ic] == 1)
-                        mask = 1;
+                        if (in_mask[row-ir][col-ic] & (1 << bit))
+                            mask = 1;
                     }
                     if (((row-ir) > 0) && ((col+ic) < (ncols-1)) && mask != 1)
                     {
-                        if (in_mask[row-ir][col+ic] == 1)
-                        mask = 1;
+                        if (in_mask[row-ir][col+ic] & (1 << bit))
+                            mask = 1;
                     }
                     if (((row+ir) < (nrows-1)) && ((col-ic) > 0) && mask != 1)
                     {
-                        if (in_mask[row+ir][col-ic] == 1)
-                        mask = 1;
+                        if (in_mask[row+ir][col-ic] & (1 << bit))
+                            mask = 1;
                     }
                     if (((row+ir) < (nrows-1)) && ((col+ic) < (ncols-1))
                         && mask != 1)
                     {
-                        if (in_mask[row+ir][col+ic] == 1)
-                        mask = 1;
+                        if (in_mask[row+ir][col+ic] & (1 << bit))
+                            mask = 1;
                     }
                 }
             }
-            out_mask[row][col] = mask;
+            if (mask == 1)
+                out_mask[row][col] |= 1 << bit;
+            else
+                out_mask[row][col] &= ~(1 << bit);
         }
     }
 }
@@ -589,10 +596,8 @@ int object_cloud_shadow_match
     float t_temph,              /*I: percentile of high background temp */
     int cldpix,                 /*I: cloud buffer size */
     int sdpix,                  /*I: shadow buffer size */
-    unsigned char **cloud_mask, /*I/O: cloud pixel mask */
-    unsigned char **shadow_mask,/*I/O: cloud shadow pixel mask */
-    unsigned char **snow_mask,  /*I/O: snow pixel mask */
-    unsigned char **water_mask, /*I/O: water pixel mask */
+    int max_cloud_pixels,       /*I: max cloud pixel number to divide cloud */
+    unsigned char **pixel_mask, /*I/O: pixel mask */
     bool verbose                /*I: value to indicate if intermediate messages
                                      be printed */
 )
@@ -666,21 +671,21 @@ int object_cloud_shadow_match
     int cloud_count = 0; /* cloud counter */
     int shadow_count = 0;/* shadow counter */
     float cloud_shadow_percent;/* cloud shadow percent */
+    int extra_clouds;          /* extra clouds needed to 
+                                  decrease memory usage */ 
+    int number;                /* loop variable */
+    int total_num_clouds;      /* total number of clouds after
+                                  large clouds division */ 
+    cloud_node *temp_node;     /* temporary cloud node */
 
     /* Dynamic memory allocation */
-    unsigned char **cloud_cal = NULL;     /* cloud pixel mask */
-    unsigned char **shadow_cal = NULL;    /* shadow pixel mask */
-    unsigned char **boundary_test = NULL; /* boundary test mask */
+    unsigned char **cal_mask = NULL;      /* calibration pixel mask */
 
-    cloud_cal = (unsigned char **)allocate_2d_array(input->size.l,
+    cal_mask = (unsigned char **)allocate_2d_array(input->size.l,
                  input->size.s, sizeof(unsigned char));
-    shadow_cal = (unsigned char **)allocate_2d_array(
-                 input->size.l, input->size.s, sizeof(unsigned char));
-    boundary_test = (unsigned char **)allocate_2d_array(
-                 input->size.l, input->size.s, sizeof(unsigned char));
-    if (cloud_cal == NULL || shadow_cal == NULL || boundary_test == NULL)
+    if (cal_mask == NULL)
     {
-        sprintf (errstr, "Allocating mask memory");
+        sprintf (errstr, "Allocating cal_mask memory");
         RETURN_ERROR (errstr, "cloud/shadow match", FAILURE);
     }
 
@@ -697,17 +702,12 @@ int object_cloud_shadow_match
     {
         for (col = 0; col < ncols; col++)
         {
-            if (cloud_mask[row][col] == 1)
+            if (pixel_mask[row][col] & (1 << CLOUD_BIT))
                 cloud_counter++;
 
             /* Boundary layer includes both cloud_mask equals 0 and 1 */
-            if (cloud_mask[row][col] < 255)
-            {
-                boundary_test[row][col] = 1;
+            if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 boundary_counter++;
-            }
-            else
-                boundary_test[row][col] = 0;
         }
     }
 
@@ -732,11 +732,11 @@ int object_cloud_shadow_match
         {
             for (col = 0; col < ncols; col++)
             {
-                /* No Shadow Match due to too much cloud (>90 percent) */
-                if (cloud_mask[row][col] == 1)
-                    cloud_cal[row][col] = 1;
-                else
-                    shadow_cal[row][col] = 1;
+                /* No Shadow Match due to too much cloud (>90 percent) 
+                   non-cloud pixels are just shadow pixels */
+                if (!(pixel_mask[row][col] & (1 << CLOUD_BIT)) &&
+                    (!(pixel_mask[row][col] & (1 << FILL_BIT))))
+                    pixel_mask[row][col] |= 1 << SHADOW_BIT;
             }
         }
     }
@@ -762,7 +762,7 @@ int object_cloud_shadow_match
         {
             for (col = 0; col < ncols; col++)
             {
-                if (boundary_test[row][col] == 1)
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_ul = row;
                     x_ul = col;
@@ -775,7 +775,7 @@ int object_cloud_shadow_match
         {
             for (row = 0; row < nrows; row++)
             {
-                if (boundary_test[row][col] == 1)
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_ur = row;
                     x_ur = col;
@@ -788,7 +788,7 @@ int object_cloud_shadow_match
         {
             for (row = nrows - 1; row >= 0; row--)
             {
-                if (boundary_test[row][col] == 1)
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_ll = row;
                     x_ll = col;
@@ -801,7 +801,7 @@ int object_cloud_shadow_match
         {
             for (col = ncols - 1; col >= 0; col--)
             {
-                if (boundary_test[row][col] == 1)
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_lr = row;
                     x_lr = col;
@@ -840,8 +840,9 @@ int object_cloud_shadow_match
         }
 
         /* Labeling the cloud pixels */
-        label(cloud_mask, nrows, ncols, cloud, obj_num, cloud_first_node);
+        label(pixel_mask, nrows, ncols, cloud, obj_num, cloud_first_node);
 
+        total_num_clouds = num_clouds;
         /* The cloud pixels are not counted as cloud pixels if the total number
            of cloud pixels is less than 9 within a cloud cluster */
         for (num = 1; num <= num_clouds; num++)
@@ -850,6 +851,48 @@ int object_cloud_shadow_match
                 obj_num[num] = 0;
             else
                 counter++;
+            if ((max_cloud_pixels > 0) && (obj_num[num] > max_cloud_pixels))
+            {
+                extra_clouds = (int) (obj_num[num] / max_cloud_pixels);
+                node = &cloud[cloud_first_node[0][num]][cloud_first_node[1][num]];
+                obj_num[num] = max_cloud_pixels;
+                int i;
+                for (i = 0; i < max_cloud_pixels; i++)
+                    node = node->child;
+                temp_node = node->child;
+                node->child = node;
+                for (number = 1; number <= extra_clouds; number++)
+                {
+                    total_num_clouds++;
+                    node = temp_node;
+                    cloud_first_node[0][total_num_clouds] = node->row;
+                    cloud_first_node[1][total_num_clouds] = node->col;
+                    for (i = 0; i < max_cloud_pixels; i++)
+                    {
+                        if (node->child != node)
+                        {
+                            node->value = total_num_clouds;
+                            node->parent = &cloud[cloud_first_node[0][total_num_clouds]]
+                                      [cloud_first_node[1][total_num_clouds]];
+                            obj_num[total_num_clouds]++;
+                            if (i == max_cloud_pixels - 1)
+                            {
+                                temp_node = node->child;
+                                node->child = node;
+                            }
+                            else
+                                node = node->child;
+                        }
+                        else
+                        {
+                            node->value = total_num_clouds;
+                            node->parent = &cloud[cloud_first_node[0][total_num_clouds]]
+                                      [cloud_first_node[1][total_num_clouds]];
+                            obj_num[total_num_clouds]++;
+                        }
+                    }
+                }
+            }
         }
 
         if (verbose)
@@ -860,15 +903,13 @@ int object_cloud_shadow_match
         {
             for (col = 0; col <ncols; col++)
             {
-                shadow_cal[row][col] = 0;
-                if ((cloud_mask[row][col] == 1)
-                    && (boundary_test[row][col] != 0)
+                cal_mask[row][col] &= ~(1 << SHADOW_BIT);
+                if ((pixel_mask[row][col] & (1 << CLOUD_BIT))
+                    && (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                     && (obj_num[cloud[row][col].value] != 0))
-                {
-                    cloud_cal[row][col] = cloud_mask[row][col];
-                }
+                    cal_mask[row][col] |= 1 << CLOUD_BIT;
                 else
-                    cloud_cal[row][col] = 0;
+                    cal_mask[row][col] &= ~(1 << CLOUD_BIT);
             }
         }
 
@@ -895,7 +936,7 @@ int object_cloud_shadow_match
 
         /* Use iteration to get the optimal move distance, Calulate the
            moving cloud shadow */
-        for (cloud_type = 1; cloud_type <= num_clouds; cloud_type++)
+        for (cloud_type = 1; cloud_type <= total_num_clouds; cloud_type++)
         {
             if (obj_num[cloud_type] == 0)
                 continue;
@@ -1048,11 +1089,16 @@ int object_cloud_shadow_match
                         }
                         else
                         {
-                            if (boundary_test[xy_type[0][i]][xy_type[1][i]] == 0
+                            if ((pixel_mask[xy_type[0][i]][xy_type[1][i]] & 
+                                  (1 << FILL_BIT))
                                 || (cloud[xy_type[0][i]][xy_type[1][i]].value !=
                                 cloud_type &&
-                                (cloud_mask[xy_type[0][i]][xy_type[1][i]]>0 ||
-                                shadow_mask[xy_type[0][i]][xy_type[1][i]] == 1)))
+                                (((pixel_mask[xy_type[0][i]][xy_type[1][i]] &
+                                (1 << CLOUD_BIT)) ||
+                                (pixel_mask[xy_type[0][i]][xy_type[1][i]] &
+                                (1 << FILL_BIT))) ||
+                                (pixel_mask[xy_type[0][i]][xy_type[1][i]] &
+                                 (1 << SHADOW_BIT)))))
                             {
                                 match_all++;
                             }
@@ -1112,7 +1158,10 @@ int object_cloud_shadow_match
                                 tmp_xy_type[1][i]=0;
                             if (tmp_xy_type[1][i]>=ncols)
                                 tmp_xy_type[1][i]=ncols-1;
-                            shadow_cal[tmp_xy_type[0][i]][tmp_xy_type[1][i]] = 1;
+                            {
+                                cal_mask[tmp_xy_type[0][i]][tmp_xy_type[1][i]] |= 
+                                                                 1 << SHADOW_BIT;
+                            }
                         }
                         break;
                     }
@@ -1177,73 +1226,53 @@ int object_cloud_shadow_match
             RETURN_ERROR (errstr, "object_cloud_shadow_match", FAILURE);
         }
 
-        /* Set the output masks to zero before image dilate */
-        for (row = 0; row < nrows; row++)
-        {
-            for (col = 0; col < ncols; col++)
-            {
-                cloud_mask[row][col] = 0;
-                shadow_mask[row][col] = 0;
-            }
-        }
-
         /* Do image dilate for cloud, shadow, snow */
-        image_dilate(cloud_cal, nrows, ncols, cldpix, cloud_mask);
-        image_dilate(shadow_cal, nrows, ncols, cldpix, shadow_mask);
+        image_dilate(cal_mask, nrows, ncols, cldpix, CLOUD_BIT, pixel_mask);
+        image_dilate(cal_mask, nrows, ncols, cldpix, SHADOW_BIT, pixel_mask);
     }
 
-    /* Use shadow_cal mask as the final output mask */
+    /* Use cal_mask as the output mask, and cal_mask is changed to be a value 
+       mask */
     for (row = 0; row < nrows; row++)
     {
         for (col = 0; col < ncols; col++)
         {
-            if (boundary_test[row][col] ==0)
-                shadow_cal[row][col] = 255;
-            else if (cloud_mask[row][col] == 1)
+            if (pixel_mask[row][col] & (1 << FILL_BIT))
+                cal_mask[row][col] = FILL_VALUE;
+            else if (pixel_mask[row][col] & (1 << CLOUD_BIT))
             {
-                shadow_cal[row][col] = 4;
+                cal_mask[row][col] = 4;
                 cloud_count++;
             }
-            else if (shadow_mask[row][col] == 1)
+            else if (pixel_mask[row][col] & (1 << SHADOW_BIT))
             {
-	        shadow_cal[row][col] = 2;
+	        cal_mask[row][col] = 2;
                 shadow_count++;
             }
-            else if (snow_mask[row][col] == 1)
-                shadow_cal[row][col] = 3;
-            else if (water_mask[row][col] == 1)
-	        shadow_cal[row][col] = 1;
+            else if (pixel_mask[row][col] & (1 << SNOW_BIT))
+                cal_mask[row][col] = 3;
+            else if (pixel_mask[row][col] & (1 <<WATER_BIT))
+	        cal_mask[row][col] = 1;
             else
-                shadow_cal[row][col] = 0;
+                cal_mask[row][col] = 0;
         }
     }
 
-    /* Copy back to use cloud_mask as final mask */
+    /* Copy back to use pixel_mask as final output mask, and it's also
+       changed to be a value mask */
     for (row = 0; row < nrows; row++)
     {
         for (col = 0; col < ncols; col++)
         {
-            cloud_mask[row][col] = shadow_cal[row][col];
+            pixel_mask[row][col] = cal_mask[row][col];
         }
     }
 
     /* Release the memory */
-    status = free_2d_array((void **)cloud_cal);
+    status = free_2d_array((void **)cal_mask);
     if (status != SUCCESS)
     {
-        sprintf (errstr, "Freeing memory: cloud_cal\n");
-        RETURN_ERROR (errstr, "object_cloud_shadow_match", FAILURE);
-    }
-    status = free_2d_array((void **)shadow_cal);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing memory: shadow_cal\n");
-        RETURN_ERROR (errstr, "object_cloud_shadow_match", FAILURE);
-    }
-    status = free_2d_array(( void **)boundary_test);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing memory: boundary_cal\n");
+        sprintf (errstr, "Freeing memory: cal_mask\n");
         RETURN_ERROR (errstr, "object_cloud_shadow_match", FAILURE);
     }
 

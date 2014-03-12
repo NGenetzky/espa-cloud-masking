@@ -71,7 +71,7 @@ def mainRoutine(logfile=None):
         logIt (msg, log_handler)
         return ERROR
 
-    # Read out the input band 4 bunary file
+    # Read out the input band 4 binary file
     f = open(fname_b4, 'rb')
     b4 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
     f.close()
@@ -102,7 +102,7 @@ def mainRoutine(logfile=None):
         logIt (msg, log_handler)
         return ERROR
 
-    # Read out the input band 5 bunary file
+    # Read out the input band 5 binary file
     f = open(fname_b5, 'rb')
     b5 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
     f.close()

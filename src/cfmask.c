@@ -46,10 +46,7 @@ int main (int argc, char *argv[])
     Input_t *input = NULL;              /* input data and meta data */
     char envi_file[MAX_STR_LEN];        /* output ENVI file name */
     char scene_name[MAX_STR_LEN];       /* input data scene name */
-    unsigned char **cloud_mask;    /* cloud pixel mask */
-    unsigned char **shadow_mask;   /* shadow pixel mask */
-    unsigned char **snow_mask;     /* snow pixel mask */
-    unsigned char **water_mask;    /* water pixel mask */
+    unsigned char **pixel_mask;    /* pixel mask */
     int status;                    /* return value from function call */
     float ptm;                     /* percent of clear-sky pixels */
     float t_templ = 0.0;     /* percentile of low background temperature */
@@ -60,6 +57,7 @@ int main (int argc, char *argv[])
     int sdpix = 2;           /* Default buffer for shadow pixel dilate */
     float cloud_prob;        /* Default cloud probability */
     float sun_azi_temp = 0.0;/* Keep the original sun azimuth angle */
+    int max_cloud_pixels;    /* Maximum cloud pixel number in cloud division */
     Espa_internal_meta_t xml_metadata;  /* XML metadata structure */
     Envi_header_t envi_hdr;   /* output ENVI header information */
   
@@ -70,7 +68,7 @@ int main (int argc, char *argv[])
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
     status = get_args (argc, argv, &xml_name, &cloud_prob, &cldpix,
-                       &sdpix, &verbose);
+                       &sdpix, &max_cloud_pixels, &verbose);
     if (status != SUCCESS)
     { 
         sprintf (errstr, "calling get_args");
@@ -161,16 +159,9 @@ int main (int argc, char *argv[])
     }
 
     /* Dynamic allocate the 2d mask memory */
-    cloud_mask = (unsigned char **)allocate_2d_array(input->size.l, 
+    pixel_mask = (unsigned char **)allocate_2d_array(input->size.l, 
                  input->size.s, sizeof(unsigned char)); 
-    shadow_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
-    snow_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
-    water_mask = (unsigned char **)allocate_2d_array(input->size.l, 
-                 input->size.s, sizeof(unsigned char)); 
-    if (cloud_mask == NULL  || shadow_mask == NULL || snow_mask == NULL
-        || water_mask == NULL)
+    if (pixel_mask == NULL)
     {
         sprintf (errstr, "Allocating mask memory");
         CFMASK_ERROR (errstr, "main");
@@ -178,8 +169,7 @@ int main (int argc, char *argv[])
 
     /* Build the potential cloud, shadow, snow, water mask */
     status = potential_cloud_shadow_snow_mask(input, cloud_prob, &ptm,
-             &t_templ, &t_temph, cloud_mask, shadow_mask, snow_mask, 
-             water_mask, verbose);
+             &t_templ, &t_temph, pixel_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "processing potential_cloud_shadow_snow_mask");
@@ -188,36 +178,16 @@ int main (int argc, char *argv[])
 
     printf("Pcloud done, starting cloud/shadow match\n");
 
-
     /* Build the final cloud shadow based on geometry matching and
-       combine the final cloud, shadow, snow, water masks into fmask */
+       combine the final cloud, shadow, snow, water masks into fmask 
+       the pixel_mask is a bit mask as input and a value mask as output*/
     status = object_cloud_shadow_match(input, ptm, t_templ, t_temph,
-             cldpix, sdpix, cloud_mask, shadow_mask, snow_mask, water_mask,
-             verbose);
+             cldpix, sdpix, max_cloud_pixels, pixel_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "processing object_cloud_and_shadow_match");
         CFMASK_ERROR (errstr, "main");
     }    
-
-    status = free_2d_array((void **)shadow_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        CFMASK_ERROR (errstr, "main");
-    }
-    status = free_2d_array((void **)snow_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        CFMASK_ERROR (errstr, "main");
-    }
-    status = free_2d_array((void **)water_mask);
-    if (status != SUCCESS)
-    {
-        sprintf (errstr, "Freeing mask memory");
-        CFMASK_ERROR (errstr, "main");
-    }
 
     /* Reassign solar azimuth angle for output purpose if south up north 
        down scene is involved */
@@ -234,7 +204,7 @@ int main (int argc, char *argv[])
         CFMASK_ERROR (errstr, "main");
     }
 
-    if (!PutOutput(output, cloud_mask))
+    if (!PutOutput(output, pixel_mask))
     {
         sprintf (errstr, "Writing output fmask in HDF files\n");
         CFMASK_ERROR (errstr, "main");
@@ -289,8 +259,8 @@ int main (int argc, char *argv[])
     /* Free the metadata structure */
     free_metadata (&xml_metadata);
 
-    /* Free the final output cloud_mask */
-    status = free_2d_array((void **)cloud_mask);
+    /* Free the pixel mask */
+    status = free_2d_array((void **)pixel_mask);
     if (status != SUCCESS)
     {
         sprintf (errstr, "Freeing mask memory");
@@ -337,6 +307,7 @@ void usage ()
             "--prob=input_cloud_probability_value "
             "--cldpix=input_cloud_pixel_buffer "
             "--sdpix=input_shadow_pixel_buffer "
+            "--max_cloud_pixels=maximum_cloud_pixel_numbers_for_cloud_division "
             "[--verbose]\n");
 
     printf ("\nwhere the following parameters are required:\n");
@@ -345,13 +316,14 @@ void usage ()
             "LEDAPS\n");
     printf ("\nwhere the following parameters are optional:\n");
     printf ("    -prob: cloud_probability, default value is 22.5\n");
-    printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 2\n");
-    printf ("    -sdpix: shadow_pixel_buffer for image dilate, default value is 2\n");
+    printf ("    -cldpix: cloud_pixel_buffer for image dilate, default value is 3\n");
+    printf ("    -sdpix: shadow_pixel_buffer for image dilate, default value is 3\n");
+    printf ("    -max_cloud_pixels: maximum_cloud_pixel_number for cloud division,"
+            "    default value is 0\n");
     printf ("    -verbose: should intermediate messages be printed? (default "
             "is false)\n");
     printf ("\n./fmask --help will print the usage statement\n");
-    printf ("\nExample: ./cfmask "
-            "--toarefl=/home/sguo/LEDAPS/ledaps-read-only/"
-            "ledapsSrc/src/fmask2/L5010054_05420110312.xml "
-            "--prob=22.5 --cldpix=3 --sdpix=3 --verbose\n");
+    printf ("\nExample: ./cfmask --xml=LE70390032010263EDC00.xml "
+            "--prob=22.5 --cldpix=3 --sdpix=3 "
+            "--max_cloud_pixels=5000000 --verbose\n");
 }
