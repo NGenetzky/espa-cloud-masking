@@ -616,12 +616,12 @@ int object_cloud_shadow_match
     int cloud_counter = 0;     /* cloud pixel counter */
     int boundary_counter = 0;  /* boundary pixel counter */
     float revised_ptm;         /* revised percent of cloud */
-    float t_similar=0.30;      /* similarity threshold */
-    float t_buffer=0.95;   /* threshold for matching buffering */
-    float max_similar=0.95;/* max similarity threshold */
-    int num_cldoj=9; /* minimum matched cloud object (pixels) */
-    int num_pix=3;   /* number of inward pixes (240m) for cloud base
-                        temperature */
+    float t_similar;           /* similarity threshold */
+    float t_buffer;            /* threshold for matching buffering */
+    float max_similar = 0.95;  /* max similarity threshold */
+    int num_cldoj = 9; /* minimum matched cloud object (pixels) */
+    int num_pix = 3;   /* number of inward pixes (240m) for cloud base
+                          temperature */
     float a, b, c, omiga_par, omiga_per; /* variables used for viewgeo
                                             routine, see it for detail */
     int i_step;     /* ietration step */
@@ -743,12 +743,8 @@ int object_cloud_shadow_match
     else
     {
         if (verbose)
-            printf("Shadow Match in processing\n");
-
-        if (verbose)
         {
-            printf("Set cloud similarity = %.3f\n", t_similar);
-            printf("Set matching buffer = %.3f\n", t_buffer);
+            printf("Shadow Match in processing\n");
             printf("Shadow match for cloud object >= %d pixels\n", num_cldoj);
         }
         i_step=rint(2.0*(float)sub_size*tan(sun_ele_rad));
@@ -942,6 +938,20 @@ int object_cloud_shadow_match
                 continue;
             else
             {
+                /* Update ib Fmask v3.3, for larger (> 10% scene area), use
+                   another set of t_similar and t_buffer to address some
+                   missing cloud shadow at edge area */
+                if (obj_num[cloud_type] <= (int)(0.1 * boundary_counter))
+                {
+                    t_similar = 0.3;
+                    t_buffer = 0.95;
+                }
+                else
+                {
+                    t_similar = 0.1;
+                    t_buffer = 0.98;
+                }
+
                 /* Note: matlab array index starts with 1 and C starts with 0,
                          array(3,1) in matlab is equal to array[2][0] in C */
                 min_cl_height = 200;
