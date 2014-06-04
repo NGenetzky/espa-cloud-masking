@@ -63,11 +63,11 @@ def fillMinima(img, nullval, boundaryval):
     # Fill it with the maximum value
     img2.fill(hMax)
 
-    # If a bondary was set to zero use the maximum value.
+    # If boundary was set to zero use the maximum value.
     if boundaryval == 0.0:
        boundaryval = hMax
 
-    # If we have no data values
+    # If we have no_data(fill) values
     if nullmask.sum() > 0:
         nullmaskDilated = grey_dilation(nullmask, size=(3, 3))
         innerBoundary = nullmaskDilated - nullmask

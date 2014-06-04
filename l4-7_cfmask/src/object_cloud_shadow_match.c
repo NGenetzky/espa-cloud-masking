@@ -1,9 +1,9 @@
-#include "input.h"
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
 #include "2d_array.h"
 #include "input.h"
+#include "output.h"
 #include "const.h"
 
 #define MAX_CLOUD_TYPE 2000000
@@ -226,7 +226,7 @@ cloud_node* Find_child(cloud_node* node) {
 }
 
 /******************************************************************************
-MODULE:  find_min
+MODULE:  find_minimum
 
 PURPOSE: Find the minimum value and its location in an array
 
@@ -239,7 +239,7 @@ Date        Programmer       Reason
 
 NOTES:
 ******************************************************************************/
-void find_min
+void find_minimum
 (
     int *array, /*I: input array */
     int nums,   /*I: number of elements in input array */
@@ -327,7 +327,7 @@ void label
                 /* The cloud pixel will be labeled as a new cloud if neighboring
                    pixels before it are not cloud pixels, otherwise it will be
                    labeled as lowest cloud number neighboring it */
-                find_min(array, 4, &min, &index);
+                find_minimum(array, 4, &min, &index);
                 if (min == 0)
                 {
                     num_clouds++;
@@ -706,7 +706,7 @@ int object_cloud_shadow_match
                 cloud_counter++;
 
             /* Boundary layer includes both cloud_mask equals 0 and 1 */
-            if (!(pixel_mask[row][col] & (1 << NON_FILL_BIT)))
+            if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 boundary_counter++;
         }
     }
@@ -735,7 +735,7 @@ int object_cloud_shadow_match
                 /* No Shadow Match due to too much cloud (>90 percent) 
                    non-cloud pixels are just shadow pixels */
                 if (!(pixel_mask[row][col] & (1 << CLOUD_BIT)) &&
-                    (!(pixel_mask[row][col] & (1 << NON_FILL_BIT))))
+                    (!(pixel_mask[row][col] & (1 << FILL_BIT))))
                     pixel_mask[row][col] |= 1 << SHADOW_BIT;
             }
         }
@@ -758,7 +758,7 @@ int object_cloud_shadow_match
         {
             for (col = 0; col < ncols; col++)
             {
-                if (!(pixel_mask[row][col] & (1 << NON_FILL_BIT)))
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_ul = row;
                     x_ul = col;
@@ -771,7 +771,7 @@ int object_cloud_shadow_match
         {
             for (row = 0; row < nrows; row++)
             {
-                if (!(pixel_mask[row][col] & (1 << NON_FILL_BIT)))
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_ur = row;
                     x_ur = col;
@@ -784,7 +784,7 @@ int object_cloud_shadow_match
         {
             for (row = nrows - 1; row >= 0; row--)
             {
-                if (!(pixel_mask[row][col] & (1 << NON_FILL_BIT)))
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_ll = row;
                     x_ll = col;
@@ -797,7 +797,7 @@ int object_cloud_shadow_match
         {
             for (col = ncols - 1; col >= 0; col--)
             {
-                if (!(pixel_mask[row][col] & (1 << NON_FILL_BIT)))
+                if (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                 {
                     y_lr = row;
                     x_lr = col;
@@ -901,7 +901,7 @@ int object_cloud_shadow_match
             {
                 cal_mask[row][col] &= ~(1 << SHADOW_BIT);
                 if ((pixel_mask[row][col] & (1 << CLOUD_BIT))
-                    && (!(pixel_mask[row][col] & (1 << NON_FILL_BIT)))
+                    && (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                     && (obj_num[cloud[row][col].value] != 0))
                     cal_mask[row][col] |= 1 << CLOUD_BIT;
                 else
@@ -1100,13 +1100,13 @@ int object_cloud_shadow_match
                         else
                         {
                             if ((pixel_mask[xy_type[0][i]][xy_type[1][i]] & 
-                                  (1 << NON_FILL_BIT))
+                                  (1 << FILL_BIT))
                                 || (cloud[xy_type[0][i]][xy_type[1][i]].value !=
                                 cloud_type &&
                                 (((pixel_mask[xy_type[0][i]][xy_type[1][i]] &
                                 (1 << CLOUD_BIT)) ||
                                 (pixel_mask[xy_type[0][i]][xy_type[1][i]] &
-                                (1 << NON_FILL_BIT))) ||
+                                (1 << FILL_BIT))) ||
                                 (pixel_mask[xy_type[0][i]][xy_type[1][i]] &
                                  (1 << SHADOW_BIT)))))
                             {
@@ -1247,8 +1247,8 @@ int object_cloud_shadow_match
     {
         for (col = 0; col < ncols; col++)
         {
-            if (pixel_mask[row][col] & (1 << NON_FILL_BIT))
-                cal_mask[row][col] = 255;
+            if (pixel_mask[row][col] & (1 << FILL_BIT))
+                cal_mask[row][col] = FILL_VALUE;
             else if (pixel_mask[row][col] & (1 << CLOUD_BIT))
             {
                 cal_mask[row][col] = 4;

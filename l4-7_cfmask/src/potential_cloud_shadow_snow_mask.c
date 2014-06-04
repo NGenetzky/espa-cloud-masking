@@ -22,6 +22,9 @@ Date        Programmer       Reason
 3/15/2013   Song Guo         Original Development
 
 NOTES: 
+1. Thermal buffer is expected to be in degrees Celsius with a factor applied
+   of 100.  Many values which compare to the thermal buffer in this code are
+   hardcoded and assume degrees celsius * 100.
 ******************************************************************************/
 int potential_cloud_shadow_snow_mask
 (
@@ -187,7 +190,7 @@ int potential_cloud_shadow_snow_mask
             else 
                 pixel_mask[row][col] &= ~(1 << WATER_BIT);
             if (mask == 0)
-                pixel_mask[row][col] |= 1 << NON_FILL_BIT;
+                pixel_mask[row][col] |= 1 << FILL_BIT;
 
             /* visible bands flatness (sum(abs)/mean < 0.6 => brigt and dark 
                cloud), equation 2 */
@@ -278,6 +281,7 @@ int potential_cloud_shadow_snow_mask
             }
         }
     }
+    printf ("\n");
 
     *ptm = 100. * ((float)clear_pixel_counter / (float)mask_counter);
     lndptm = 100. * ((float)clear_land_pixel_counter / (float)mask_counter);
@@ -396,6 +400,7 @@ int potential_cloud_shadow_snow_mask
 	        }
             }
         }
+        printf ("\n");
     
         /* Tempearture for snow test */
         l_pt = 0.175;
@@ -598,6 +603,7 @@ int potential_cloud_shadow_snow_mask
                 }
             }
         }
+        printf ("\n");
 
         /* Allocate memory for prob */
         prob = malloc(input->size.l * input->size.s * sizeof(float));
@@ -741,6 +747,7 @@ int potential_cloud_shadow_snow_mask
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
             }
         }
+        printf ("\n");
 
         /* Free the memory */
         status = free_2d_array((void **)wfinal_prob);
@@ -859,6 +866,7 @@ int potential_cloud_shadow_snow_mask
                 RETURN_ERROR (errstr, "pcloud", FAILURE);
             }
         }
+        printf ("\n");
 
         /* Close the intermediate file */
         status = fclose(fd1);
@@ -1022,7 +1030,7 @@ int potential_cloud_shadow_snow_mask
                 }
                 else
                 {
-                    pixel_mask[row][col] |= 1 << NON_FILL_BIT;
+                    pixel_mask[row][col] |= 1 << FILL_BIT;
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
                     pixel_mask[row][col] &= ~(1 << SHADOW_BIT);
                     pixel_mask[row][col] &= ~(1 << WATER_BIT);
@@ -1035,6 +1043,7 @@ int potential_cloud_shadow_snow_mask
                     pixel_mask[row][col] &= ~(1 << WATER_BIT);
             }
         }
+        printf ("\n");
 
         /* Release the memory */ 
         free(new_nir);

@@ -1,8 +1,7 @@
-#ifndef IAS_MISC_2D_ARRAY_H
-#define IAS_MISC_2D_ARRAY_H
+#ifndef MISC_2D_ARRAY_H
+#define MISC_2D_ARRAY_H
 
 #include <stdio.h>          /* FILE definition */
-#include "mystring.h"
 
 void **allocate_2d_array
 (
