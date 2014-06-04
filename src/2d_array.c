@@ -4,7 +4,7 @@
 #include "2d_array.h"
 #include "const.h"
 
-/* The IAS_2D_ARRAY maintains a 2D array that can be sized at run-time. */
+/* The 2D_ARRAY maintains a 2D array that can be sized at run-time. */
 typedef struct ias_2d_array
 {
     unsigned int signature; /* Signature used to make sure the pointer

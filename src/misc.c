@@ -164,6 +164,8 @@ Date        Programmer       Reason
 1/2/2013    Gail Schmidt     Original Development
 3/15/2013   Song Guo         Changed to support Fmask
 9/13/2013   Song Guo         Changed to use RETURN_ERROR
+2/19/2014   Gail Schmidt     Modified to utilize the ESPA internal raw binary
+                             file format
 
 NOTES:
   1. Memory is allocated for the input and output files.  All of these should
@@ -174,21 +176,17 @@ int get_args
 (
     int argc,              /* I: number of cmd-line args */
     char *argv[],          /* I: string of cmd-line args */
-    char **toa_infile,     /* O: address of input TOA filename */
+    char **xml_infile,     /* O: address of input XML filename */
     float *cloud_prob,     /* O: cloud_probability input */
     int *cldpix,           /* O: cloud_pixel buffer used for image dilate */
     int *sdpix,            /* O: shadow_pixel buffer used for image dilate  */
     int *max_cloud_pixels, /* O: Max cloud pixel number to divide cloud */
-    bool *write_binary,    /* O: write raw binary flag */
-    bool *no_hdf_output,   /* O: No HDF4 output file flag */
     bool *verbose          /* O: verbose flag */
 )
 {
     int c;                         /* current argument index */
     int option_index;              /* index for the command-line option */
     static int verbose_flag=0;     /* verbose flag */
-    static int binary_flag=0;      /* write binary flag */
-    static int no_hdf_flag=0;         /* write binary flag */
     static int cldpix_default = 3; /* Default buffer for cloud pixel dilate */
     static int sdpix_default = 3;  /* Default buffer for shadow pixel dilate */
     static int max_pixel_default = 0;  /* Default maxium cloud pixel number for
@@ -199,9 +197,7 @@ int get_args
     static struct option long_options[] =
     {
         {"verbose", no_argument, &verbose_flag, 1},
-        {"write_binary", no_argument, &binary_flag, 1},
-        {"no_hdf_output", no_argument, &no_hdf_flag, 1},
-        {"toarefl", required_argument, 0, 'm'},
+        {"xml", required_argument, 0, 'i'},
         {"prob", required_argument, 0, 'p'},
         {"cldpix", required_argument, 0, 'c'},
         {"sdpix", required_argument, 0, 's'},
@@ -240,8 +236,8 @@ int get_args
                 return FAILURE;
                 break;
 
-            case 'm':  /* toa infile */
-                *toa_infile = strdup (optarg);
+            case 'i':  /* xml infile */
+                *xml_infile = strdup (optarg);
                 break;
      
             case 'p':  /* cloud probability value */
@@ -271,9 +267,9 @@ int get_args
     }
 
     /* Make sure the infile was specified */
-    if (*toa_infile == NULL)
+    if (*xml_infile == NULL)
     {
-        sprintf (errmsg, "TOA input file is a required argument");
+        sprintf (errmsg, "XML input file is a required argument");
         usage();
         RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
@@ -285,18 +281,6 @@ int get_args
         RETURN_ERROR(errmsg, FUNC_NAME, FAILURE);
     }
 
-    /* Check the write HDF flag */
-    if (no_hdf_flag)
-        *no_hdf_output = true;
-    else
-        *no_hdf_output = false;
-
-    /* Check the write binary flag */
-    if (binary_flag)
-        *write_binary = true;
-    else
-        *write_binary = false;
-
     /* Check the verbose flag */
     if (verbose_flag)
         *verbose = true;
@@ -305,13 +289,11 @@ int get_args
 
     if (*verbose)
     {
-        printf("TOA_input_file = %s\n", *toa_infile);
+        printf("XML_input_file = %s\n", *xml_infile);
         printf("cloud_probability = %f\n", *cloud_prob);
         printf("cloud_pixel_buffer = %d\n", *cldpix);
         printf("shadow_pixel_buffer = %d\n", *sdpix);
         printf("max_cloud_pixels = %d\n", *max_cloud_pixels);
-        printf("write_binary = %d\n", *write_binary);
-        printf("verbose = %d\n", *verbose);
     }
 
     return SUCCESS;

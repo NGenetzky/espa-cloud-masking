@@ -27,9 +27,7 @@ void split_filename
 )
 {
     char file_name[PATH_MAX];      /* Local copy of filename */
-    char root[PATH_MAX];           /* Root portion of filename */
-    char full_extension[PATH_MAX]; /* Root portion of filename */
-    char *ptr;                     /* String pointer */
+    char *ptr = NULL;              /* String pointer */
 
     /* Make a local copy of filename so it is not destroyed */
     strcpy(file_name, filename);
@@ -39,40 +37,33 @@ void split_filename
     ptr = (char *) strrchr(file_name, '/');
     if (ptr != NULL)
     {
+        *(ptr++) = '\0';
         strcpy (directory, file_name);
-        ptr = (char *) strrchr(directory, '/');
-        ptr++;
-        strcpy (file_name, ptr);
-        *ptr = '\0';
     }
     else
         strcpy (directory, "");
 
     /* Check for a file extension */
-    ptr = (char *) strchr(file_name, '.');
+    strcpy(file_name, filename);
+    ptr = (char *) strrchr(file_name, '.');
     if (ptr != NULL)
     {
-        *(ptr++) = '\0';
-        strcpy (root, file_name);
-        strcpy (full_extension, ptr);
-    }
-    else
-    {
-        strcpy (root, file_name);
-        strcpy (full_extension, "");
-    }
-    ptr = (char *) strchr(full_extension, '.');
-    if (ptr != NULL)
-    {
-        *(ptr++) = '\0';
-        strcpy (scene_name, full_extension);
+        ptr++;
         strcpy (extension, ptr);
     }
     else
-    {
-        strcpy (scene_name, full_extension);
         strcpy (extension, "");
+
+    /* Obtain the scene name */
+    strcpy(file_name, filename);
+    ptr = (char *) strrchr(file_name, '.');
+    if (ptr != NULL)
+    {
+        *(ptr++) = '\0';
+        strcpy (scene_name, file_name);
     }
+    else
+        strcpy (scene_name, file_name);
 
     return;
 }
