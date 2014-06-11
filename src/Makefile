@@ -16,7 +16,7 @@ OBJ = $(SRC:.c=.o)
 
 # Define the object libraries
 LIB = -L$(ESPALIB) -l_espa_raw_binary -l_espa_common -l_espa_format_conversion \
-      -L$(XML2LIB) -lxml2 -lz -lpthread -lrt -lm
+      -L$(XML2LIB) -lxml2 -L$(LZMALIB) -lz -lpthread -lrt -lm
 
 # Define the executable
 EXE = cfmask
