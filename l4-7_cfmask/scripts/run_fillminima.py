@@ -5,10 +5,10 @@ import traceback
 import numpy as np
 import fillminima
 import os.path
-from numpy import zeros , int16 , int32
+from numpy import zeros, int16, int32
 
 
-### Error/Success codes ###
+# Error/Success codes
 ERROR = 1
 SUCCESS = 0
 
@@ -25,11 +25,11 @@ SUCCESS = 0
 #
 # Notes:
 ############################################################################
-def logIt (msg, log_handler):
-    if log_handler == None:
+def logIt(msg, log_handler):
+    if log_handler is None:
         print msg
     else:
-        log_handler.write (msg + '\n')
+        log_handler.write(msg + '\n')
 
 
 #############################################################################
@@ -41,20 +41,20 @@ def logIt (msg, log_handler):
 ############################################################################
 def mainRoutine(logfile=None):
     nullval = -9999
-    fname_txt = 'b4_b5.txt' # input text file
-    fname_b4 = 'b4.bin'     # input band 4 binary file
-    fname_b5 = 'b5.bin'     # input band 5 binary file
+    fname_txt = 'b4_b5.txt'  # input text file
+    fname_b4 = 'b4.bin'      # input band 4 binary file
+    fname_b5 = 'b5.bin'      # input band 5 binary file
 
     print "Start running fillminima"
     # open the log file if it exists; use line buffering for the output
     log_handler = None
-    if logfile != None:
-        log_handler = open (logfile, 'w', buffering=1)
+    if logfile is not None:
+        log_handler = open(logfile, 'w', buffering=1)
 
     # check the existenece of the input text file
     if not os.path.isfile(fname_txt):
         msg = 'Input file does not exist: ' + fname_txt
-        logIt (msg, log_handler)
+        logIt(msg, log_handler)
         return ERROR
 
     # Read out the input text file
@@ -68,21 +68,21 @@ def mainRoutine(logfile=None):
     # check the existenece of the input band 4 binary file
     if not os.path.isfile(fname_b4):
         msg = 'Input file does not exist: ' + fname_b4
-        logIt (msg, log_handler)
+        logIt(msg, log_handler)
         return ERROR
 
     # Read out the input band 4 binary file
     f = open(fname_b4, 'rb')
-    b4 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
+    b4 = np.fromfile(f, dtype=int16, count=-1).reshape(nlines, nsamps)
     f.close()
 
     # Call the fillMinima routine for band 4
     try:
         filled_b4 = fillminima.fillMinima(b4, nullval, b4_17)
     except:
-        logIt ("Error: Processing band 4 fillminima", log_handler)
+        logIt("Error: Processing band 4 fillminima", log_handler)
         tb = traceback.format_exc()
-        logIt ("Traceback: [%s]" % tb, log_handler)
+        logIt("Traceback: [%s]" % tb, log_handler)
         return ERROR
 
     # Release memory for b4 array
@@ -99,21 +99,21 @@ def mainRoutine(logfile=None):
     # check the existenece of the input band 5 binary file
     if not os.path.isfile(fname_b5):
         msg = 'Input file does not exist: ' + fname_b5
-        logIt (msg, log_handler)
+        logIt(msg, log_handler)
         return ERROR
 
     # Read out the input band 5 binary file
     f = open(fname_b5, 'rb')
-    b5 = np.fromfile(f, dtype=int16, count = -1).reshape(nlines, nsamps)
+    b5 = np.fromfile(f, dtype=int16, count=-1).reshape(nlines, nsamps)
     f.close()
 
     # Call the fillMinima routine for band 5
     try:
         filled_b5 = fillminima.fillMinima(b5, nullval, b5_17)
     except:
-        logIt ("Error: Processing band 5 fillminima", log_handler)
+        logIt("Error: Processing band 5 fillminima", log_handler)
         tb = traceback.format_exc()
-        logIt ("Traceback: [%s]" % tb, log_handler)
+        logIt("Traceback: [%s]" % tb, log_handler)
         return ERROR
 
     # Release memory for b5 array
