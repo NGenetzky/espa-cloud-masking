@@ -23,8 +23,8 @@
 
 #include "output.h"
 
-#define FMASK_BAND "fmask"
-#define FMASK_LONG_NAME "fmask_band"
+#define FMASK_BAND "cfmask"
+#define FMASK_LONG_NAME "cfmask_band"
 
 
 /******************************************************************************
@@ -122,7 +122,7 @@ Output_t *OpenOutput
 
   strncpy (bmeta[0].short_name, in_meta->band[refl_indx].short_name, 3);
   bmeta[0].short_name[3] = '\0';
-  strcat (bmeta[0].short_name, "FMSK");
+  strcat (bmeta[0].short_name, "CFMASK");
   strcpy (bmeta[0].product, "cfmask");
   strcpy (bmeta[0].source, "toa_refl");
   strcpy (bmeta[0].category, "qa");
