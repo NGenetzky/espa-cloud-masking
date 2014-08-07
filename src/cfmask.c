@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
     }
 
     /* Validate the input metadata file */
-    if (validate_xml_file (xml_name, ESPA_SCHEMA) != SUCCESS)
+    if (validate_xml_file (xml_name) != SUCCESS)
     {  /* Error messages already written */
         CFMASK_ERROR (errstr, "main");
     }
