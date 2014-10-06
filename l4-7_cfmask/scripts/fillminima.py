@@ -24,6 +24,7 @@ import numpy
 from scipy import weave
 from scipy.ndimage import grey_erosion, grey_dilation, minimum_filter
 
+
 ############################################################################
 # Description: Set the boundary values and call the fillMinima C code
 #
@@ -35,10 +36,10 @@ from scipy.ndimage import grey_erosion, grey_dilation, minimum_filter
 #
 # Returns: filled image data
 #
-# Notes: Fill all local minima in the input img. The input
-#        array should be a numpy 2-d array. This function returns
-#        an array of the same shape and datatype, with the same contents, but
-#        with local minima filled using the reconstruction-by-erosion algorithm.
+# Notes: Fill all local minima in the input img. The input array should be a
+#        numpy 2-d array. This function returns an array of the same shape
+#        and datatype, with the same contents, but with local minima filled
+#        using the reconstruction-by-erosion algorithm.
 ############################################################################
 def fillMinima(img, nullval, boundaryval):
     """
@@ -50,13 +51,13 @@ def fillMinima(img, nullval, boundaryval):
     """
     (nrows, ncols) = img.shape
     dtype = img.dtype
-    nullmask = (img == nullval) # Generate mask of no data values
-    nonNullmask = numpy.logical_not(nullmask) # Convert it to a data mask
+    nullmask = (img == nullval)  # Generate mask of no data values
+    nonNullmask = numpy.logical_not(nullmask)  # Convert it to a data mask
     # Find the minimum and maximum values in the data
     (hMax, hMin) = (int(img[nonNullmask].max()), int(img[nonNullmask].min()))
 
     # No longer need the nonNullmask
-    del nonNullmask;
+    del nonNullmask
 
     # Generate an internal image initialized with zeros
     img2 = numpy.zeros((nrows, ncols), dtype=dtype)
@@ -65,7 +66,7 @@ def fillMinima(img, nullval, boundaryval):
 
     # If boundary was set to zero use the maximum value.
     if boundaryval == 0.0:
-       boundaryval = hMax
+        boundaryval = hMax
 
     # If we have no_data(fill) values
     if nullmask.sum() > 0:
@@ -74,21 +75,21 @@ def fillMinima(img, nullval, boundaryval):
         (boundaryRows, boundaryCols) = numpy.where(innerBoundary)
 
         # No longer need the innerBoundary
-        del innerBoundary;
+        del innerBoundary
     else:
         img2[0, :] = img[0, :]
         img2[-1, :] = img[-1, :]
         img2[:, 0] = img[:, 0]
         img2[:, -1] = img[:, -1]
-        (boundaryRows, boundaryCols) = numpy.where(img2!=hMax)
+        (boundaryRows, boundaryCols) = numpy.where(img2 != hMax)
 
     varList = ['img', 'img2', 'hMin', 'hMax', 'nullmask', 'boundaryval',
-        'boundaryRows', 'boundaryCols']
+               'boundaryRows', 'boundaryCols']
 
     try:
         weave.inline(mainCcode, arg_names=varList,
-            type_converters=weave.converters.blitz,
-            compiler="gcc", support_code=supportCcode)
+                     type_converters=weave.converters.blitz,
+                     compiler="gcc", support_code=supportCcode)
     except Exception, e:
         print ("Error: WEAVE [%s]" % str(e))
         raise e
@@ -257,7 +258,7 @@ supportCcode = """
         pl = NULL;
         for (ii=-1; ii<=1; ii++) {
             for (jj=-1; jj<=1; jj++) {
-                if ((ii != 0) && (jj != 0)) {
+                if ((ii != 0) || (jj != 0)) {
                     i = p->i + ii;
                     j = p->j + jj;
                     if ((i >= 0) && (i < nRows) && (j >= 0) && (j < nCols)) {
