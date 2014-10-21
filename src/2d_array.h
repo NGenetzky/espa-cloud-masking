@@ -1,8 +1,6 @@
 #ifndef MISC_2D_ARRAY_H
 #define MISC_2D_ARRAY_H
 
-#include <stdio.h>
-
 void **allocate_2d_array
 (
     int rows,          /* I: Number of rows for the 2D array */
