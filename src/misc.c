@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
+#include <math.h>
 
 #include "const.h"
 #include "error.h"
