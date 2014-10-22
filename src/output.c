@@ -164,7 +164,7 @@ Output_t *OpenOutput
     bmeta[0].class_values[2].class = 2;
     bmeta[0].class_values[3].class = 3;
     bmeta[0].class_values[4].class = 4;
-    bmeta[0].class_values[5].class = 255;
+    bmeta[0].class_values[5].class = FILL_VALUE;
     strcpy (bmeta[0].class_values[0].description, "clear");
     strcpy (bmeta[0].class_values[1].description, "water");
     strcpy (bmeta[0].class_values[2].description, "cloud_shadow");
