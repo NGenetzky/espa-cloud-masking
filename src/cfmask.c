@@ -1,6 +1,5 @@
 
 #include <string.h>
-#include <stdarg.h>
 #include <time.h>
 
 #include "espa_metadata.h"
@@ -10,12 +9,12 @@
 #include "espa_geoloc.h"
 #include "raw_binary_io.h"
 
+#include "const.h"
 #include "error.h"
 #include "input.h"
 #include "output.h"
-#include "cfmask.h"
 #include "2d_array.h"
-#include "const.h"
+#include "cfmask.h"
 
 /******************************************************************************
 METHOD:  cfmask
@@ -289,10 +288,12 @@ main (int argc, char *argv[])
     FreeInput (input);
 
     free (xml_name);
+
     printf ("Processing complete.\n");
     time (&now);
     printf ("CFmask end_time=%s\n", ctime (&now));
-    return (SUCCESS);
+
+    return SUCCESS;
 }
 
 /******************************************************************************
@@ -320,8 +321,9 @@ usage ()
     printf ("Fmask identify the cloud, shadow, snow, water and clear pixels"
             " using the input Landsat scene (top of atmosphere (TOA)"
             " reflection and brightness temperature (BT) for band 6) output"
-            " from LEDAPS\n\n");
-    printf ("usage: ./cfmask"
+            " from LEDAPS\n");
+
+    printf ("\nusage: ./cfmask"
             " --xml=input_xml_filename"
             " --prob=input_cloud_probability_value"
             " --cldpix=input_cloud_pixel_buffer"
@@ -333,6 +335,7 @@ usage ()
     printf ("    -xml: name of the input XML file which contains the TOA"
             " reflectance and brightness temperature files output from"
             " LEDAPS\n");
+
     printf ("\nwhere the following parameters are optional:\n");
     printf ("    -prob: cloud_probability, default value is 22.5\n");
     printf ("    -cldpix: cloud_pixel_buffer for image dilate,"
@@ -343,7 +346,9 @@ usage ()
             " division, (default value is 0)\n");
     printf ("    -verbose: should intermediate messages be printed?"
             " (default is false)\n");
-    printf ("\n./fmask --help will print the usage statement\n");
+
+    printf ("\n./cfmask --help will print the usage statement\n");
+
     printf ("\nExample: ./cfmask --xml=LE70390032010263EDC00.xml"
             " --prob=22.5 --cldpix=3 --sdpix=3"
             " --max_cloud_pixels=5000000 --verbose\n");
