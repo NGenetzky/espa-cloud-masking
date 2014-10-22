@@ -58,7 +58,7 @@ dn_to_bt (Input_t * input)
     }
 
     temp = (input->meta.gain_th * (float) dn) + input->meta.bias_th;
-    temp = k2 / log ((k1 / temp) + 1);
+    temp = k2 / log ((k1 / temp) + 1.0);
     input->meta.therm_satu_value_max = (int) (100.0 * (temp - 273.15) + 0.5);
 
     return true;
@@ -160,8 +160,10 @@ Date        Programmer       Reason
 
 !Design Notes:
 ******************************************************************************/
-Input_t *OpenInput (Espa_internal_meta_t * metadata     /* I: input metadata */
-    )
+Input_t *OpenInput
+(
+    Espa_internal_meta_t *metadata /* I: input metadata */
+)
 {
     Input_t *this = NULL;
     char *error_string = NULL;
@@ -292,7 +294,7 @@ Input_t *OpenInput (Espa_internal_meta_t * metadata     /* I: input metadata */
 !Design Notes:
 ******************************************************************************/
 bool
-CloseInput (Input_t * this)
+CloseInput (Input_t *this)
 {
     int ib;
     bool none_open;
@@ -339,7 +341,7 @@ CloseInput (Input_t * this)
 !Design Notes:
 ******************************************************************************/
 bool
-FreeInput (Input_t * this)
+FreeInput (Input_t *this)
 {
     int ib;
 
@@ -384,10 +386,10 @@ FreeInput (Input_t * this)
 !Design Notes:
 ******************************************************************************/
 bool
-GetInputLine (Input_t * this, int iband, int iline)
+GetInputLine (Input_t *this, int iband, int iline)
 {
     void *buf = NULL;
-    long loc;                   /* pointer location in the raw binary file */
+    long loc; /* pointer location in the raw binary file */
 
     /* Check the parameters */
     if (this == (Input_t *) NULL)
@@ -432,13 +434,13 @@ current line
 !Design Notes:
 ******************************************************************************/
 bool
-GetInputThermLine (Input_t * this, int iline)
+GetInputThermLine (Input_t *this, int iline)
 {
     void *buf = NULL;
-    int i;                      /* looping variable */
-    long loc;                   /* pointer location in the raw binary file */
-    float therm_val;            /* tempoary thermal value for conversion from Kelvin
-                                   to Celsius */
+    int i;            /* looping variable */
+    long loc;         /* pointer location in the raw binary file */
+    float therm_val;  /* tempoary thermal value for conversion from Kelvin to
+                         Celsius */
 
     /* Check the parameters */
     if (this == (Input_t *) NULL)
@@ -459,8 +461,8 @@ GetInputThermLine (Input_t * this, int iline)
         RETURN_ERROR ("error reading thermal line (binary)",
                       "GetInputThermLine", false);
 
-    /* Convert from kelvin back to degrees Celsius since the application is based
-       on Celsius.  If this is fill or saturated, then leave as fill or
+    /* Convert from kelvin back to degrees Celsius since the application is
+       based on Celsius.  If this is fill or saturated, then leave as fill or
        saturated. */
     for (i = 0; i < this->size.s; i++)
     {
@@ -471,8 +473,8 @@ GetInputThermLine (Input_t * this, int iline)
             therm_val = this->therm_buf[i] * this->meta.therm_scale_fact;
             therm_val -= 273.15;
 
-            /* apply the old scale factor that the cfmask processing is based upon,
-               with hard-coded values */
+            /* apply the old scale factor that the cfmask processing is based
+               upon, with hard-coded values */
             therm_val *= 100.0;
             this->therm_buf[i] = (int) (therm_val + 0.5);
         }
@@ -485,11 +487,7 @@ GetInputThermLine (Input_t * this, int iline)
 #define DATE_STRING_LEN (50)
 #define TIME_STRING_LEN (50)
 
-bool
-GetXMLInput (Input_t * this, Espa_internal_meta_t * metadata)
-/* 
-!C******************************************************************************
-
+/******************************************************************************
 !Description: 'GetXMLInput' pulls input values from the XML structure.
  
 !Input Parameters:
@@ -506,8 +504,9 @@ GetXMLInput (Input_t * this, Espa_internal_meta_t * metadata)
 ! Design Notes:
   1. This replaces the previous GetInputMeta so the input values are pulled
      from the XML file instead of the HDF and MTL files.
-!END****************************************************************************
-*/
+******************************************************************************/
+bool
+GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
 {
     char *error_string = NULL;
     int ib;
@@ -516,7 +515,7 @@ GetXMLInput (Input_t * this, Espa_internal_meta_t * metadata)
     char temp[MAX_STR_LEN + 1];
     int i;                      /* looping variable */
     int indx = -1;              /* band index in XML file for band1 or band6 */
-    Espa_global_meta_t *gmeta = &metadata->global;      /* pointer to global meta */
+    Espa_global_meta_t *gmeta = &metadata->global; /* pointer to global meta */
 
     /* Initialize the input fields */
     this->nband = 0;
@@ -572,48 +571,58 @@ GetXMLInput (Input_t * this, Espa_internal_meta_t * metadata)
        information */
     for (i = 0; i < metadata->nbands; i++)
     {
-        if (!strcmp (metadata->band[i].name, "band1") && !strncmp (metadata->band[i].product, "L1", 2)) /* L1G or L1T */
+        if (!strcmp (metadata->band[i].name, "band1")
+            && !strncmp (metadata->band[i].product, "L1", 2))
         {
             this->meta.gain[0] = metadata->band[i].toa_gain;
             this->meta.bias[0] = metadata->band[i].toa_bias;
         }
-        else if (!strcmp (metadata->band[i].name, "band2") && !strncmp (metadata->band[i].product, "L1", 2))    /* L1G or L1T */
+        else if (!strcmp (metadata->band[i].name, "band2")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
         {
             this->meta.gain[1] = metadata->band[i].toa_gain;
             this->meta.bias[1] = metadata->band[i].toa_bias;
         }
-        else if (!strcmp (metadata->band[i].name, "band3") && !strncmp (metadata->band[i].product, "L1", 2))    /* L1G or L1T */
+        else if (!strcmp (metadata->band[i].name, "band3")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
         {
             this->meta.gain[2] = metadata->band[i].toa_gain;
             this->meta.bias[2] = metadata->band[i].toa_bias;
         }
-        else if (!strcmp (metadata->band[i].name, "band4") && !strncmp (metadata->band[i].product, "L1", 2))    /* L1G or L1T */
+        else if (!strcmp (metadata->band[i].name, "band4")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
         {
             this->meta.gain[3] = metadata->band[i].toa_gain;
             this->meta.bias[3] = metadata->band[i].toa_bias;
         }
-        else if (!strcmp (metadata->band[i].name, "band5") && !strncmp (metadata->band[i].product, "L1", 2))    /* L1G or L1T */
+        else if (!strcmp (metadata->band[i].name, "band5")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
         {
             this->meta.gain[4] = metadata->band[i].toa_gain;
             this->meta.bias[4] = metadata->band[i].toa_bias;
         }
-        else if (!strcmp (metadata->band[i].name, "band7") && !strncmp (metadata->band[i].product, "L1", 2))    /* L1G or L1T */
+        else if (!strcmp (metadata->band[i].name, "band7")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
         {
             this->meta.gain[5] = metadata->band[i].toa_gain;
             this->meta.bias[5] = metadata->band[i].toa_bias;
         }
 
-        if (!strcmp (metadata->band[i].name, "band6") && !strncmp (metadata->band[i].product, "L1", 2)) /* L1G or L1T */
-        {                       /* TM */
+        if (!strcmp (metadata->band[i].name, "band6")
+            && !strncmp (metadata->band[i].product, "L1", 2))
+        {
+            /* TM */
             this->meta.gain_th = metadata->band[i].toa_gain;
             this->meta.bias_th = metadata->band[i].toa_bias;
         }
-        else if (!strcmp (metadata->band[i].name, "band61") && !strncmp (metadata->band[i].product, "L1", 2))   /* L1G or L1T */
-        {                       /* ETM+ */
+        else if (!strcmp (metadata->band[i].name, "band61")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
+        {
+            /* ETM+ */
             this->meta.gain_th = metadata->band[i].toa_gain;
             this->meta.bias_th = metadata->band[i].toa_bias;
         }
-    }                           /* for i */
+    } /* for i */
 
     /* Find TOA band 1 in the input XML file to obtain band-related
        information */
@@ -667,7 +676,7 @@ GetXMLInput (Input_t * this, Espa_internal_meta_t * metadata)
             this->file_name[5] = strdup (metadata->band[i].file_name);
             this->meta.satu_value_ref[5] = metadata->band[i].saturate_value;
         }
-    }                           /* for i */
+    } /* for i */
 
     if (indx == -1)
     {
