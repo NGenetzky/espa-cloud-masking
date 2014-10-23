@@ -1,6 +1,14 @@
 #ifndef CONST_H
 #define CONST_H
 
+#define PI (3.141592653589793238)
+
+#define TWO_PI (2.0 * PI)
+#define HALF_PI (PI / 2.0)
+
+#define DEG (180.0 / PI)
+#define RAD (PI / 180.0)
+
 #ifndef SUCCESS
 #define SUCCESS  0
 #endif

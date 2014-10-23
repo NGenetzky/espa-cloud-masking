@@ -11,7 +11,7 @@
 #include "2d_array.h"
 #include "input.h"
 
-#define MAX_CLOUD_TYPE 2000000
+#define MAX_CLOUD_TYPE 3000000
 #define MIN_CLOUD_OBJ 9
 
 static int num_clouds = 0;
@@ -105,17 +105,18 @@ Date        Programmer       Reason
 NOTES:
 ******************************************************************************/
 void mat_truecloud
-(    int *x,             /*I: input pixel cloumn */
-     int *y,             /*I: input pixel row */
-     int array_length,   /*I: number of input array */
-     float *h,           /*I: cloud pixel height */
-     float a,            /*I: coefficient */
-     float b,            /*I: coefficient */
-     float c,            /*I: coefficient */
-     float omiga_par,    /*I: angle of parellel line */
-     float omiga_per,    /*I: angle of parellel line */
-     float *x_new,       /*O: output pixel cloumn */
-     float *y_new        /*O: output pixel row */
+(
+    int *x,           /*I: input pixel cloumn */
+    int *y,           /*I: input pixel row */
+    int array_length, /*I: number of input array */
+    float *h,         /*I: cloud pixel height */
+    float a,          /*I: coefficient */
+    float b,          /*I: coefficient */
+    float c,          /*I: coefficient */
+    float omiga_par,  /*I: angle of parellel line */
+    float omiga_per,  /*I: angle of parellel line */
+    float *x_new,     /*O: output pixel cloumn */
+    float *y_new      /*O: output pixel row */
 )
 {
     float dist;                 /* distance */
