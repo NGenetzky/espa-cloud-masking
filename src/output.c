@@ -30,7 +30,7 @@
 #include "input.h"
 #include "output.h"
 
-#define FMASK_BAND "cfmask"
+#define FMASK_PRODUCT "cfmask"
 #define FMASK_LONG_NAME "cfmask_band"
 
 
@@ -136,7 +136,7 @@ Output_t *OpenOutput
     strncpy (bmeta[0].short_name, in_meta->band[refl_indx].short_name, 3);
     bmeta[0].short_name[3] = '\0';
     strcat (bmeta[0].short_name, "CFMASK");
-    strcpy (bmeta[0].product, "cfmask");
+    strcpy (bmeta[0].product, FMASK_PRODUCT);
     strcpy (bmeta[0].source, "toa_refl");
     strcpy (bmeta[0].category, "qa");
     bmeta[0].nlines = this->size.l;
@@ -144,13 +144,13 @@ Output_t *OpenOutput
     bmeta[0].pixel_size[0] = input->meta.pixel_size[0];
     bmeta[0].pixel_size[1] = input->meta.pixel_size[1];
     strcpy (bmeta[0].pixel_units, "meters");
-    sprintf (bmeta[0].app_version, "cfmask_%s", CFMASK_VERSION);
+    sprintf (bmeta[0].app_version, "%s_%s", CFMASK_APP_NAME, CFMASK_VERSION);
     strcpy (bmeta[0].production_date, production_date);
     bmeta[0].data_type = ESPA_UINT8;
     bmeta[0].fill_value = FILL_VALUE;
     bmeta[0].valid_range[0] = 0;
     bmeta[0].valid_range[1] = 4;
-    strcpy (bmeta[0].name, FMASK_BAND);
+    strcpy (bmeta[0].name, FMASK_PRODUCT);
     strcpy (bmeta[0].long_name, FMASK_LONG_NAME);
     strcpy (bmeta[0].data_units, "quality/feature classification");
 
