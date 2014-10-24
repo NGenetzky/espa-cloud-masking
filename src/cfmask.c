@@ -323,13 +323,13 @@ usage ()
             " reflection and brightness temperature (BT) for band 6) output"
             " from LEDAPS\n");
 
-    printf ("\nusage: ./cfmask"
+    printf ("\nusage: ./%s"
             " --xml=input_xml_filename"
             " --prob=input_cloud_probability_value"
             " --cldpix=input_cloud_pixel_buffer"
             " --sdpix=input_shadow_pixel_buffer"
             " --max_cloud_pixels=maximum_cloud_pixel_numbers_for_cloud_division"
-            " [--verbose]\n");
+            " [--verbose]\n", CFMASK_APP_NAME);
 
     printf ("\nwhere the following parameters are required:\n");
     printf ("    -xml: name of the input XML file which contains the TOA"
@@ -347,9 +347,9 @@ usage ()
     printf ("    -verbose: should intermediate messages be printed?"
             " (default is false)\n");
 
-    printf ("\n./cfmask --help will print the usage statement\n");
+    printf ("\n./%s --help will print the usage statement\n", CFMASK_APP_NAME);
 
-    printf ("\nExample: ./cfmask --xml=LE70390032010263EDC00.xml"
+    printf ("\nExample: ./%s --xml=LE70390032010263EDC00.xml"
             " --prob=22.5 --cldpix=3 --sdpix=3"
-            " --max_cloud_pixels=5000000 --verbose\n");
+            " --max_cloud_pixels=5000000 --verbose\n", CFMASK_APP_NAME);
 }
