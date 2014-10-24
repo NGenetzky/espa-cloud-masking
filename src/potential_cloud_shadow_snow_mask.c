@@ -390,7 +390,7 @@ int potential_cloud_shadow_snow_mask
                 }
                 else
                 {
-                    /*get clear water temperature */
+                    /* get clear water temperature */
                     if (clear_mask[row][col] & (1 << CLEAR_BIT))
                     {
                         f_temp[index] = input->therm_buf[col];
@@ -414,6 +414,17 @@ int potential_cloud_shadow_snow_mask
             }
         }
         printf ("\n");
+
+        /* Set maximum and minimum values to zero if no clear land/water 
+           pixels */
+        if (f_temp_min == SHRT_MAX)
+            f_temp_min = 0;
+        if (f_temp_max == SHRT_MIN)
+            f_temp_max = 0;
+        if (f_wtemp_min == SHRT_MAX)
+            f_wtemp_min = 0;
+        if (f_wtemp_max == SHRT_MIN)
+            f_wtemp_max = 0;
 
         /* Tempearture for snow test */
         l_pt = 0.175;
