@@ -1,7 +1,8 @@
 #ifndef CFMASK_H
 #define CFMASK_H
 
-#define CFMASK_VERSION "1.4.0"
+#define CFMASK_APP_NAME "cfmask"
+#define CFMASK_VERSION "1.4.2"
 
 typedef signed short int16;
 
