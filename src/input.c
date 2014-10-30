@@ -13,9 +13,9 @@
 #include "input.h"
 
 /******************************************************************************
-MODULE:  dn_to_bt
+MODULE:  dn_to_bt_saturation
 
-PURPOSE:  Convert Digital Number to Brightness Temperature
+PURPOSE:  Convert saturated Digital Number to Brightness Temperature
 
 RETURN: true on success
         false on error
@@ -28,13 +28,12 @@ Date        Programmer       Reason
 NOTES: The constants and formular used are from BU's matlab code
        & G. Chander et al. RSE 113 (2009) 893-903
 *****************************************************************************/
-bool
-dn_to_bt (Input_t * input)
+void
+dn_to_bt_saturation (Input_t * input)
 {
     float k1, k2;               /* constans */
     int dn = 255;               /* maximum DN value */
     float temp;                 /* intermediate variable */
-    char errmsg[STR_SIZE];      /* error message */
 
     if (strcmp (input->meta.sat, "LANDSAT_7") == 0)
     {
@@ -51,23 +50,16 @@ dn_to_bt (Input_t * input)
         k1 = 671.62;
         k2 = 1284.30;
     }
-    else
-    {
-        sprintf (errmsg, "Unsupported satellite sensor");
-        RETURN_ERROR (errmsg, "dn_to_bt", false);
-    }
 
     temp = (input->meta.gain_th * (float) dn) + input->meta.bias_th;
     temp = k2 / log ((k1 / temp) + 1.0);
     input->meta.therm_satu_value_max = (int) (100.0 * (temp - 273.15) + 0.5);
-
-    return true;
 }
 
 /******************************************************************************
-MODULE:  dn_to_toa
+MODULE:  dn_to_toa_saturation
 
-PURPOSE: Convert Digital Number to TOA reflectance 
+PURPOSE: Convert saturated Digital Number to TOA reflectance 
 
 RETURN: true on success
         false on error 
@@ -80,14 +72,15 @@ Date        Programmer       Reason
 NOTES: The constants and formular used are from BU's matlab code
        & G. Chander et al. RSE 113 (2009) 893-903  
 ******************************************************************************/
-bool
-dn_to_toa (Input_t * input)
+void
+dn_to_toa_saturation (Input_t * input)
 {
-    float esun[BI_REFL_BAND_COUNT]; /* earth sun distance for each band */
+    float esun[BI_REFL_BAND_COUNT]; /* mean solar exoatmospheric spectral
+                                       irradiance for each band */
     int ib;                         /* band loop variable */
     int dn = 255;                   /* maximum DN value */
     float temp;                     /* intermediate variable */
-    char errmsg[STR_SIZE];          /* error message */
+    float sun_zen_deg;              /* solar zenith angle in degrees */
 
     if (strcmp (input->meta.sat, "LANDSAT_7") == 0)
     {
@@ -116,30 +109,24 @@ dn_to_toa (Input_t * input)
         esun[BI_SWIR_1] = 219.8;
         esun[BI_SWIR_2] = 83.49;
     }
-    else
-    {
-        sprintf (errmsg, "Unsupported satellite sensor");
-        RETURN_ERROR (errmsg, "dn_to_toa", false);
-    }
+
+    sun_zen_deg = cos (input->meta.sun_zen * (PI / 180.0));
 
     for (ib = 0; ib < BI_REFL_BAND_COUNT; ib++)
     {
         temp = (input->meta.gain[ib] * (float) dn) + input->meta.bias[ib];
-        input->meta.satu_value_max[ib] = (int) ((10000.0 * PI * temp *
-                                                 input->dsun_doy[input->meta.
-                                                                 acq_date.
-                                                                 doy -
-                                                                 1] *
-                                                 input->dsun_doy[input->meta.
-                                                                 acq_date.
-                                                                 doy -
-                                                                 1]) /
-                                                (esun[ib] *
-                                                 cos (input->meta.sun_zen *
-                                                      (PI / 180.0))) + 0.5);
+        input->meta.satu_value_max[ib] = (int) ((10000.0 * PI * temp
+                                                 * input->dsun_doy[input->meta.
+                                                                   acq_date.
+                                                                   doy -
+                                                                   1]
+                                                 * input->dsun_doy[input->meta.
+                                                                   acq_date.
+                                                                   doy -
+                                                                   1])
+                                                / (esun[ib] * sun_zen_deg)
+                                                + 0.5);
     }
-
-    return true;
 }
 
 /******************************************************************************
@@ -173,7 +160,6 @@ Input_t *OpenInput
     FILE *dsun_in = NULL;       /* EarthSunDistance.txt file pointer */
     char *path = NULL;
     char full_path[MAX_STR_LEN];
-    int status;
 
     /* Create the Input data structure */
     this = (Input_t *) malloc (sizeof (Input_t));
@@ -257,20 +243,10 @@ Input_t *OpenInput
     fclose (dsun_in);
 
     /* Calculate maximum TOA reflectance values and put them in metadata */
-    status = dn_to_toa (this);
-    if (!status)
-    {
-        error_string = "Error calling dn_to_toa routine";
-        RETURN_ERROR (error_string, "OpenInput", NULL);
-    }
+    dn_to_toa_saturation (this);
 
     /* Calculate maximum BT values and put them in metadata */
-    status = dn_to_bt (this);
-    if (!status)
-    {
-        error_string = "Error calling dn_to_bt routine";
-        RETURN_ERROR (error_string, "OpenInput", NULL);
-    }
+    dn_to_bt_saturation (this);
 
     return this;
 }

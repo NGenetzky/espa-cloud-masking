@@ -102,6 +102,15 @@ main (int argc, char *argv[])
         CFMASK_ERROR (errstr, "main");
     }
 
+    /* Verify supported satellites */
+    if ((strcmp (xml_metadata.global.satellite, "LANDSAT_7") != 0)
+        && (strcmp (xml_metadata.global.satellite, "LANDSAT_5") != 0)
+        && (strcmp (xml_metadata.global.satellite, "LANDSAT_4") != 0))
+    {
+        sprintf (errstr, "Unsupported satellite sensor");
+        CFMASK_ERROR (errstr, "main");
+    }
+
     /* Split the filename to obtain the directory, scene name, and extension */
     split_filename (xml_name, directory, scene_name, extension);
     if (verbose)
