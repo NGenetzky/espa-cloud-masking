@@ -83,38 +83,38 @@ NOTES: The constants and formular used are from BU's matlab code
 bool
 dn_to_toa (Input_t * input)
 {
-    float esun[6];              /* earth sun distance for each band */
-    int ib;                     /* band loop variable */
-    int dn = 255;               /* maximum DN value */
-    float temp;                 /* intermediate variable */
-    char errmsg[STR_SIZE];      /* error message */
+    float esun[BI_REFL_BAND_COUNT]; /* earth sun distance for each band */
+    int ib;                         /* band loop variable */
+    int dn = 255;                   /* maximum DN value */
+    float temp;                     /* intermediate variable */
+    char errmsg[STR_SIZE];          /* error message */
 
     if (strcmp (input->meta.sat, "LANDSAT_7") == 0)
     {
-        esun[0] = 1997.0;
-        esun[1] = 1812.0;
-        esun[2] = 1533.0;
-        esun[3] = 1039.0;
-        esun[4] = 230.8;
-        esun[5] = 84.9;
+        esun[BI_BLUE] = 1997.0;
+        esun[BI_GREEN] = 1812.0;
+        esun[BI_RED] = 1533.0;
+        esun[BI_NIR] = 1039.0;
+        esun[BI_SWIR_1] = 230.8;
+        esun[BI_SWIR_2] = 84.9;
     }
     else if (strcmp (input->meta.sat, "LANDSAT_5") == 0)
     {
-        esun[0] = 1983.0;
-        esun[1] = 1796.0;
-        esun[2] = 1536.0;
-        esun[3] = 1031.0;
-        esun[4] = 220.0;
-        esun[5] = 83.44;
+        esun[BI_BLUE] = 1983.0;
+        esun[BI_GREEN] = 1796.0;
+        esun[BI_RED] = 1536.0;
+        esun[BI_NIR] = 1031.0;
+        esun[BI_SWIR_1] = 220.0;
+        esun[BI_SWIR_2] = 83.44;
     }
     else if (strcmp (input->meta.sat, "LANDSAT_4") == 0)
     {
-        esun[0] = 1983.0;
-        esun[1] = 1795.0;
-        esun[2] = 1539.0;
-        esun[3] = 1028.0;
-        esun[4] = 219.8;
-        esun[5] = 83.49;
+        esun[BI_BLUE] = 1983.0;
+        esun[BI_GREEN] = 1795.0;
+        esun[BI_RED] = 1539.0;
+        esun[BI_NIR] = 1028.0;
+        esun[BI_SWIR_1] = 219.8;
+        esun[BI_SWIR_2] = 83.49;
     }
     else
     {
@@ -122,7 +122,7 @@ dn_to_toa (Input_t * input)
         RETURN_ERROR (errmsg, "dn_to_toa", false);
     }
 
-    for (ib = 0; ib < NBAND_REFL_MAX; ib++)
+    for (ib = 0; ib < BI_REFL_BAND_COUNT; ib++)
     {
         temp = (input->meta.gain[ib] * (float) dn) + input->meta.bias[ib];
         input->meta.satu_value_max[ib] = (int) ((10000.0 * PI * temp *
@@ -519,7 +519,7 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
 
     /* Initialize the input fields */
     this->nband = 0;
-    for (ib = 0; ib < NBAND_REFL_MAX; ib++)
+    for (ib = 0; ib < BI_REFL_BAND_COUNT; ib++)
     {
         this->file_name[ib] = NULL;
         this->open[ib] = false;
@@ -559,7 +559,7 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
         !strncmp (gmeta->instrument, "ETM", 3))
     {
         /* reflectance bands */
-        this->nband = 6;        /* number of reflectance bands */
+        this->nband = BI_REFL_BAND_COUNT; /* number of reflectance bands */
     }
     else
     {
@@ -574,42 +574,42 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
         if (!strcmp (metadata->band[i].name, "band1")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[0] = metadata->band[i].toa_gain;
-            this->meta.bias[0] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_BLUE] = metadata->band[i].toa_gain;
+            this->meta.bias[BI_BLUE] = metadata->band[i].toa_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band2")
                  && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[1] = metadata->band[i].toa_gain;
-            this->meta.bias[1] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_GREEN] = metadata->band[i].toa_gain;
+            this->meta.bias[BI_GREEN] = metadata->band[i].toa_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band3")
                  && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[2] = metadata->band[i].toa_gain;
-            this->meta.bias[2] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_RED] = metadata->band[i].toa_gain;
+            this->meta.bias[BI_RED] = metadata->band[i].toa_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band4")
                  && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[3] = metadata->band[i].toa_gain;
-            this->meta.bias[3] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_NIR] = metadata->band[i].toa_gain;
+            this->meta.bias[BI_NIR] = metadata->band[i].toa_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band5")
                  && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[4] = metadata->band[i].toa_gain;
-            this->meta.bias[4] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_SWIR_1] = metadata->band[i].toa_gain;
+            this->meta.bias[BI_SWIR_1] = metadata->band[i].toa_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band7")
                  && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[5] = metadata->band[i].toa_gain;
-            this->meta.bias[5] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_SWIR_2] = metadata->band[i].toa_gain;
+            this->meta.bias[BI_SWIR_2] = metadata->band[i].toa_bias;
         }
-
-        if (!strcmp (metadata->band[i].name, "band6")
-            && !strncmp (metadata->band[i].product, "L1", 2))
+        /* Thermal */
+        else if (!strcmp (metadata->band[i].name, "band6")
+                 && !strncmp (metadata->band[i].product, "L1", 2))
         {
             /* TM */
             this->meta.gain_th = metadata->band[i].toa_gain;
@@ -635,33 +635,46 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
             indx = i;
 
             /* get the band1 info */
-            this->file_name[0] = strdup (metadata->band[i].file_name);
-            this->meta.satu_value_ref[0] = metadata->band[i].saturate_value;
+            this->file_name[BI_BLUE] = strdup (metadata->band[i].file_name);
+            this->meta.satu_value_ref[BI_BLUE] =
+                metadata->band[i].saturate_value;
         }
         else if (!strcmp (metadata->band[i].name, "toa_band2") &&
                  !strcmp (metadata->band[i].product, "toa_refl"))
         {
-            this->file_name[1] = strdup (metadata->band[i].file_name);
-            this->meta.satu_value_ref[1] = metadata->band[i].saturate_value;
+            this->file_name[BI_GREEN] = strdup (metadata->band[i].file_name);
+            this->meta.satu_value_ref[BI_GREEN] =
+                metadata->band[i].saturate_value;
         }
         else if (!strcmp (metadata->band[i].name, "toa_band3") &&
                  !strcmp (metadata->band[i].product, "toa_refl"))
         {
-            this->file_name[2] = strdup (metadata->band[i].file_name);
-            this->meta.satu_value_ref[2] = metadata->band[i].saturate_value;
+            this->file_name[BI_RED] = strdup (metadata->band[i].file_name);
+            this->meta.satu_value_ref[BI_RED] =
+                metadata->band[i].saturate_value;
         }
         else if (!strcmp (metadata->band[i].name, "toa_band4") &&
                  !strcmp (metadata->band[i].product, "toa_refl"))
         {
-            this->file_name[3] = strdup (metadata->band[i].file_name);
-            this->meta.satu_value_ref[3] = metadata->band[i].saturate_value;
+            this->file_name[BI_NIR] = strdup (metadata->band[i].file_name);
+            this->meta.satu_value_ref[BI_NIR] =
+                metadata->band[i].saturate_value;
         }
         else if (!strcmp (metadata->band[i].name, "toa_band5") &&
                  !strcmp (metadata->band[i].product, "toa_refl"))
         {
-            this->file_name[4] = strdup (metadata->band[i].file_name);
-            this->meta.satu_value_ref[4] = metadata->band[i].saturate_value;
+            this->file_name[BI_SWIR_1] = strdup (metadata->band[i].file_name);
+            this->meta.satu_value_ref[BI_SWIR_1] =
+                metadata->band[i].saturate_value;
         }
+        else if (!strcmp (metadata->band[i].name, "toa_band7") &&
+                 !strcmp (metadata->band[i].product, "toa_refl"))
+        {
+            this->file_name[BI_SWIR_2] = strdup (metadata->band[i].file_name);
+            this->meta.satu_value_ref[BI_SWIR_2] =
+                metadata->band[i].saturate_value;
+        }
+        /* Thermal */
         else if (!strcmp (metadata->band[i].name, "toa_band6") &&
                  !strcmp (metadata->band[i].product, "toa_bt"))
         {
@@ -669,12 +682,6 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
             this->meta.therm_satu_value_ref =
                 metadata->band[i].saturate_value;
             this->meta.therm_scale_fact = metadata->band[i].scale_factor;
-        }
-        else if (!strcmp (metadata->band[i].name, "toa_band7") &&
-                 !strcmp (metadata->band[i].product, "toa_refl"))
-        {
-            this->file_name[5] = strdup (metadata->band[i].file_name);
-            this->meta.satu_value_ref[5] = metadata->band[i].saturate_value;
         }
     } /* for i */
 

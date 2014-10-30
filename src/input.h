@@ -30,12 +30,12 @@ typedef struct
     float sun_az;             /* Solar azimuth angle (degrees; scene center) */
     int fill;                 /* Fill value for image data */
     float pixel_size[2];      /* pixel size (x,y) */
-    int satu_value_ref[NBAND_REFL_MAX]; /* saturation value of TOA products */
-    int satu_value_max[NBAND_REFL_MAX]; /* maximum TOA value */
+    int satu_value_ref[BI_REFL_BAND_COUNT]; /* sat value of TOA products */
+    int satu_value_max[BI_REFL_BAND_COUNT]; /* maximum TOA value */
     int therm_satu_value_ref;   /* saturation value of thermal product */
     int therm_satu_value_max;   /* maximum bt value (degrees Celsius) */
-    float gain[NBAND_REFL_MAX]; /* Band gain */
-    float bias[NBAND_REFL_MAX]; /* Band bias */
+    float gain[BI_REFL_BAND_COUNT]; /* Band gain */
+    float bias[BI_REFL_BAND_COUNT]; /* Band bias */
     float gain_th;              /* Thermal band gain */
     float bias_th;              /* Thermal band bias */
     float therm_scale_fact;     /* Scale factor for the thermal band */
@@ -49,13 +49,13 @@ typedef struct
     Input_meta_t meta;          /* Input metadata */
     int nband;                  /* Number of input TOA reflectance bands */
     Img_coord_int_t size;       /* Input file size */
-    char *file_name[NBAND_REFL_MAX]; /* Name of the input TOA image files */
+    char *file_name[BI_REFL_BAND_COUNT]; /* Name of the input TOA image files */
     char *file_name_therm;      /* Name of the input thermal file */
-    FILE *fp_bin[NBAND_REFL_MAX]; /* File pointer for TOA refl binary files */
-    bool open[NBAND_REFL_MAX];  /* Flag to indicate whether the specific input
-                                   TOA reflectance file is open for access;
-                                   'true' = open, 'false' = not open */
-    int16 *buf[NBAND_REFL_MAX]; /* Input data buffer (one line of data) */
+    FILE *fp_bin[BI_REFL_BAND_COUNT]; /* File ptr for TOA refl binary files */
+    bool open[BI_REFL_BAND_COUNT];  /* Indicates whether the specific input
+                                       TOA reflectance file is open for access;
+                                       'true' = open, 'false' = not open */
+    int16 *buf[BI_REFL_BAND_COUNT]; /* Input data buffer (one line of data) */
     FILE *fp_bin_therm;         /* File pointer for thermal binary file */
     bool open_therm;            /* Flag to indicate whether the input thermal
                                    file is open for access */

@@ -131,7 +131,7 @@ int potential_cloud_shadow_snow_mask
         for (col = 0; col < ncols; col++)
         {
             int ib;
-            for (ib = 0; ib < NBAND_REFL_MAX; ib++)
+            for (ib = 0; ib < BI_REFL_BAND_COUNT; ib++)
             {
                 if (input->buf[ib][col] == input->meta.satu_value_ref[ib])
                     input->buf[ib][col] = input->meta.satu_value_max[ib];
@@ -139,11 +139,17 @@ int potential_cloud_shadow_snow_mask
             if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
                 input->therm_buf[col] = input->meta.therm_satu_value_max;
 
-            /* process non-fill pixels only */
-            if (input->therm_buf[col] <= -9999 || input->buf[0][col] == -9999
-                || input->buf[1][col] == -9999 || input->buf[2][col] == -9999
-                || input->buf[3][col] == -9999 || input->buf[4][col] == -9999
-                || input->buf[5][col] == -9999)
+            /* process non-fill pixels only
+               Due to a problem with the input LPGS data, the thermal band
+               may have values less than -9999 after scaling so exclude those
+               as well */
+            if (input->therm_buf[col] <= -9999
+                || input->buf[BI_BLUE][col] == -9999
+                || input->buf[BI_GREEN][col] == -9999
+                || input->buf[BI_RED][col] == -9999
+                || input->buf[BI_NIR][col] == -9999
+                || input->buf[BI_SWIR_1][col] == -9999
+                || input->buf[BI_SWIR_2][col] == -9999)
             {
                 mask = 0;
             }
@@ -153,42 +159,61 @@ int potential_cloud_shadow_snow_mask
                 mask_counter++;
             }
 
-            if ((input->buf[2][col] + input->buf[3][col]) != 0 && mask == 1)
+            if ((input->buf[BI_RED][col] + input->buf[BI_NIR][col]) != 0
+                && mask == 1)
             {
-                ndvi = (float) (input->buf[3][col] - input->buf[2][col]) /
-                    (float) (input->buf[3][col] + input->buf[2][col]);
+                ndvi = (float) (input->buf[BI_NIR][col]
+                                - input->buf[BI_RED][col])
+                       / (float) (input->buf[BI_NIR][col]
+                                  + input->buf[BI_RED][col]);
             }
             else
                 ndvi = 0.01;
 
-            if ((input->buf[1][col] + input->buf[4][col]) != 0 && mask == 1)
+            if ((input->buf[BI_GREEN][col] + input->buf[BI_SWIR_1][col]) != 0
+                && mask == 1)
             {
-                ndsi = (float) (input->buf[1][col] - input->buf[4][col]) /
-                    (float) (input->buf[1][col] + input->buf[4][col]);
+                ndsi = (float) (input->buf[BI_GREEN][col]
+                                - input->buf[BI_SWIR_1][col])
+                       / (float) (input->buf[BI_GREEN][col]
+                                  + input->buf[BI_SWIR_1][col]);
             }
             else
                 ndsi = 0.01;
 
             /* Basic cloud test, equation 1 */
-            if (((ndsi - 0.8) < MINSIGMA) && ((ndvi - 0.8) < MINSIGMA) &&
-                (input->buf[5][col] > 300) && (input->therm_buf[col] < 2700))
+            if (((ndsi - 0.8) < MINSIGMA)
+                && ((ndvi - 0.8) < MINSIGMA)
+                && (input->buf[BI_SWIR_2][col] > 300)
+                && (input->therm_buf[col] < 2700))
+            {
                 pixel_mask[row][col] |= 1 << CLOUD_BIT;
+            }
             else
                 pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
 
             /* It takes every snow pixels including snow pixel under thin 
                clouds or icy clouds, equation 20 */
-            if (((ndsi - 0.15) > MINSIGMA) && (input->therm_buf[col] < 1000)
-                && (input->buf[3][col] > 1100) && (input->buf[1][col] > 1000))
+            if (((ndsi - 0.15) > MINSIGMA)
+                && (input->therm_buf[col] < 1000)
+                && (input->buf[BI_NIR][col] > 1100)
+                && (input->buf[BI_GREEN][col] > 1000))
+            {
                 pixel_mask[row][col] |= 1 << SNOW_BIT;
+            }
             else
                 pixel_mask[row][col] &= ~(1 << SNOW_BIT);
 
             /* Zhe's water test (works over thin cloud), equation 5 */
-            if (((((ndvi - 0.01) < MINSIGMA) && (input->buf[3][col] < 1100))
-                 || (((ndvi - 0.1) < MINSIGMA) && (ndvi > MINSIGMA)
-                     && (input->buf[3][col] < 500))) && (mask == 1))
+            if (((((ndvi - 0.01) < MINSIGMA)
+                  && (input->buf[BI_NIR][col] < 1100))
+                 || (((ndvi - 0.1) < MINSIGMA)
+                     && (ndvi > MINSIGMA)
+                     && (input->buf[BI_NIR][col] < 500)))
+                && (mask == 1))
+            {
                 pixel_mask[row][col] |= 1 << WATER_BIT;
+            }
             else
                 pixel_mask[row][col] &= ~(1 << WATER_BIT);
             if (mask == 0)
@@ -198,15 +223,16 @@ int potential_cloud_shadow_snow_mask
                cloud), equation 2 */
             if ((pixel_mask[row][col] & (1 << CLOUD_BIT)) && mask == 1)
             {
-                visi_mean = (float) (input->buf[0][col] + input->buf[1][col] +
-                                     input->buf[2][col]) / 3.0;
+                visi_mean = (float) (input->buf[BI_BLUE][col]
+                                     + input->buf[BI_GREEN][col]
+                                     + input->buf[BI_RED][col]) / 3.0;
                 if (visi_mean != 0)
                 {
                     whiteness =
-                        ((fabs ((float) input->buf[0][col] - visi_mean) +
-                          fabs ((float) input->buf[1][col] - visi_mean) +
-                          fabs ((float) input->buf[2][col] -
-                                visi_mean))) / visi_mean;
+                        ((fabs ((float) input->buf[BI_BLUE][col] - visi_mean)
+                          + fabs ((float) input->buf[BI_GREEN][col] - visi_mean)
+                          + fabs ((float) input->buf[BI_RED][col]
+                                  - visi_mean))) / visi_mean;
                 }
                 else
                 {
@@ -219,9 +245,14 @@ int potential_cloud_shadow_snow_mask
             /* Update cloud_mask,  if one visible band is saturated,
                whiteness = 0, due to data type conversion, pixel value
                difference of 1 is possible */
-            if ((input->buf[0][col] >= (input->meta.satu_value_max[0] - 1)) ||
-                (input->buf[1][col] >= (input->meta.satu_value_max[1] - 1)) ||
-                (input->buf[2][col] >= (input->meta.satu_value_max[2] - 1)))
+            if ((input->buf[BI_BLUE][col]
+                 >= (input->meta.satu_value_max[BI_BLUE] - 1))
+                ||
+                (input->buf[BI_GREEN][col]
+                 >= (input->meta.satu_value_max[BI_GREEN] - 1))
+                ||
+                (input->buf[BI_RED][col]
+                 >= (input->meta.satu_value_max[BI_RED] - 1)))
             {
                 whiteness = 0.0;
                 satu_bv = 1;
@@ -239,8 +270,8 @@ int potential_cloud_shadow_snow_mask
 
             /* Haze test, equation 3 */
             hot =
-                (float) input->buf[0][col] -
-                0.5 * (float) input->buf[2][col] - 800.0;
+                (float) input->buf[BI_BLUE][col] -
+                0.5 * (float) input->buf[BI_RED][col] - 800.0;
             if ((pixel_mask[row][col] & (1 << CLOUD_BIT))
                 && (hot > MINSIGMA || satu_bv == 1))
                 pixel_mask[row][col] |= 1 << CLOUD_BIT;
@@ -249,10 +280,10 @@ int potential_cloud_shadow_snow_mask
 
             /* Ratio 4/5 > 0.75 test, equation 4 */
             if ((pixel_mask[row][col] & (1 << CLOUD_BIT)) &&
-                input->buf[4][col] != 0)
+                input->buf[BI_SWIR_1][col] != 0)
             {
-                if ((float) input->buf[3][col] /
-                    (float) (input->buf[4][col]) - 0.75 > MINSIGMA)
+                if ((float) input->buf[BI_NIR][col] /
+                    (float) (input->buf[BI_SWIR_1][col]) - 0.75 > MINSIGMA)
                     pixel_mask[row][col] |= 1 << CLOUD_BIT;
                 else
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
@@ -370,8 +401,12 @@ int potential_cloud_shadow_snow_mask
 
             for (col = 0; col < ncols; col++)
             {
-                if (input->buf[5][col] == input->meta.satu_value_ref[5])
-                    input->buf[5][col] = input->meta.satu_value_max[5];
+                if (input->buf[BI_SWIR_2][col]
+                    == input->meta.satu_value_ref[BI_SWIR_2])
+                {
+                    input->buf[BI_SWIR_2][col] =
+                        input->meta.satu_value_max[BI_SWIR_2];
+                }
                 if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
                     input->therm_buf[col] = input->meta.therm_satu_value_max;
 
@@ -516,7 +551,7 @@ int potential_cloud_shadow_snow_mask
             /* Loop through each line in the image */
             for (col = 0; col < ncols; col++)
             {
-                for (ib = 0; ib < NBAND_REFL_MAX - 1; ib++)
+                for (ib = 0; ib < BI_REFL_BAND_COUNT - 1; ib++)
                 {
                     if (input->buf[ib][col] == input->meta.satu_value_ref[ib])
                         input->buf[ib][col] = input->meta.satu_value_max[ib];
@@ -535,7 +570,7 @@ int potential_cloud_shadow_snow_mask
 
                     /* Brightness test (over water) */
                     t_bright = 1100;
-                    brightness_prob = (float) input->buf[4][col] /
+                    brightness_prob = (float) input->buf[BI_SWIR_1][col] /
                         (float) t_bright;
                     if ((brightness_prob - 1.0) > MINSIGMA)
                         brightness_prob = 1.0;
@@ -555,36 +590,43 @@ int potential_cloud_shadow_snow_mask
                     if (temp_prob < MINSIGMA)
                         temp_prob = 0.0;
 
-                    /* label the non-fill pixels */
+                    /* label the non-fill pixels
+                       Due to a problem with the input LPGS data, the thermal
+                       band may have values less than -9999 after scaling so
+                       exclude those as well */
                     if (input->therm_buf[col] <= -9999
-                        || input->buf[0][col] == -9999
-                        || input->buf[1][col] == -9999
-                        || input->buf[2][col] == -9999
-                        || input->buf[3][col] == -9999
-                        || input->buf[4][col] == -9999
-                        || input->buf[5][col] == -9999)
+                        || input->buf[BI_BLUE][col] == -9999
+                        || input->buf[BI_GREEN][col] == -9999
+                        || input->buf[BI_RED][col] == -9999
+                        || input->buf[BI_NIR][col] == -9999
+                        || input->buf[BI_SWIR_1][col] == -9999
+                        || input->buf[BI_SWIR_2][col] == -9999)
                     {
                         mask = 0;
                     }
                     else
                         mask = 1;
 
-                    if ((input->buf[2][col] + input->buf[3][col]) != 0
+                    if ((input->buf[BI_RED][col]
+                         + input->buf[BI_NIR][col]) != 0
                         && mask == 1)
                     {
-                        ndvi = (float) (input->buf[3][col] -
-                                        input->buf[2][col]) /
-                            (float) (input->buf[3][col] + input->buf[2][col]);
+                        ndvi = (float) (input->buf[BI_NIR][col]
+                                        - input->buf[BI_RED][col])
+                               / (float) (input->buf[BI_NIR][col]
+                                          + input->buf[BI_RED][col]);
                     }
                     else
                         ndvi = 0.01;
 
-                    if ((input->buf[1][col] + input->buf[4][col]) != 0
+                    if ((input->buf[BI_GREEN][col]
+                         + input->buf[BI_SWIR_1][col]) != 0
                         && mask == 1)
                     {
-                        ndsi = (float) (input->buf[1][col] -
-                                        input->buf[4][col]) /
-                            (float) (input->buf[1][col] + input->buf[4][col]);
+                        ndsi = (float) (input->buf[BI_GREEN][col]
+                                        - input->buf[BI_SWIR_1][col])
+                               / (float) (input->buf[BI_GREEN][col]
+                                          + input->buf[BI_SWIR_1][col]);
                     }
                     else
                         ndsi = 0.01;
@@ -595,29 +637,31 @@ int potential_cloud_shadow_snow_mask
                     if (ndvi < MINSIGMA)
                         ndvi = 0.0;
 
-                    visi_mean = (input->buf[0][col] + input->buf[1][col] +
-                                 input->buf[2][col]) / 3.0;
+                    visi_mean = (input->buf[BI_BLUE][col]
+                                 + input->buf[BI_GREEN][col]
+                                 + input->buf[BI_RED][col]) / 3.0;
                     if (visi_mean != 0)
                     {
                         whiteness =
-                            (float) ((fabs
-                                      ((float) input->buf[0][col] -
-                                       visi_mean) +
-                                      fabs ((float) input->buf[1][col] -
-                                            visi_mean) +
-                                      fabs ((float) input->buf[2][col] -
-                                            visi_mean))) / visi_mean;
+                            ((fabs ((float) input->buf[BI_BLUE][col]
+                                    - visi_mean)
+                              + fabs ((float) input->buf[BI_GREEN][col]
+                                      - visi_mean)
+                              + fabs ((float) input->buf[BI_RED][col]
+                                      - visi_mean))) / visi_mean;
                     }
                     else
                         whiteness = 0.0;
 
                     /* If one visible band is saturated, whiteness = 0 */
-                    if ((input->buf[0][col] >= (input->meta.satu_value_max[0]
-                                                - 1)) ||
-                        (input->buf[1][col] >=
-                         (input->meta.satu_value_max[1] - 1))
-                        || (input->buf[2][col] >=
-                            (input->meta.satu_value_max[2] - 1)))
+                    if ((input->buf[BI_BLUE][col]
+                         >= (input->meta.satu_value_max[BI_BLUE] - 1))
+                        ||
+                        (input->buf[BI_GREEN][col]
+                         >= (input->meta.satu_value_max[BI_GREEN] - 1))
+                        ||
+                        (input->buf[BI_RED][col]
+                         >= (input->meta.satu_value_max[BI_RED] - 1)))
                     {
                         whiteness = 0.0;
                     }
@@ -861,14 +905,22 @@ int potential_cloud_shadow_snow_mask
 
             for (col = 0; col < ncols; col++)
             {
-                if (input->buf[3][col] == input->meta.satu_value_ref[3])
-                    input->buf[3][col] = input->meta.satu_value_max[3];
-                if (input->buf[4][col] == input->meta.satu_value_ref[4])
-                    input->buf[4][col] = input->meta.satu_value_max[4];
+                if (input->buf[BI_NIR][col]
+                    == input->meta.satu_value_ref[BI_NIR])
+                {
+                    input->buf[BI_NIR][col] =
+                        input->meta.satu_value_max[BI_NIR];
+                }
+                if (input->buf[BI_SWIR_1][col]
+                    == input->meta.satu_value_ref[BI_SWIR_1])
+                {
+                    input->buf[BI_SWIR_1][col] =
+                        input->meta.satu_value_max[BI_SWIR_1];
+                }
 
                 if (clear_mask[row][col] & (1 << CLEAR_LAND_BIT))
                 {
-                    nir[idx] = input->buf[3][col];
+                    nir[idx] = input->buf[BI_NIR][col];
                     if (nir[idx] > nir_max)
                         nir_max = nir[idx];
                     if (nir[idx] < nir_min)
@@ -878,7 +930,7 @@ int potential_cloud_shadow_snow_mask
 
                 if (clear_mask[row][col] & (1 << CLEAR_LAND_BIT))
                 {
-                    swir[idx2] = input->buf[4][col];
+                    swir[idx2] = input->buf[BI_SWIR_1][col];
                     if (swir[idx2] > swir_max)
                         swir_max = swir[idx2];
                     if (swir[idx2] < swir_min)
@@ -888,14 +940,14 @@ int potential_cloud_shadow_snow_mask
             }
 
             /* Write out the intermediate file */
-            status = fwrite (&input->buf[3][0], sizeof (int16),
+            status = fwrite (&input->buf[BI_NIR][0], sizeof (int16),
                              input->size.s, fd1);
             if (status != input->size.s)
             {
                 sprintf (errstr, "Writing file: b4.bin\n");
                 RETURN_ERROR (errstr, "pcloud", FAILURE);
             }
-            status = fwrite (&input->buf[4][0], sizeof (int16),
+            status = fwrite (&input->buf[BI_SWIR_1][0], sizeof (int16),
                              input->size.s, fd2);
             if (status != input->size.s)
             {
@@ -1040,27 +1092,40 @@ int potential_cloud_shadow_snow_mask
 
             for (col = 0; col < ncols; col++)
             {
-                if (input->buf[3][col] == input->meta.satu_value_ref[3])
-                    input->buf[3][col] = input->meta.satu_value_max[3];
-                if (input->buf[4][col] == input->meta.satu_value_ref[4])
-                    input->buf[4][col] = input->meta.satu_value_max[4];
+                if (input->buf[BI_NIR][col]
+                    == input->meta.satu_value_ref[BI_NIR])
+                {
+                    input->buf[BI_NIR][col] =
+                        input->meta.satu_value_max[BI_NIR];
+                }
+                if (input->buf[BI_SWIR_1][col]
+                    == input->meta.satu_value_ref[BI_SWIR_1])
+                {
+                    input->buf[BI_SWIR_1][col] =
+                        input->meta.satu_value_max[BI_SWIR_1];
+                }
 
-                /* process non-fill pixels only */
+                /* process non-fill pixels only
+                   Due to a problem with the input LPGS data, the thermal
+                   band may have values less than -9999 after scaling so
+                   exclude those as well */
                 if (input->therm_buf[col] <= -9999
-                    || input->buf[0][col] == -9999
-                    || input->buf[1][col] == -9999
-                    || input->buf[2][col] == -9999
-                    || input->buf[3][col] == -9999
-                    || input->buf[4][col] == -9999
-                    || input->buf[5][col] == -9999)
+                    || input->buf[BI_BLUE][col] == -9999
+                    || input->buf[BI_GREEN][col] == -9999
+                    || input->buf[BI_RED][col] == -9999
+                    || input->buf[BI_NIR][col] == -9999
+                    || input->buf[BI_SWIR_1][col] == -9999
+                    || input->buf[BI_SWIR_2][col] == -9999)
+                {
                     mask = 0;
+                }
                 else
                     mask = 1;
 
                 if (mask == 1)
                 {
-                    new_nir[col] -= input->buf[3][col];
-                    new_swir[col] -= input->buf[4][col];
+                    new_nir[col] -= input->buf[BI_NIR][col];
+                    new_swir[col] -= input->buf[BI_SWIR_1][col];
 
                     if (new_nir[col] < new_swir[col])
                         shadow_prob = new_nir[col];

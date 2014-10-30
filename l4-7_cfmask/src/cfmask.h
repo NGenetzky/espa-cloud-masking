@@ -6,9 +6,17 @@
 
 typedef signed short int16;
 
-/* There are currently a maximum of 6 reflective bands in the output surface
-   reflectance product */
-#define NBAND_REFL_MAX 6
+typedef enum {
+    BI_BLUE   = 0,
+    BI_GREEN  = 1,
+    BI_RED    = 2,
+    BI_NIR    = 3,
+    BI_SWIR_1 = 4,
+    BI_SWIR_2 = 5,
+    BI_REFL_BAND_COUNT,
+    BI_TIR    = 6,
+    BI_BAND_COUNT
+} BAND_INDEX;
 
 void usage ();
 
