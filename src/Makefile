@@ -1,0 +1,42 @@
+# Set up compile options
+CC    = gcc
+RM    = rm -f
+MV    = mv
+EXTRA = -Wall -g
+
+# Define the include files
+INC = const.h date.h error.h input.h 2d_array.h cfmask.h output.h
+INCDIR  = -I. -I$(XML2INC) -I$(ESPAINC)
+NCFLAGS = $(EXTRA) $(INCDIR)
+
+# Define the source code and object files
+SRC = error.c input.c 2d_array.c cfmask.c potential_cloud_shadow_snow_mask.c \
+      date.c split_filename.c object_cloud_shadow_match.c misc.c output.c
+OBJ = $(SRC:.c=.o)
+
+# Define the object libraries
+LIB = -L$(ESPALIB) -l_espa_raw_binary -l_espa_common -l_espa_format_conversion \
+      -L$(XML2LIB) -lxml2 -L$(LZMALIB) -lz -lpthread -lrt -lm
+
+# Define the executable
+EXE = cfmask
+
+# Target for the executable
+all: $(EXE)
+
+$(EXE): $(OBJ) $(INC)
+	$(CC) $(NCFLAGS) -o $(EXE) $(OBJ) $(LIB)
+
+install:
+	cp $(EXE) $(BIN)
+	cp ../scripts/run_fillminima.py $(BIN)
+	cp ../scripts/fillminima.py $(BIN)
+
+clean:
+	$(RM) *.o $(EXE)
+
+$(OBJ): $(INC)
+
+.c.o:
+	$(CC) $(NCFLAGS) $(INCDIR) -c $<
+
