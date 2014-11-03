@@ -31,7 +31,7 @@ NOTES: The constants and formular used are from BU's matlab code
 void
 dn_to_bt_saturation (Input_t * input)
 {
-    float k1, k2;               /* constans */
+    float k1 = 0.0, k2 = 0.0;   /* constans */
     int dn = 255;               /* maximum DN value */
     float temp;                 /* intermediate variable */
 
@@ -81,6 +81,13 @@ dn_to_toa_saturation (Input_t * input)
     int dn = 255;                   /* maximum DN value */
     float temp;                     /* intermediate variable */
     float sun_zen_deg;              /* solar zenith angle in degrees */
+
+    esun[BI_BLUE] = 0.0;
+    esun[BI_GREEN] = 0.0;
+    esun[BI_RED] = 0.0;
+    esun[BI_NIR] = 0.0;
+    esun[BI_SWIR_1] = 0.0;
+    esun[BI_SWIR_2] = 0.0;
 
     if (strcmp (input->meta.sat, "LANDSAT_7") == 0)
     {
