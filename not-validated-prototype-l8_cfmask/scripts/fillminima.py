@@ -70,6 +70,7 @@ def fillMinima(img, nullval, boundaryval):
 
     # If we have no_data(fill) values
     if nullmask.sum() > 0:
+        # Use only the image boundaries
         nullmaskDilated = grey_dilation(nullmask, size=(3, 3))
         innerBoundary = nullmaskDilated - nullmask
         (boundaryRows, boundaryCols) = numpy.where(innerBoundary)
@@ -77,6 +78,7 @@ def fillMinima(img, nullval, boundaryval):
         # No longer need the innerBoundary
         del innerBoundary
     else:
+        # Use the entire data file
         img2[0, :] = img[0, :]
         img2[-1, :] = img[-1, :]
         img2[:, 0] = img[:, 0]
@@ -94,6 +96,7 @@ def fillMinima(img, nullval, boundaryval):
         print ("Error: WEAVE [%s]" % str(e))
         raise e
 
+    # Use the null mask to apply the fill pixels to the output
     img2[nullmask] = nullval
 
     return img2
@@ -275,6 +278,7 @@ supportCcode = """
 
 mainCcode = """
     int i, r, c, imgval, img2val, h, nRows, nCols;
+    int newval;
     PixelQueue *pixQ;
     PQel *p, *nbrs, *pNbr, *pNext;
     int hCrt;
@@ -312,12 +316,13 @@ mainCcode = """
                 c = pNbr->j;
                 /* Exclude null area of original image */
                 if (! nullmask(r, c)) {
-                    imgval = img(r, c);
                     img2val = img2(r, c);
                     if (img2val == hMax) {
-                        img2(r, c) = max(hCrt, imgval);
+                        imgval = img(r, c);
+                        newval = max(hCrt, imgval);
+                        img2(r, c) = newval;
                         if (imgval < hMax)
-                            PQ_add(pixQ, pNbr, img2(r, c));
+                            PQ_add(pixQ, pNbr, newval);
                     }
                 }
                 pNext = pNbr->next;
