@@ -94,13 +94,14 @@ int potential_cloud_shadow_snow_mask
 
     if (verbose)
         printf ("The first pass\n");
+
     /* Loop through each line in the image */
     for (row = 0; row < nrows; row++)
     {
-        /* Print status on every 1000 lines */
-        if (!(row % 1000))
+        if (verbose)
         {
-            if (verbose)
+            /* Print status on every 1000 lines */
+            if (!(row % 1000))
             {
                 printf ("Processing line %d\r", row);
                 fflush (stdout);
@@ -324,6 +325,7 @@ int potential_cloud_shadow_snow_mask
 
     *ptm = 100. * ((float) clear_pixel_counter / (float) mask_counter);
     lndptm = 100. * ((float) clear_land_pixel_counter / (float) mask_counter);
+
     if (verbose)
     {
         printf ("clear_pixels, clear_land_pixels, mask_counter = %d,%d,%d\n",
@@ -359,6 +361,7 @@ int potential_cloud_shadow_snow_mask
 
         if (verbose)
             printf ("The second pass\n");
+
         int16 f_temp_max = SHRT_MIN;
         int16 f_temp_min = SHRT_MAX;
         int16 f_wtemp_max = SHRT_MIN;
@@ -368,26 +371,13 @@ int potential_cloud_shadow_snow_mask
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 1000 lines */
-            if (!(row % 1000))
+            if (verbose)
             {
-                if (verbose)
+                /* Print status on every 1000 lines */
+                if (!(row % 1000))
                 {
                     printf ("Processing line %d\r", row);
                     fflush (stdout);
-                }
-            }
-
-            /* For each of the image bands */
-            for (ib = 0; ib < input->nband; ib++)
-            {
-                /* Read each input reflective band -- data is read into
-                   input->buf[ib] */
-                if (!GetInputLine (input, ib, row))
-                {
-                    sprintf (errstr, "Reading input image data for line %d, "
-                             "band %d", row, ib);
-                    RETURN_ERROR (errstr, "pcloud", FAILURE);
                 }
             }
 
@@ -401,12 +391,6 @@ int potential_cloud_shadow_snow_mask
 
             for (col = 0; col < ncols; col++)
             {
-                if (input->buf[BI_SWIR_2][col]
-                    == input->meta.satu_value_ref[BI_SWIR_2])
-                {
-                    input->buf[BI_SWIR_2][col] =
-                        input->meta.satu_value_max[BI_SWIR_2];
-                }
                 if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
                     input->therm_buf[col] = input->meta.therm_satu_value_max;
 
@@ -514,13 +498,14 @@ int potential_cloud_shadow_snow_mask
 
         if (verbose)
             printf ("The third pass\n");
+
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 1000 lines */
-            if (!(row % 1000))
+            if (verbose)
             {
-                if (verbose)
+                /* Print status on every 1000 lines */
+                if (!(row % 1000))
                 {
                     printf ("Processing line %d\r", row);
                     fflush (stdout);
@@ -786,17 +771,17 @@ int potential_cloud_shadow_snow_mask
             printf ("pcloud probability threshold (land) = %.2f\n", clr_mask);
             printf ("pcloud probability threshold (water) = %.2f\n",
                     wclr_mask);
+
+            printf ("The fourth pass\n");
         }
 
-        if (verbose)
-            printf ("The fourth pass\n");
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 1000 lines */
-            if (!(row % 1000))
+            if (verbose)
             {
-                if (verbose)
+                /* Print status on every 1000 lines */
+                if (!(row % 1000))
                 {
                     printf ("Processing line %d\r", row);
                     fflush (stdout);
@@ -869,21 +854,22 @@ int potential_cloud_shadow_snow_mask
             RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
 
+        if (verbose)
+            printf ("The fifth pass\n");
+
         int16 nir_max = 0;
         int16 nir_min = 0;
         int16 swir_max = 0;
         int16 swir_min = 0;
         int idx = 0;
         int idx2 = 0;
-        if (verbose)
-            printf ("The fifth pass\n");
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 1000 lines */
-            if (!(row % 1000))
+            if (verbose)
             {
-                if (verbose)
+                /* Print status on every 1000 lines */
+                if (!(row % 1000))
                 {
                     printf ("Processing line %d\r", row);
                     fflush (stdout);
@@ -1053,12 +1039,13 @@ int potential_cloud_shadow_snow_mask
 
         if (verbose)
             printf ("The sixth pass\n");
+
         for (row = 0; row < nrows; row++)
         {
-            /* Print status on every 1000 lines */
-            if (!(row % 1000))
+            if (verbose)
             {
-                if (verbose)
+                /* Print status on every 1000 lines */
+                if (!(row % 1000))
                 {
                     printf ("Processing line %d\r", row);
                     fflush (stdout);
