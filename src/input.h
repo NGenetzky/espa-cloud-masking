@@ -5,22 +5,6 @@
 #include "date.h"
 #include "cfmask.h"
 
-typedef enum
-{
-    WATER_BIT = 0,
-    SHADOW_BIT,
-    SNOW_BIT,
-    CLOUD_BIT,
-    FILL_BIT
-} Bits_t;
-
-typedef enum
-{
-    CLEAR_BIT = 0,
-    CLEAR_WATER_BIT,
-    CLEAR_LAND_BIT
-} Clear_Bits_t;
-
 /* Structure for the metadata */
 typedef struct
 {
