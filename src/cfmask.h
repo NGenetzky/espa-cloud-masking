@@ -18,6 +18,22 @@ typedef enum {
     BI_BAND_COUNT
 } BAND_INDEX;
 
+typedef enum
+{
+    WATER_BIT = 0,
+    SHADOW_BIT,
+    SNOW_BIT,
+    CLOUD_BIT,
+    FILL_BIT
+} Bits_t;
+
+typedef enum
+{
+    CLEAR_BIT = 0,
+    CLEAR_WATER_BIT,
+    CLEAR_LAND_BIT
+} Clear_Bits_t;
+
 void usage ();
 
 #endif
