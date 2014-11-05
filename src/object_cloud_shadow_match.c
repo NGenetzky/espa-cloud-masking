@@ -113,8 +113,10 @@ void mat_truecloud
     float a,          /*I: coefficient */
     float b,          /*I: coefficient */
     float c,          /*I: coefficient */
-    float omiga_par,  /*I: angle of parellel line */
-    float omiga_per,  /*I: angle of parellel line */
+    float inv_a_b_distance, /*I: precalculated */
+    float inv_cos_omiga_per_minus_par,  /*I: precalculated */
+    float cos_omiga_par,  /*I: precalculated */
+    float sin_omiga_par,  /*I: precalculated */
     float *x_new,     /*O: output pixel cloumn */
     float *y_new      /*O: output pixel row */
 )
@@ -130,14 +132,16 @@ void mat_truecloud
 
     for (i = 0; i < array_length; i++)
     {
-        dist =
-            (a * (float) x[i] + b * (float) y[i] +
-             c) / (sqrt (a * a + b * b));
+        dist = (a * (float) x[i] + b * (float) y[i] + c) * inv_a_b_distance;
+
         /* from the cetral perpendicular (unit: pixel) */
-        dist_par = dist / cos (omiga_per - omiga_par);
-        dist_move = (dist_par * h[i]) / height; /* cloud move distance (m) */
-        delt_x = dist_move * cos (omiga_par);
-        delt_y = dist_move * sin (omiga_par);
+        dist_par = dist * inv_cos_omiga_per_minus_par;
+
+        /* cloud move distance (m) */
+        dist_move = (dist_par * h[i]) / height;
+
+        delt_x = dist_move * cos_omiga_par;
+        delt_y = dist_move * sin_omiga_par;
 
         x_new[i] = x[i] + delt_x;       /* new x, j */
         y_new[i] = y[i] + delt_y;       /* new y, i */
@@ -652,6 +656,10 @@ int object_cloud_shadow_match
                                    temperature */
     float a, b, c, omiga_par, omiga_per;  /* variables used for viewgeo
                                              routine, see it for detail */
+    float inv_a_b_distance;            /* Inverse of... */
+    float inv_cos_omiga_per_minus_par; /* Inverse of... */
+    float cos_omiga_par;
+    float sin_omiga_par;
     int i_step;                 /* ietration step */
     int x_ul = 0;               /* upper left column */
     int y_ul = 0;               /* upper left row */
@@ -839,6 +847,12 @@ int object_cloud_shadow_match
         /* get view angle geometry */
         viewgeo (x_ul, y_ul, x_ur, y_ur, x_ll, y_ll, x_lr, y_lr, &a, &b, &c,
                  &omiga_par, &omiga_per);
+
+        /* These don't change so calculate them here */
+        inv_a_b_distance = 1 / sqrt (a * a + b * b);
+        inv_cos_omiga_per_minus_par = 1 / cos (omiga_per - omiga_par);
+        cos_omiga_par = cos (omiga_par);
+        sin_omiga_par = sin (omiga_par);
 
         /* Allocate memory for segment cloud portion */
         obj_num =
@@ -1112,8 +1126,11 @@ int object_cloud_shadow_match
                     /* Get the true postion of the cloud
                        calculate cloud DEM with initial base height */
                     mat_truecloud (orin_xys[0], orin_xys[1],
-                                   obj_num[cloud_type], h, a, b, c, omiga_par,
-                                   omiga_per, tmp_xys[0], tmp_xys[1]);
+                                   obj_num[cloud_type], h, a, b, c,
+                                   inv_a_b_distance,
+                                   inv_cos_omiga_per_minus_par,
+                                   cos_omiga_par, sin_omiga_par,
+                                   tmp_xys[0], tmp_xys[1]);
 
                     out_all = 0;
                     match_all = 0;

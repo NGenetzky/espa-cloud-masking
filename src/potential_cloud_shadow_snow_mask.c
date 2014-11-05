@@ -6,6 +6,7 @@
 
 #include "const.h"
 #include "error.h"
+#include "cfmask.h"
 #include "2d_array.h"
 #include "input.h"
 
@@ -292,7 +293,7 @@ int potential_cloud_shadow_snow_mask
                 pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
 
             /* Cirrus cloud test */
-            if (!use_l8_cirrus)
+            if (use_l8_cirrus)
             {
                 if ((pixel_mask[row][col] & (1 << CLOUD_BIT))
                     ||
@@ -577,12 +578,12 @@ int potential_cloud_shadow_snow_mask
 
                     /*Final prob mask (water), cloud over water probability */
                     if (use_l8_cirrus)
-                        wfinal_prob[row][col] =
-                            100.0 * wtemp_prob * brightness_prob;
-                    else
                         wfinal_prob[row][col] = 100.0
                             * (wtemp_prob * brightness_prob
                                + (float) input->buf[BI_CIRRUS][col] / 400.0);
+                    else
+                        wfinal_prob[row][col] =
+                            100.0 * wtemp_prob * brightness_prob;
                     final_prob[row][col] = 0.0;
                 }
                 else
@@ -677,12 +678,12 @@ int potential_cloud_shadow_snow_mask
 
                     /*Final prob mask (land) */
                     if (use_l8_cirrus)
-                        final_prob[row][col] =
-                            100.0 * (temp_prob * vari_prob);
-                    else
                         final_prob[row][col] = 100.0
                             * ((temp_prob * vari_prob)
                                + ((float) input->buf[BI_CIRRUS][col] / 400.0));
+                    else
+                        final_prob[row][col] =
+                            100.0 * (temp_prob * vari_prob);
                     wfinal_prob[row][col] = 0.0;
                 }
             }
