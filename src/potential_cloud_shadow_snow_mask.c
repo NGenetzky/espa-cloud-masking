@@ -6,6 +6,7 @@
 
 #include "const.h"
 #include "error.h"
+#include "cfmask.h"
 #include "2d_array.h"
 #include "input.h"
 

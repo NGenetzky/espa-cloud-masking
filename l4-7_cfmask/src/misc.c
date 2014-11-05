@@ -21,6 +21,7 @@ HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
+Nov/2014    Ron Dilley       Speed improvements by removing divisions
 
 NOTES: 
 ******************************************************************************/
@@ -38,6 +39,8 @@ int prctile
     int i, j;                 /* loop variables */
     int loops;                /* data range for input data */
     char errstr[MAX_STR_LEN]; /* error string */
+    float inv_nums_100;       /* inverse of the nums value * 100 */
+    int sum;
 
     /* Just return 0 if no input value */
     if (nums == 0)
@@ -57,11 +60,12 @@ int prctile
         interval[array[i] - min]++;
     }
 
-    int sum = 0;
+    inv_nums_100 = (1.0/((float) nums)) * 100;
+    sum = 0;
     for (j = 0; j < loops; j++)
     {
         sum += interval[j];
-        if ((((float) sum / (float) nums) * 100 - prct) > MINSIGMA)
+        if ((((float) sum * inv_nums_100) - prct) > MINSIGMA)
         {
             *result = (float) (min + j);
             break;
@@ -88,6 +92,7 @@ HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
+Nov/2014    Ron Dilley       Speed improvements by removing divisions
 
 NOTES: 
 ******************************************************************************/
@@ -106,6 +111,8 @@ int prctile2
     int start, end;           /* start/end variables */
     int loops;                /* data range of input data */
     char errstr[MAX_STR_LEN]; /* error string */
+    float inv_nums_100;       /* inverse of the nums value * 100 */
+    int sum;
 
     /* Just return 0 if no input value */
     if (nums == 0)
@@ -128,11 +135,12 @@ int prctile2
         interval[(int) rint (array[i]) - start]++;
     }
 
-    int sum = 0;
+    inv_nums_100 = (1.0/((float) nums)) * 100;
+    sum = 0;
     for (j = 0; j < loops; j++)
     {
         sum += interval[j];
-        if ((((float) sum / (float) nums) * 100 - prct) > MINSIGMA)
+        if ((((float) sum * inv_nums_100) - prct) > MINSIGMA)
         {
             *result = (float) (start + j);
             break;
