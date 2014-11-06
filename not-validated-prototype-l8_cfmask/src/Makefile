@@ -2,7 +2,7 @@
 CC    = gcc
 RM    = rm -f
 MV    = mv
-EXTRA = -Wall -g
+EXTRA = -Wall -g -O2
 
 # Define the include files
 INC = const.h date.h error.h input.h 2d_array.h cfmask.h output.h
