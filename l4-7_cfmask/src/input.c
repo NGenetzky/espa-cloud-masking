@@ -32,7 +32,7 @@ void
 dn_to_bt_saturation (Input_t * input)
 {
     float k1 = 0.0, k2 = 0.0;   /* constans */
-    int dn = 255;               /* maximum DN value */
+    float dn = 255.0;           /* maximum DN value */
     float temp;                 /* intermediate variable */
 
     if (strcmp (input->meta.sat, "LANDSAT_7") == 0)
@@ -51,7 +51,7 @@ dn_to_bt_saturation (Input_t * input)
         k2 = 1284.30;
     }
 
-    temp = (input->meta.gain_th * (float) dn) + input->meta.bias_th;
+    temp = (input->meta.gain_th * dn) + input->meta.bias_th;
     temp = k2 / log ((k1 / temp) + 1.0);
     input->meta.therm_satu_value_max = (int) (100.0 * (temp - 273.15) + 0.5);
 }
@@ -78,7 +78,7 @@ dn_to_toa_saturation (Input_t * input)
     float esun[BI_REFL_BAND_COUNT]; /* mean solar exoatmospheric spectral
                                        irradiance for each band */
     int ib;                         /* band loop variable */
-    int dn = 255;                   /* maximum DN value */
+    float dn = 255.0;               /* maximum DN value */
     float temp;                     /* intermediate variable */
     float sun_zen_deg;              /* solar zenith angle in degrees */
 
@@ -121,7 +121,7 @@ dn_to_toa_saturation (Input_t * input)
 
     for (ib = 0; ib < BI_REFL_BAND_COUNT; ib++)
     {
-        temp = (input->meta.gain[ib] * (float) dn) + input->meta.bias[ib];
+        temp = (input->meta.gain[ib] * dn) + input->meta.bias[ib];
         input->meta.satu_value_max[ib] = (int) ((10000.0 * PI * temp
                                                  * input->dsun_doy[input->meta.
                                                                    acq_date.

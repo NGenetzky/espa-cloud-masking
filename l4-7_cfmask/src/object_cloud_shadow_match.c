@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 #include "espa_geoloc.h"
 
@@ -310,7 +311,7 @@ void label
     int ncols,                      /*I: number of columns */
     cloud_node ** cloud,            /*O: cloud pixel node */
     unsigned int *obj_num,          /*O: cloud number */
-    unsigned int **first_cloud_node /*O: fisrt cloud pixel node */
+    unsigned int **first_cloud_node /*O: first cloud pixel node */
 )
 {
     int row, col;    /* loop indices */
@@ -324,24 +325,43 @@ void label
         {
             if (pixel_mask[row][col] & (1 << CLOUD_BIT))
             {
-                if (row > 0 && col > 0 && (pixel_mask[row - 1][col - 1] &
-                                           (1 << CLOUD_BIT)))
+                if (row > 0 && col > 0
+                    && (pixel_mask[row - 1][col - 1] & (1 << CLOUD_BIT)))
+                {
                     array[0] = cloud[row - 1][col - 1].value;
+                }
                 else
+                {
                     array[0] = 0;
+                }
+
                 if (row > 0 && (pixel_mask[row - 1][col] & (1 << CLOUD_BIT)))
+                {
                     array[1] = cloud[row - 1][col].value;
+                }
                 else
+                {
                     array[1] = 0;
+                }
+
                 if (row > 0 && (col < ncols - 1)
                     && (pixel_mask[row - 1][col + 1] & (1 << CLOUD_BIT)))
+                {
                     array[2] = cloud[row - 1][col + 1].value;
+                }
                 else
+                {
                     array[2] = 0;
+                }
+
                 if (col > 0 && (pixel_mask[row][col - 1] & (1 << CLOUD_BIT)))
+                {
                     array[3] = cloud[row][col - 1].value;
+                }
                 else
+                {
                     array[3] = 0;
+                }
 
                 /* The cloud pixel will be labeled as a new cloud if
                    neighboring pixels before it are not cloud pixels,
@@ -394,8 +414,8 @@ void label
                     /* If two neighboring pixels are labeled as different
                        cloud numbers, the two cloud pixels are relabeled as
                        the same cloud */
-                    if ((row > 0 && col > 0
-                         && (pixel_mask[row - 1][col - 1] & (1 << CLOUD_BIT)))
+                    if (row > 0 && col > 0
+                        && (pixel_mask[row - 1][col - 1] & (1 << CLOUD_BIT))
                         && (cloud[row - 1][col - 1].value != min))
                     {
                         if (index == 1)
@@ -423,8 +443,8 @@ void label
                         else
                             continue;
                     }
-                    if ((row > 0
-                         && (pixel_mask[row - 1][col] & (1 << CLOUD_BIT)))
+                    if (row > 0
+                        && (pixel_mask[row - 1][col] & (1 << CLOUD_BIT))
                         && (cloud[row - 1][col].value != min))
                     {
                         if (index == 0)
@@ -453,8 +473,8 @@ void label
                         else
                             continue;
                     }
-                    if ((row > 0 && (col < ncols - 1)
-                         && (pixel_mask[row - 1][col + 1] & (1 << CLOUD_BIT)))
+                    if (row > 0 && (col < ncols - 1)
+                        && (pixel_mask[row - 1][col + 1] & (1 << CLOUD_BIT))
                         && (cloud[row - 1][col + 1].value != min))
                     {
                         if (index == 0)
@@ -482,8 +502,8 @@ void label
                         else
                             continue;
                     }
-                    if ((col > 0
-                         && (pixel_mask[row][col - 1] & (1 << CLOUD_BIT)))
+                    if (col > 0
+                        && (pixel_mask[row][col - 1] & (1 << CLOUD_BIT))
                         && (cloud[row][col - 1].value != min))
                     {
                         if (index == 0)
@@ -517,7 +537,6 @@ void label
         }
     }
     printf ("First pass in labeling algorithm done\n");
-
 
     /* The second pass labels all cloud pixels according two their root
        parent cloud pixel values */
@@ -647,7 +666,7 @@ int object_cloud_shadow_match
     int status;                 /* return value */
     int cloud_counter = 0;      /* cloud pixel counter */
     int boundary_counter = 0;   /* boundary pixel counter */
-    float revised_ptm;          /* revised percent of cloud */
+    float revised_ptm = 0.0;    /* revised percent of cloud */
     float t_similar;            /* similarity threshold */
     float t_buffer;             /* threshold for matching buffering */
     float max_similar = 0.95;   /* max similarity threshold */
@@ -685,10 +704,11 @@ int object_cloud_shadow_match
     int16 temp_obj_min = 0;     /* minimum temperature for each cloud */
     int index;                  /* loop index */
     float r_obj;                /* cloud radius */
+    float r_sqrd_obj;           /* cloud radius squared */
     float pct_obj;              /* percent of edge pixels */
     float t_obj;                /* cloud percentile value */
-    float rate_elapse = 6.5;    /* wet air lapse rate */
-    float rate_dlapse = 9.8;    /* dry air lapse rate */
+    float inv_rate_elapse = 1.0/6.5; /* inverse wet air lapse rate */
+    float inv_rate_dlapse = 1.0/9.8; /* inverse dry air lapse rate */
     int max_cl_height;          /* Max cloud base height (m) */
     int min_cl_height;          /* Min cloud base height (m) */
     int max_height;             /* refined maximum height (m) */
@@ -716,6 +736,8 @@ int object_cloud_shadow_match
 
     /* Dynamic memory allocation */
     unsigned char **cal_mask = NULL;    /* calibration pixel mask */
+
+    printf("CURRENT TIME %ld\n", time(NULL));
 
     cal_mask = (unsigned char **) allocate_2d_array (input->size.l,
                                                      input->size.s,
@@ -882,8 +904,12 @@ int object_cloud_shadow_match
             }
         }
 
+        printf("CURRENT TIME %ld\n", time(NULL));
+
         /* Labeling the cloud pixels */
         label (pixel_mask, nrows, ncols, cloud, obj_num, cloud_first_node);
+
+        printf("CURRENT TIME %ld\n", time(NULL));
 
         total_num_clouds = num_clouds;
         /* The cloud pixels are not counted as cloud pixels if the total
@@ -951,15 +977,14 @@ int object_cloud_shadow_match
         {
             for (col = 0; col < ncols; col++)
             {
-                cal_mask[row][col] &= ~(1 << SHADOW_BIT);
+                /* Has not been used yet, so initialize it first */
+                cal_mask[row][col] = MASK_CLEAR_LAND;
                 if ((pixel_mask[row][col] & (1 << CLOUD_BIT))
                     && (!(pixel_mask[row][col] & (1 << FILL_BIT)))
                     && (obj_num[cloud[row][col].value] != 0))
                 {
                     cal_mask[row][col] |= 1 << CLOUD_BIT;
                 }
-                else
-                    cal_mask[row][col] &= ~(1 << CLOUD_BIT);
             }
         }
 
@@ -1069,13 +1094,12 @@ int object_cloud_shadow_match
 
                 /* the base temperature for cloud
                    assume object is round r_obj is radium of object */
-                r_obj = sqrt ((float) obj_num[cloud_type] / (2.0 * PI));
+                r_sqrd_obj = ((float) obj_num[cloud_type] / (2.0 * PI));
+                r_obj = sqrt (r_sqrd_obj);
 
-                /* number of inward pixes for correct temperature */
-                pct_obj =
-                    ((r_obj - (float) num_pix) * (r_obj -
-                                                  (float) num_pix)) / (r_obj *
-                                                                       r_obj);
+                /* number of inward pixels for correct temperature */
+                pct_obj = ((r_obj - (float) num_pix)
+                           * (r_obj - (float) num_pix)) / r_sqrd_obj;
                 if ((pct_obj - 1.0) >= MINSIGMA)
                     pct_obj = 1.0; /* pct of edge pixel should be less than 1 */
 
@@ -1089,7 +1113,7 @@ int object_cloud_shadow_match
 
                 /* refine cloud height range (m) */
                 min_height =
-                    (int) rint (10.0 * (t_templ - t_obj) / rate_dlapse);
+                    (int) rint (10.0 * (t_templ - t_obj) * inv_rate_dlapse);
                 max_height = (int) rint (10.0 * (t_temph - t_obj));
                 if (min_cl_height < min_height)
                     min_cl_height = min_height;
@@ -1120,7 +1144,7 @@ int object_cloud_shadow_match
                     for (i = 0; i < obj_num[cloud_type]; i++)
                     {
                         h[i] = (10.0 * (t_obj - (float) temp_obj[i]))
-                            / rate_elapse + (float) base_h;
+                               * inv_rate_elapse + (float) base_h;
                     }
 
                     /* Get the true postion of the cloud
@@ -1314,6 +1338,7 @@ int object_cloud_shadow_match
 
         /* Do image dilate for cloud, shadow, snow */
         image_dilate (cal_mask, nrows, ncols, cldpix, CLOUD_BIT, pixel_mask);
+
         image_dilate (cal_mask, nrows, ncols, sdpix, SHADOW_BIT, pixel_mask);
     }
 
@@ -1324,35 +1349,35 @@ int object_cloud_shadow_match
         for (col = 0; col < ncols; col++)
         {
             if (pixel_mask[row][col] & (1 << FILL_BIT))
-                cal_mask[row][col] = FILL_VALUE;
+            {
+                pixel_mask[row][col] = FILL_VALUE;
+            }
             else if (pixel_mask[row][col] & (1 << CLOUD_BIT))
             {
-                cal_mask[row][col] = 4;
+                pixel_mask[row][col] = MASK_CLOUD;
                 cloud_count++;
             }
             else if (pixel_mask[row][col] & (1 << SHADOW_BIT))
             {
-                cal_mask[row][col] = 2;
+                pixel_mask[row][col] = MASK_CLOUD_SHADOW;
                 shadow_count++;
             }
             else if (pixel_mask[row][col] & (1 << SNOW_BIT))
-                cal_mask[row][col] = 3;
+            {
+                pixel_mask[row][col] = MASK_CLEAR_SNOW;
+            }
             else if (pixel_mask[row][col] & (1 << WATER_BIT))
-                cal_mask[row][col] = 1;
+            {
+                pixel_mask[row][col] = MASK_CLEAR_WATER;
+            }
             else
-                cal_mask[row][col] = 0;
+            {
+                pixel_mask[row][col] = MASK_CLEAR_LAND;
+            }
         }
     }
 
-    /* Copy back to use pixel_mask as final output mask, and it's also
-       changed to be a value mask */
-    for (row = 0; row < nrows; row++)
-    {
-        for (col = 0; col < ncols; col++)
-        {
-            pixel_mask[row][col] = cal_mask[row][col];
-        }
-    }
+    printf("CURRENT TIME %ld\n", time(NULL));
 
     /* Release the memory */
     status = free_2d_array ((void **) cal_mask);

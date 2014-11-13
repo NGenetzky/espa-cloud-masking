@@ -190,6 +190,12 @@ main (int argc, char *argv[])
         CFMASK_ERROR (errstr, "main");
     }
 
+    /* Initialize the mask to clear data */
+    int row, col;
+    for (row = 0; row < input->size.l; row++)
+        for (col = 0; col < input->size.s; col++)
+            pixel_mask[row][col] = MASK_CLEAR_LAND;
+
     /* Build the potential cloud, shadow, snow, water mask */
     status = potential_cloud_shadow_snow_mask (input, cloud_prob, &ptm,
                                                &t_templ, &t_temph, pixel_mask,
