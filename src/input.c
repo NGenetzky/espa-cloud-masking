@@ -32,13 +32,13 @@ void
 dn_to_bt_saturation (Input_t *input)
 {
     float k1, k2;
-    int dn = 65535;
+    float dn = 65535;
     float temp;
 
     k1 = 774.89; /* B10 */
     k2 = 1321.08; /* B10 */
 
-    temp = (input->meta.gain_th * (float) dn) + input->meta.bias_th;
+    temp = (input->meta.gain_th * dn) + input->meta.bias_th;
     temp = k2 / log ((k1 / temp) + 1.0);
     input->meta.therm_satu_value_max = (int) (100.0 * (temp - 273.15) + 0.5);
 }
@@ -63,12 +63,12 @@ void
 dn_to_toa_saturation (Input_t *input)
 {
     int ib;
-    int dn = 65535;
+    float dn = 65535;
     float temp;
 
     for (ib = 0; ib < BI_REFL_BAND_COUNT; ib++)
     {
-        temp = input->meta.gain[ib] * (float) dn + input->meta.bias[ib];
+        temp = input->meta.gain[ib] * dn + input->meta.bias[ib];
         input->meta.satu_value_max[ib] = (int) ((10000.0 * temp) /
                                                 cos (input->meta.sun_zen *
                                                      (PI / 180.0)) + 0.5);
