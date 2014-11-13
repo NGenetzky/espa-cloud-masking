@@ -20,6 +20,15 @@ typedef enum {
 
 typedef enum
 {
+    MASK_CLEAR_LAND = 0,
+    MASK_CLEAR_WATER,
+    MASK_CLOUD_SHADOW,
+    MASK_CLEAR_SNOW,
+    MASK_CLOUD
+} MASK_VALUE;
+
+typedef enum
+{
     WATER_BIT = 0,
     SHADOW_BIT,
     SNOW_BIT,
