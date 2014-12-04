@@ -709,7 +709,7 @@ int potential_cloud_shadow_snow_mask
         }
         else
         {
-            clr_mask = 22.5; /* no clear land pixel, make clr_mask double of
+            clr_mask = 27.5; /* no clear land pixel, make clr_mask double of
                                 cloud_prob_threshold */
         }
         clr_mask += cloud_prob_threshold;
