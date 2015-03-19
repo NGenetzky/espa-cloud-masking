@@ -814,7 +814,8 @@ int object_cloud_shadow_match
                                       large solar zenith angle case */
 
         /* Get moving direction, the idea is to get the corner rows/cols */
-        for (row = 0; row < nrows; row++)
+        bool not_found = true;
+        for (row = 0; row < nrows && not_found; row++)
         {
             for (col = 0; col < ncols; col++)
             {
@@ -822,12 +823,14 @@ int object_cloud_shadow_match
                 {
                     y_ul = row;
                     x_ul = col;
+                    not_found = false;
                     break;
                 }
             }
         }
 
-        for (col = ncols - 1; col >= 0; col--)
+        not_found = true;
+        for (col = ncols - 1; col >= 0 && not_found; col--)
         {
             for (row = 0; row < nrows; row++)
             {
@@ -835,12 +838,14 @@ int object_cloud_shadow_match
                 {
                     y_ur = row;
                     x_ur = col;
+                    not_found = false;
                     break;
                 }
             }
         }
 
-        for (col = 0; col < ncols; col++)
+        not_found = true;
+        for (col = 0; col < ncols && not_found; col++)
         {
             for (row = nrows - 1; row >= 0; row--)
             {
@@ -848,12 +853,14 @@ int object_cloud_shadow_match
                 {
                     y_ll = row;
                     x_ll = col;
+                    not_found = false;
                     break;
                 }
             }
         }
 
-        for (row = nrows - 1; row >= 0; row--)
+        not_found = true;
+        for (row = nrows - 1; row >= 0 && not_found; row--)
         {
             for (col = ncols - 1; col >= 0; col--)
             {
@@ -861,6 +868,7 @@ int object_cloud_shadow_match
                 {
                     y_lr = row;
                     x_lr = col;
+                    not_found = false;
                     break;
                 }
             }
@@ -1065,8 +1073,8 @@ int object_cloud_shadow_match
                     RETURN_ERROR (errstr, "cloud/shadow match", FAILURE);
                 }
 
-                temp_obj_max = 0;
-                temp_obj_min = 0;
+                temp_obj_max = SHRT_MIN;
+                temp_obj_min = SHRT_MAX;
                 index = 0;
                 node = &cloud[cloud_first_node[0][cloud_type]]
                     [cloud_first_node[1][cloud_type]];
@@ -1101,14 +1109,20 @@ int object_cloud_shadow_match
                 pct_obj = ((r_obj - (float) num_pix)
                            * (r_obj - (float) num_pix)) / r_sqrd_obj;
                 if ((pct_obj - 1.0) >= MINSIGMA)
-                    pct_obj = 1.0; /* pct of edge pixel should be less than 1 */
-
-                status = prctile (temp_obj, obj_num[cloud_type], temp_obj_min,
-                                  temp_obj_max, 100.0 * pct_obj, &t_obj);
-                if (status != SUCCESS)
                 {
-                    sprintf (errstr, "Error calling prctile");
-                    RETURN_ERROR (errstr, "cloud/shadow match", FAILURE);
+                    /* Use the minimum temperature instead */
+                    t_obj = temp_obj_min;
+                }
+                else
+                {
+                    status = prctile (temp_obj, obj_num[cloud_type],
+                                      temp_obj_min, temp_obj_max,
+                                      100.0 * pct_obj, &t_obj);
+                    if (status != SUCCESS)
+                    {
+                        RETURN_ERROR ("Error calling prctile",
+                                      "cloud/shadow match", FAILURE);
+                    }
                 }
 
                 /* refine cloud height range (m) */

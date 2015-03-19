@@ -38,21 +38,26 @@ int prctile
     int *interval;            /* array to store data in an interval */
     int i, j;                 /* loop variables */
     int loops;                /* data range for input data */
-    char errstr[MAX_STR_LEN]; /* error string */
     float inv_nums_100;       /* inverse of the nums value * 100 */
     int sum;
 
     /* Just return 0 if no input value */
     if (nums == 0)
+    {
         *result = 0.0;
+        return SUCCESS;
+    }
+    else
+    {
+        *result = max;
+    }
 
     loops = max - min + 1;
 
     interval = calloc (loops, sizeof (int));
     if (interval == NULL)
     {
-        sprintf (errstr, "Invalid memory allocation");
-        RETURN_ERROR (errstr, "prctile", FAILURE);
+        RETURN_ERROR ("Invalid memory allocation", "prctile", FAILURE);
     }
 
     for (i = 0; i < nums; i++)
@@ -60,12 +65,12 @@ int prctile
         interval[array[i] - min]++;
     }
 
-    inv_nums_100 = (1.0/((float) nums)) * 100;
+    inv_nums_100 = (1.0/((float) nums)) * 100.0;
     sum = 0;
     for (j = 0; j < loops; j++)
     {
         sum += interval[j];
-        if ((((float) sum * inv_nums_100) - prct) > MINSIGMA)
+        if (((float) sum * inv_nums_100) >= prct)
         {
             *result = (float) (min + j);
             break;
@@ -110,13 +115,19 @@ int prctile2
     int i, j;                 /* loop variables */
     int start, end;           /* start/end variables */
     int loops;                /* data range of input data */
-    char errstr[MAX_STR_LEN]; /* error string */
     float inv_nums_100;       /* inverse of the nums value * 100 */
     int sum;
 
     /* Just return 0 if no input value */
     if (nums == 0)
+    {
         *result = 0.0;
+        return SUCCESS;
+    }
+    else
+    {
+        *result = max;
+    }
 
     start = (int) rint (min);
     end = (int) rint (max);
@@ -126,8 +137,7 @@ int prctile2
     interval = calloc (loops, sizeof (int));
     if (interval == NULL)
     {
-        sprintf (errstr, "Invalid memory allocation");
-        RETURN_ERROR (errstr, "prctile2", FAILURE);
+        RETURN_ERROR ("Invalid memory allocation", "prctile2", FAILURE);
     }
 
     for (i = 0; i < nums; i++)
@@ -135,12 +145,12 @@ int prctile2
         interval[(int) rint (array[i]) - start]++;
     }
 
-    inv_nums_100 = (1.0/((float) nums)) * 100;
+    inv_nums_100 = (1.0/((float) nums)) * 100.0;
     sum = 0;
     for (j = 0; j < loops; j++)
     {
         sum += interval[j];
-        if ((((float) sum * inv_nums_100) - prct) > MINSIGMA)
+        if (((float) sum * inv_nums_100) >= prct)
         {
             *result = (float) (start + j);
             break;

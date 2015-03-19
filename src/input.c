@@ -17,9 +17,6 @@ MODULE:  dn_to_bt_saturation
 
 PURPOSE:  Convert saturated Digital Number to Brightness Temperature
 
-RETURN: true on success
-        false on error
-
 HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
@@ -31,7 +28,7 @@ NOTES: The constants and formular used are from BU's matlab code
 void
 dn_to_bt_saturation (Input_t * input)
 {
-    float k1 = 0.0, k2 = 0.0;   /* constans */
+    float k1 = 0.0, k2 = 0.0;   /* contants */
     float dn = 255.0;           /* maximum DN value */
     float temp;                 /* intermediate variable */
 
@@ -60,9 +57,6 @@ dn_to_bt_saturation (Input_t * input)
 MODULE:  dn_to_toa_saturation
 
 PURPOSE: Convert saturated Digital Number to TOA reflectance 
-
-RETURN: true on success
-        false on error 
 
 HISTORY:
 Date        Programmer       Reason
@@ -537,6 +531,14 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
         error_string = "solar azimuth angle out of range";
         RETURN_ERROR (error_string, "GetXMLInput", true);
     }
+
+    /* Get the geographic coordinates */
+    this->meta.ul_corner.lat = gmeta->ul_corner[0];
+    this->meta.ul_corner.lon = gmeta->ul_corner[1];
+    this->meta.ul_corner.is_fill = true;
+    this->meta.lr_corner.lat = gmeta->lr_corner[0];
+    this->meta.lr_corner.lon = gmeta->lr_corner[1];
+    this->meta.lr_corner.is_fill = true;
 
     if (!strcmp (gmeta->instrument, "TM") ||
         !strncmp (gmeta->instrument, "ETM", 3))
