@@ -17,9 +17,6 @@ MODULE:  dn_to_bt_saturation
 
 PURPOSE:  Convert saturated Digital Number to Brightness Temperature
 
-RETURN: true on success
-        false on error
-
 HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
@@ -35,8 +32,8 @@ dn_to_bt_saturation (Input_t *input)
     float dn = 65535;
     float temp;
 
-    k1 = 774.89; /* B10 */
-    k2 = 1321.08; /* B10 */
+    k1 = 774.8853; /* B10 */
+    k2 = 1321.0789; /* B10 */
 
     temp = (input->meta.gain_th * dn) + input->meta.bias_th;
     temp = k2 / log ((k1 / temp) + 1.0);
@@ -47,9 +44,6 @@ dn_to_bt_saturation (Input_t *input)
 MODULE:  dn_to_toa_saturation
 
 PURPOSE: Convert saturated Digital Number to TOA reflectance 
-
-RETURN: true on success
-        false on error 
 
 HISTORY:
 Date        Programmer       Reason
@@ -476,6 +470,14 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
         error_string = "solar azimuth angle out of range";
         RETURN_ERROR (error_string, "GetXMLInput", true);
     }
+
+    /* Get the geographic coordinates */
+    this->meta.ul_corner.lat = gmeta->ul_corner[0];
+    this->meta.ul_corner.lon = gmeta->ul_corner[1];
+    this->meta.ul_corner.is_fill = true;
+    this->meta.lr_corner.lat = gmeta->lr_corner[0];
+    this->meta.lr_corner.lon = gmeta->lr_corner[1];
+    this->meta.lr_corner.is_fill = true;
 
     if (!strcmp (gmeta->instrument, "OLI_TIRS"))
     {
