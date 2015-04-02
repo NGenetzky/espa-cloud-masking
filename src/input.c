@@ -37,6 +37,8 @@ dn_to_bt_saturation (Input_t *input)
 
     temp = (input->meta.gain_th * dn) + input->meta.bias_th;
     temp = k2 / log ((k1 / temp) + 1.0);
+    /* Convert from Kelvin back to degrees Celsius since the application is
+       based on the unscaled Celsius values originally produced. */
     input->meta.therm_satu_value_max = (int) (100.0 * (temp - 273.15) + 0.5);
 }
 
@@ -377,9 +379,9 @@ GetInputThermLine (Input_t *this, int iline)
         RETURN_ERROR ("error reading thermal line (binary)",
                       "GetInputThermLine", false);
 
-    /* Convert from kelvin back to degrees Celsius since the application is
-       based on Celsius.  If this is fill or saturated, then leave as fill or
-       saturated. */
+    /* Convert from Kelvin back to degrees Celsius since the application is
+       based on the unscaled Celsius values originnally produced.  If this is
+       fill or saturated, then leave as fill or saturated. */
     for (i = 0; i < this->size.s; i++)
     {
         if (this->therm_buf[i] != this->meta.fill &&
@@ -390,7 +392,7 @@ GetInputThermLine (Input_t *this, int iline)
             therm_val -= 273.15;
 
             /* apply the old scale factor that the cfmask processing is based
-               upon, with hard-coded values */
+               upon, to get the original unscaled Celsius values */
             therm_val *= 100.0;
             this->therm_buf[i] = (int) (therm_val + 0.5);
         }
@@ -497,51 +499,51 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
         if (!strcmp (metadata->band[i].name, "band2")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_BLUE] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_BLUE] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_BLUE] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_BLUE] = metadata->band[i].refl_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band3")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_GREEN] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_GREEN] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_GREEN] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_GREEN] = metadata->band[i].refl_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band4")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_RED] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_RED] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_RED] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_RED] = metadata->band[i].refl_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band5")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_NIR] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_NIR] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_NIR] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_NIR] = metadata->band[i].refl_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band6")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_SWIR_1] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_SWIR_1] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_SWIR_1] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_SWIR_1] = metadata->band[i].refl_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band7")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_SWIR_2] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_SWIR_2] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_SWIR_2] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_SWIR_2] = metadata->band[i].refl_bias;
         }
         else if (!strcmp (metadata->band[i].name, "band9")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain[BI_CIRRUS] = metadata->band[i].toa_gain;
-            this->meta.bias[BI_CIRRUS] = metadata->band[i].toa_bias;
+            this->meta.gain[BI_CIRRUS] = metadata->band[i].refl_gain;
+            this->meta.bias[BI_CIRRUS] = metadata->band[i].refl_bias;
         }
         /* Thermal */
         else if (!strcmp (metadata->band[i].name, "band10")
             && !strncmp (metadata->band[i].product, "L1", 2))
         {
-            this->meta.gain_th = metadata->band[i].toa_gain;
-            this->meta.bias_th = metadata->band[i].toa_bias;
+            this->meta.gain_th = metadata->band[i].rad_gain;
+            this->meta.bias_th = metadata->band[i].rad_bias;
         }
     } /* for i */
 
