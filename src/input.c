@@ -28,15 +28,11 @@ NOTES: The constants and formular used are from BU's matlab code
 void
 dn_to_bt_saturation (Input_t *input)
 {
-    float k1, k2;
     float dn = 65535;
     float temp;
 
-    k1 = 774.8853; /* B10 */
-    k2 = 1321.0789; /* B10 */
-
     temp = (input->meta.gain_th * dn) + input->meta.bias_th;
-    temp = k2 / log ((k1 / temp) + 1.0);
+    temp = input->meta.k2 / log ((input->meta.k1 / temp) + 1.0);
     /* Convert from Kelvin back to degrees Celsius since the application is
        based on the unscaled Celsius values originally produced. */
     input->meta.therm_satu_value_max = (int) (100.0 * (temp - 273.15) + 0.5);
@@ -96,12 +92,9 @@ Input_t *OpenInput
 {
     Input_t *this = NULL;
     char *error_string = NULL;
-    int i;                      /* looping variable */
     int ib;                     /* band looping variable */
     int16 *buf = NULL;
-    FILE *dsun_in = NULL;       /* EarthSunDistance.txt file pointer */
     char *path = NULL;
-    char full_path[MAX_STR_LEN];
 
     /* Create the Input data structure */
     this = (Input_t *) malloc (sizeof (Input_t));
@@ -165,24 +158,6 @@ Input_t *OpenInput
         error_string = "ESUN environment variable is not set";
         RETURN_ERROR (error_string, "OpenInput", NULL);
     }
-
-    sprintf (full_path, "%s/%s", path, "EarthSunDistance.txt");
-    dsun_in = fopen (full_path, "r");
-    if (dsun_in == NULL)
-    {
-        error_string = "Can't open EarthSunDistance.txt file";
-        RETURN_ERROR (error_string, "OpenInput", NULL);
-    }
-
-    for (i = 0; i < 366; i++)
-    {
-        if (fscanf (dsun_in, "%f", &this->dsun_doy[i]) == EOF)
-        {
-            error_string = "End of file (EOF) is met before 336 lines";
-            RETURN_ERROR (error_string, "OpenInput", NULL);
-        }
-    }
-    fclose (dsun_in);
 
     /* Calculate maximum TOA reflectance values and put them in metadata */
     dn_to_toa_saturation (this);
@@ -544,6 +519,8 @@ GetXMLInput (Input_t *this, Espa_internal_meta_t *metadata)
         {
             this->meta.gain_th = metadata->band[i].rad_gain;
             this->meta.bias_th = metadata->band[i].rad_bias;
+            this->meta.k1 = metadata->band[i].k1_const;
+            this->meta.k2 = metadata->band[i].k2_const;
         }
     } /* for i */
 

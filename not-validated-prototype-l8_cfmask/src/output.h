@@ -17,9 +17,10 @@ typedef struct
 } Output_t;
 
 /* Prototypes */
-Output_t *OpenOutput (Espa_internal_meta_t * in_meta, Input_t * input);
-bool PutOutput (Output_t * this, unsigned char **final_mask);
-bool CloseOutput (Output_t * this);
-bool FreeOutput (Output_t * this);
+Output_t *OpenOutput (Espa_internal_meta_t *in_meta, Input_t *input);
+Output_t *OpenOutputConfidence (Espa_internal_meta_t *in_meta, Input_t *input);
+bool PutOutput (Output_t *this, unsigned char **final_mask);
+bool CloseOutput (Output_t *this);
+bool FreeOutput (Output_t *this);
 
 #endif

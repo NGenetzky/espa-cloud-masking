@@ -10,6 +10,11 @@
 #include "2d_array.h"
 #include "input.h"
 
+
+#define CONFIDENCE_THRESHOLD_LOW 12.5
+#define CONFIDENCE_THRESHOLD_HIGH 22.5
+
+
 /******************************************************************************
 MODULE:  potential_cloud_shadow_snow_mask
 
@@ -37,10 +42,11 @@ int potential_cloud_shadow_snow_mask
     float *t_templ,             /*O: percentile of low background temp */
     float *t_temph,             /*O: percentile of high background temp */
     unsigned char **pixel_mask, /*I/O: pixel mask */
+    unsigned char **conf_mask,  /*I/O: confidence mask */
     bool use_l8_cirrus,         /*I: value to inidicate if l8 cirrus bit
                                      results are used */
     bool verbose                /*I: value to indicate if intermediate
-                                     messages be printed */
+                                     messages should be printed */
 )
 {
     char errstr[MAX_STR_LEN];   /* error string */
@@ -50,8 +56,8 @@ int potential_cloud_shadow_snow_mask
     int row = 0;                /* row index */
     int col = 0;                /* column index */
     int mask_counter = 0;       /* mask counter */
-    int clear_pixel_counter = 0;        /* clear sky pixel counter */
-    int clear_land_pixel_counter = 0;   /* clear land pixel counter */
+    int clear_pixel_counter = 0;      /* clear sky pixel counter */
+    int clear_land_pixel_counter = 0; /* clear land pixel counter */
     float ndvi, ndsi;           /* NDVI and NDSI values */
     int16 *f_temp = NULL;       /* clear land temperature */
     int16 *f_wtemp = NULL;      /* clear water temperature */
@@ -678,12 +684,15 @@ int potential_cloud_shadow_snow_mask
 
                     /*Final prob mask (land) */
                     if (use_l8_cirrus)
+                    {
                         final_prob[row][col] = 100.0
                             * ((temp_prob * vari_prob)
                                + ((float) input->buf[BI_CIRRUS][col] / 400.0));
+                    }
                     else
-                        final_prob[row][col] =
-                            100.0 * (temp_prob * vari_prob);
+                    {
+                        final_prob[row][col] = 100.0 * (temp_prob * vari_prob);
+                    }
                     wfinal_prob[row][col] = 0.0;
                 }
             }
@@ -821,18 +830,57 @@ int potential_cloud_shadow_snow_mask
             for (col = 0; col < ncols; col++)
             {
                 if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
+                {
                     input->therm_buf[col] = input->meta.therm_satu_value_max;
+                }
 
-                if (((pixel_mask[row][col] & (1 << CLOUD_BIT)) &&
-                     final_prob[row][col] > clr_mask &&
-                     (!(pixel_mask[row][col] & (1 << WATER_BIT)))) ||
-                    ((pixel_mask[row][col] & (1 << CLOUD_BIT)) &&
-                     wfinal_prob[row][col] > wclr_mask &&
+                if (((pixel_mask[row][col] & (1 << CLOUD_BIT))
+                     &&
+                     (final_prob[row][col] > clr_mask)
+                     &&
+                     (!(pixel_mask[row][col] & (1 << WATER_BIT))))
+                    ||
+                    ((pixel_mask[row][col] & (1 << CLOUD_BIT))
+                     &&
+                     (wfinal_prob[row][col] > wclr_mask)
+                     &&
                      (pixel_mask[row][col] & (1 << WATER_BIT)))
-                    || (input->therm_buf[col] < *t_templ + t_buffer - 3500))
+                    ||
+                    (input->therm_buf[col] < *t_templ + t_buffer - 3500))
+                {
+                    /* This test indicates a high confidence */
+                    conf_mask[row][col] = CLOUD_CONFIDENCE_HIGH;
+
+                    /* Original code was only this if test and setting the
+                       cloud bit or not */
                     pixel_mask[row][col] |= 1 << CLOUD_BIT;
-                else
+                }
+                else if (((pixel_mask[row][col] & (1 << CLOUD_BIT))
+                          &&
+                          (final_prob[row][col] > clr_mask-10.0)
+                          &&
+                          (!(pixel_mask[row][col] & (1 << WATER_BIT))))
+                         ||
+                         ((pixel_mask[row][col] & (1 << CLOUD_BIT))
+                          &&
+                          (wfinal_prob[row][col] > wclr_mask-10.0)
+                          &&
+                          (pixel_mask[row][col] & (1 << WATER_BIT))))
+                {
+                    /* This test indicates a medium confidence */
+                    conf_mask[row][col] = CLOUD_CONFIDENCE_MED;
+
+                    /* Don't set the cloud bit per the original code */
                     pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
+                }
+                else
+                {
+                    /* All remaining are a medium confidence */
+                    conf_mask[row][col] = CLOUD_CONFIDENCE_LOW;
+
+                    /* Don't set the cloud bit per the original code */
+                    pixel_mask[row][col] &= ~(1 << CLOUD_BIT);
+                }
             }
         }
         printf ("\n");
@@ -851,7 +899,7 @@ int potential_cloud_shadow_snow_mask
             RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
 
-        /* Band 4 &5 flood fill */
+        /* Band 4 & 5 flood fill */
         nir = calloc (input->size.l * input->size.s, sizeof (int16));
         swir = calloc (input->size.l * input->size.s, sizeof (int16));
         if (nir == NULL || swir == NULL)
@@ -1150,6 +1198,8 @@ int potential_cloud_shadow_snow_mask
                     pixel_mask[row][col] &= ~(1 << SHADOW_BIT);
                     pixel_mask[row][col] &= ~(1 << WATER_BIT);
                     pixel_mask[row][col] &= ~(1 << SNOW_BIT);
+
+                    conf_mask[row][col] = FILL_VALUE;
                 }
 
                 /* refine Water mask (no confusion water/cloud) */

@@ -12,6 +12,8 @@ typedef struct
     Date_t acq_date;          /* Acqsition date/time (scene center) */
     float sun_zen;            /* Solar zenith angle (degrees; scene center) */
     float sun_az;             /* Solar azimuth angle (degrees; scene center) */
+    float k1;                 /* Thermal K1 constant for BT calculation */
+    float k2;                 /* Thermal K2 constant for BT calculation */
     int fill;                 /* Fill value for image data */
     float pixel_size[2];      /* pixel size (x,y) */
     int satu_value_ref[BI_REFL_BAND_COUNT]; /* sat value of TOA products */
@@ -44,8 +46,6 @@ typedef struct
     bool open_therm;            /* Flag to indicate whether the input thermal
                                    file is open for access */
     int16 *therm_buf;           /* Input data buffer (one line of data) */
-    float dsun_doy[366];        /* Array of earth/sun distances for each DOY;
-                                   read from the EarthSunDistance.txt file */
 } Input_t;
 
 /* Prototypes */
@@ -64,6 +64,7 @@ int potential_cloud_shadow_snow_mask
     float *t_templ,             /*O: percentile of low background temp */
     float *t_temph,             /*O: percentile of high background temp */
     unsigned char **pixel_mask, /*I/O: pixel mask */
+    unsigned char **prob_mask,  /*I/O: probability mask */
     bool use_l8_cirrus,         /*I: value to inidicate if l8 cirrus bit
                                      results are used */
     bool verbose                /*I: value to indicate if intermediate
