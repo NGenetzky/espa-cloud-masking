@@ -2,7 +2,7 @@
 #define CFMASK_H
 
 #define CFMASK_APP_NAME "cfmask"
-#define CFMASK_VERSION "1.4.2"
+#define CFMASK_VERSION "1.5.0"
 
 typedef signed short int16;
 
@@ -26,6 +26,14 @@ typedef enum
     MASK_CLEAR_SNOW,
     MASK_CLOUD
 } MASK_VALUE;
+
+typedef enum
+{
+    CLOUD_CONFIDENCE_NONE = 0,
+    CLOUD_CONFIDENCE_LOW = 1,
+    CLOUD_CONFIDENCE_MED = 2,
+    CLOUD_CONFIDENCE_HIGH = 3
+} CONFIDENCE_MASK_VALUE;
 
 typedef enum
 {

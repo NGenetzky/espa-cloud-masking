@@ -26,7 +26,7 @@ NOTES: The constants and formular used are from BU's matlab code
        & G. Chander et al. RSE 113 (2009) 893-903
 *****************************************************************************/
 void
-dn_to_bt_saturation (Input_t * input)
+dn_to_bt_saturation (Input_t *input)
 {
     float k1 = 0.0, k2 = 0.0;   /* contants */
     float dn = 255.0;           /* maximum DN value */
@@ -69,7 +69,7 @@ NOTES: The constants and formular used are from BU's matlab code
        & G. Chander et al. RSE 113 (2009) 893-903  
 ******************************************************************************/
 void
-dn_to_toa_saturation (Input_t * input)
+dn_to_toa_saturation (Input_t *input)
 {
     float esun[BI_REFL_BAND_COUNT]; /* mean solar exoatmospheric spectral
                                        irradiance for each band */

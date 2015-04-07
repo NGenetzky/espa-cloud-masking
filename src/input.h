@@ -64,6 +64,7 @@ int potential_cloud_shadow_snow_mask
     float *t_templ,             /*O: percentile of low background temp */
     float *t_temph,             /*O: percentile of high background temp */
     unsigned char **pixel_mask, /*I/O: pixel mask */
+    unsigned char **conf_mask,  /*I/O: confidence mask */
     bool verbose                /*I: value to indicate if intermediate
                                      messages be printed */
 );

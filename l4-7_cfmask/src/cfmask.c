@@ -57,6 +57,7 @@ main (int argc, char *argv[])
     char envi_file[MAX_STR_LEN];  /* output ENVI file name */
     char scene_name[MAX_STR_LEN]; /* input data scene name */
     unsigned char **pixel_mask;   /* pixel mask */
+    unsigned char **conf_mask;    /* confidence mask */
     int status;               /* return value from function call */
     float ptm;                /* percent of clear-sky pixels */
     float t_templ = 0.0;      /* percentile of low background temperature */
@@ -182,11 +183,19 @@ main (int argc, char *argv[])
     /* Dynamic allocate the 2d mask memory */
     pixel_mask = (unsigned char **) allocate_2d_array (input->size.l,
                                                        input->size.s,
-                                                       sizeof (unsigned
-                                                               char));
+                                                       sizeof (unsigned char));
     if (pixel_mask == NULL)
     {
-        sprintf (errstr, "Allocating mask memory");
+        sprintf (errstr, "Allocating pixel mask memory");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    conf_mask = (unsigned char **) allocate_2d_array (input->size.l,
+                                                      input->size.s,
+                                                      sizeof (unsigned char));
+    if (conf_mask == NULL)
+    {
+        sprintf (errstr, "Allocating confidence mask memory");
         CFMASK_ERROR (errstr, "main");
     }
 
@@ -194,12 +203,15 @@ main (int argc, char *argv[])
     int row, col;
     for (row = 0; row < input->size.l; row++)
         for (col = 0; col < input->size.s; col++)
+        {
             pixel_mask[row][col] = MASK_CLEAR_LAND;
+            conf_mask[row][col] = CLOUD_CONFIDENCE_NONE;
+        }
 
     /* Build the potential cloud, shadow, snow, water mask */
     status = potential_cloud_shadow_snow_mask (input, cloud_prob, &ptm,
                                                &t_templ, &t_temph, pixel_mask,
-                                               verbose);
+                                               conf_mask, verbose);
     if (status != SUCCESS)
     {
         sprintf (errstr, "processing potential_cloud_shadow_snow_mask");
@@ -237,7 +249,66 @@ main (int argc, char *argv[])
 
     if (!PutOutput (output, pixel_mask))
     {
-        sprintf (errstr, "Writing output fmask in HDF files\n");
+        sprintf (errstr, "Writing output fmask files\n");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    /* Close the output file */
+    if (!CloseOutput (output))
+    {
+        sprintf (errstr, "closing output file");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    /* Create the ENVI header file this band */
+    if (create_envi_struct (&output->metadata.band[0], &xml_metadata.global,
+                            &envi_hdr) != SUCCESS)
+    {
+        sprintf (errstr, "Creating ENVI header structure.");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    /* Write the ENVI header */
+    strcpy (envi_file, output->metadata.band[0].file_name);
+    cptr = strchr (envi_file, '.');
+    if (cptr == NULL)
+    {
+        sprintf (errstr, "error in ENVI header filename");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    strcpy (cptr, ".hdr");
+    if (write_envi_hdr (envi_file, &envi_hdr) != SUCCESS)
+    {
+        sprintf (errstr, "Writing ENVI header file.");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    /* Append the cfmask band to the XML file */
+    if (append_metadata (output->nband, output->metadata.band, xml_name)
+        != SUCCESS)
+    {
+        sprintf (errstr, "Appending spectral index bands to XML file.");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    /* Free the structure */
+    if (!FreeOutput (output))
+    {
+        sprintf (errstr, "freeing output file structure");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    output = OpenOutputConfidence (&xml_metadata, input);
+    if (output == NULL)
+    {                           /* error message already printed */
+        sprintf (errstr, "Opening output file");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    if (!PutOutput (output, conf_mask))
+    {
+        sprintf (errstr, "Writing output fmask files\n");
         CFMASK_ERROR (errstr, "main");
     }
 
@@ -294,7 +365,14 @@ main (int argc, char *argv[])
     status = free_2d_array ((void **) pixel_mask);
     if (status != SUCCESS)
     {
-        sprintf (errstr, "Freeing mask memory");
+        sprintf (errstr, "Freeing pixel mask memory");
+        CFMASK_ERROR (errstr, "main");
+    }
+
+    status = free_2d_array ((void **) conf_mask);
+    if (status != SUCCESS)
+    {
+        sprintf (errstr, "Freeing confidence mask memory");
         CFMASK_ERROR (errstr, "main");
     }
 
