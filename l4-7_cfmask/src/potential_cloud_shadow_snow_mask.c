@@ -11,10 +11,6 @@
 #include "input.h"
 
 
-#define CONFIDENCE_THRESHOLD_LOW 12.5
-#define CONFIDENCE_THRESHOLD_HIGH 22.5
-
-
 /******************************************************************************
 MODULE:  potential_cloud_shadow_snow_mask
 
@@ -851,7 +847,7 @@ int potential_cloud_shadow_snow_mask
                 }
                 else
                 {
-                    /* All remaining are a medium confidence */
+                    /* All remaining are a low confidence */
                     conf_mask[row][col] = CLOUD_CONFIDENCE_LOW;
 
                     /* Don't set the cloud bit per the original code */
