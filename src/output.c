@@ -30,11 +30,12 @@
 #include "input.h"
 #include "output.h"
 
-#define FMASK_SHORTNAME "CFMASK"
 #define FMASK_PRODUCT "cfmask"
+#define FMASK_SHORTNAME "CFMASK"
+#define FMASK_NAME "cfmask"
 #define FMASK_LONG_NAME "cfmask_band"
 #define FMASK_CONFIDENCE_SHORTNAME "CFMASK_CONF"
-#define FMASK_CONFIDENCE_PRODUCT "cfmask_conf"
+#define FMASK_CONFIDENCE_NAME "cfmask_conf"
 #define FMASK_CONFIDENCE_LONG_NAME "cfmask_conf_band"
 
 
@@ -154,7 +155,7 @@ Output_t *OpenOutput
     bmeta[0].fill_value = FILL_VALUE;
     bmeta[0].valid_range[0] = 0;
     bmeta[0].valid_range[1] = 4;
-    strcpy (bmeta[0].name, FMASK_PRODUCT);
+    strcpy (bmeta[0].name, FMASK_NAME);
     strcpy (bmeta[0].long_name, FMASK_LONG_NAME);
     strcpy (bmeta[0].data_units, "quality/feature classification");
 
@@ -271,7 +272,7 @@ Output_t *OpenOutputConfidence
     strncpy (bmeta[0].short_name, in_meta->band[refl_indx].short_name, 3);
     bmeta[0].short_name[3] = '\0';
     strcat (bmeta[0].short_name, FMASK_CONFIDENCE_SHORTNAME);
-    strcpy (bmeta[0].product, FMASK_CONFIDENCE_PRODUCT);
+    strcpy (bmeta[0].product, FMASK_PRODUCT);
     strcpy (bmeta[0].source, "toa_refl");
     strcpy (bmeta[0].category, "qa");
     bmeta[0].nlines = this->size.l;
@@ -285,7 +286,7 @@ Output_t *OpenOutputConfidence
     bmeta[0].fill_value = FILL_VALUE;
     bmeta[0].valid_range[0] = 0;
     bmeta[0].valid_range[1] = 3;
-    strcpy (bmeta[0].name, FMASK_CONFIDENCE_PRODUCT);
+    strcpy (bmeta[0].name, FMASK_CONFIDENCE_NAME);
     strcpy (bmeta[0].long_name, FMASK_CONFIDENCE_LONG_NAME);
     strcpy (bmeta[0].data_units, "quality/feature classification");
 
