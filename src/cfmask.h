@@ -47,9 +47,9 @@ typedef enum
 
 typedef enum
 {
-    CLEAR_BIT = 0,
-    CLEAR_WATER_BIT,
-    CLEAR_LAND_BIT
+    CLEAR_BIT = 1,
+    CLEAR_WATER_BIT = 2,
+    CLEAR_LAND_BIT = 4
 } Clear_Bits_t;
 
 void usage ();
