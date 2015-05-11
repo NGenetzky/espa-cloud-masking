@@ -60,7 +60,7 @@ int potential_cloud_shadow_snow_mask
 (
     Input_t *input,             /*I: input structure */
     float cloud_prob_threshold, /*I: cloud probability threshold */
-    float *ptm,                 /*O: percent of clear-sky pixels */
+    float *clear_ptm,           /*O: percent of clear-sky pixels */
     float *t_templ,             /*O: percentile of low background temp */
     float *t_temph,             /*O: percentile of high background temp */
     unsigned char **pixel_mask, /*I/O: pixel mask */
@@ -72,7 +72,7 @@ int potential_cloud_shadow_snow_mask
 int object_cloud_shadow_match
 (
     Input_t *input,  /*I: input structure */
-    float ptm,       /*I: percent of clear-sky pixels */
+    float clear_ptm, /*I: percent of clear-sky pixels */
     float t_templ,   /*I: percentile of low background temperature */
     float t_temph,   /*I: percentile of high background temperature */
     int cldpix,      /*I: cloud buffer size */

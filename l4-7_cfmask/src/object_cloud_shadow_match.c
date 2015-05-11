@@ -642,7 +642,7 @@ NOTES: All variable names are same as in matlab code
 int object_cloud_shadow_match
 (
     Input_t * input, /*I: input structure */
-    float ptm,       /*I: percent of clear-sky pixels */
+    float clear_ptm, /*I: percent of clear-sky pixels */
     float t_templ,   /*I: percentile of low background temp */
     float t_temph,   /*I: percentile of high background temp */
     int cldpix,      /*I: cloud buffer size */
@@ -785,7 +785,7 @@ int object_cloud_shadow_match
 
     /* cloud covers more than 90% of the scene
        => no match => rest are definite shadows */
-    if (ptm <= 0.1 || revised_ptm >= 0.90)
+    if (clear_ptm <= 0.1 || revised_ptm >= 0.90)
     {
         for (row = 0; row < nrows; row++)
         {

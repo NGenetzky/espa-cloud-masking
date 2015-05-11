@@ -34,7 +34,7 @@ int potential_cloud_shadow_snow_mask
 (
     Input_t * input,            /*I: input structure */
     float cloud_prob_threshold, /*I: cloud probability threshold */
-    float *ptm,                 /*O: percent of clear-sky pixels */
+    float *clear_ptm,           /*O: percent of clear-sky pixels */
     float *t_templ,             /*O: percentile of low background temp */
     float *t_temph,             /*O: percentile of high background temp */
     unsigned char **pixel_mask, /*I/O: pixel mask */
@@ -50,15 +50,19 @@ int potential_cloud_shadow_snow_mask
     int row = 0;                /* row index */
     int col = 0;                /* column index */
     int mask_counter = 0;       /* mask counter */
-    int clear_pixel_counter = 0;      /* clear sky pixel counter */
-    int clear_land_pixel_counter = 0; /* clear land pixel counter */
+    int clear_pixel_counter = 0;       /* clear sky pixel counter */
+    int clear_land_pixel_counter = 0;  /* clear land pixel counter */
+    int clear_water_pixel_counter = 0; /* clear water pixel counter */
     float ndvi, ndsi;           /* NDVI and NDSI values */
     int16 *f_temp = NULL;       /* clear land temperature */
     int16 *f_wtemp = NULL;      /* clear water temperature */
     float visi_mean;            /* mean of visible bands */
     float whiteness = 0.0;      /* whiteness value */
     float hot;                  /* hot value for hot test */
-    float lndptm;               /* clear land pixel percentage */
+    float land_ptm;             /* clear land pixel percentage */
+    float water_ptm;            /* clear water pixel percentage */
+    Clear_Bits_t land_bit;      /* Which clear bit to test all or just land */
+    Clear_Bits_t water_bit;     /* Which clear bit to test all or just water */
     float l_pt;                 /* low percentile threshold */
     float h_pt;                 /* high percentile threshold */
     float t_wtemp;              /* high percentile water temperature */
@@ -315,6 +319,7 @@ int potential_cloud_shadow_snow_mask
                      clear_mask[row][col] & (1 << CLEAR_BIT))
             {
                 clear_mask[row][col] |= 1 << CLEAR_WATER_BIT;
+                clear_water_pixel_counter++;
                 clear_mask[row][col] &= ~(1 << CLEAR_LAND_BIT);
             }
             else
@@ -326,18 +331,26 @@ int potential_cloud_shadow_snow_mask
     }
     printf ("\n");
 
-    *ptm = 100. * ((float) clear_pixel_counter / (float) mask_counter);
-    lndptm = 100. * ((float) clear_land_pixel_counter / (float) mask_counter);
+    *clear_ptm = 100.0 * ((float) clear_pixel_counter
+                          / (float) mask_counter);
+    land_ptm = 100.0 * ((float) clear_land_pixel_counter
+                        / (float) mask_counter);
+    water_ptm = 100.0 * ((float) clear_water_pixel_counter
+                         / (float) mask_counter);
 
     if (verbose)
     {
-        printf ("clear_pixels, clear_land_pixels, mask_counter = %d,%d,%d\n",
-                clear_pixel_counter, clear_land_pixel_counter, mask_counter);
-        printf ("*ptm, lndptm=%f,%f\n", *ptm, lndptm);
+        printf ("(clear_pixels, clear_land_pixels, clear_water_pixels,"
+                " mask_counter) = (%d, %d, %d, %d)\n",
+                clear_pixel_counter, clear_land_pixel_counter,
+                clear_water_pixel_counter, mask_counter);
+        printf ("(clear_ptm, land_ptm, water_ptm) = (%f, %f, %f)\n",
+                *clear_ptm, land_ptm, water_ptm);
     }
 
-    if ((*ptm - 0.1) <= MINSIGMA) /* No thermal test is needed, all clouds */
+    if ((*clear_ptm - 0.1) <= MINSIGMA)
     {
+        /* No thermal test is needed, all clouds */
         *t_templ = -1.0;
         *t_temph = -1.0;
         for (row = 0; row < nrows; row++)
@@ -365,12 +378,36 @@ int potential_cloud_shadow_snow_mask
         if (verbose)
             printf ("The second pass\n");
 
+        /* Determine which bit to test for land */
+        if ((land_ptm - 0.1) >= MINSIGMA)
+        {
+            /* use clear land only */
+            land_bit = CLEAR_LAND_BIT;
+        }
+        else
+        {
+            /* not enough clear land so use all clear pixels */
+            land_bit = CLEAR_BIT;
+        }
+
+        /* Determine which bit to test for water */
+        if ((water_ptm - 0.1) >= MINSIGMA)
+        {
+            /* use clear water only */
+            water_bit = CLEAR_WATER_BIT;
+        }
+        else
+        {
+            /* not enough clear water so use all clear pixels */
+            water_bit = CLEAR_BIT;
+        }
+
         int16 f_temp_max = SHRT_MIN;
         int16 f_temp_min = SHRT_MAX;
         int16 f_wtemp_max = SHRT_MIN;
         int16 f_wtemp_min = SHRT_MAX;
-        int index = 0;
-        int index2 = 0;
+        int land_count = 0;
+        int water_count = 0;
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
@@ -397,41 +434,26 @@ int potential_cloud_shadow_snow_mask
                 if (input->therm_buf[col] == input->meta.therm_satu_value_ref)
                     input->therm_buf[col] = input->meta.therm_satu_value_max;
 
-                if ((lndptm - 0.1) >= MINSIGMA)
+                /* get clear land temperature */
+                if (clear_mask[row][col] & land_bit)
                 {
-                    /* get clear land temperature */
-                    if (clear_mask[row][col] & (1 << CLEAR_LAND_BIT))
-                    {
-                        f_temp[index] = input->therm_buf[col];
-                        if (f_temp_max < f_temp[index])
-                            f_temp_max = f_temp[index];
-                        if (f_temp_min > f_temp[index])
-                            f_temp_min = f_temp[index];
-                        index++;
-                    }
+                    f_temp[land_count] = input->therm_buf[col];
+                    if (f_temp_max < f_temp[land_count])
+                        f_temp_max = f_temp[land_count];
+                    if (f_temp_min > f_temp[land_count])
+                        f_temp_min = f_temp[land_count];
+                    land_count++;
                 }
-                else
+
+                /* get clear water temperature */
+                if (clear_mask[row][col] & water_bit)
                 {
-                    /* get clear water temperature */
-                    if (clear_mask[row][col] & (1 << CLEAR_BIT))
-                    {
-                        f_temp[index] = input->therm_buf[col];
-                        if (f_temp_max < f_temp[index])
-                            f_temp_max = f_temp[index];
-                        if (f_temp_min > f_temp[index])
-                            f_temp_min = f_temp[index];
-                        index++;
-                    }
-                }
-                /* Equation 7 */
-                if (clear_mask[row][col] & (1 << CLEAR_WATER_BIT))
-                {
-                    f_wtemp[index2] = input->therm_buf[col];
-                    if (f_wtemp[index2] > f_wtemp_max)
-                        f_wtemp_max = f_wtemp[index2];
-                    if (f_wtemp[index2] < f_wtemp_min)
-                        f_wtemp_min = f_wtemp[index2];
-                    index2++;
+                    f_wtemp[water_count] = input->therm_buf[col];
+                    if (f_wtemp_max < f_wtemp[water_count])
+                        f_wtemp_max = f_wtemp[water_count];
+                    if (f_wtemp_min > f_wtemp[water_count])
+                        f_wtemp_min = f_wtemp[water_count];
+                    water_count++;
                 }
             }
         }
@@ -451,23 +473,26 @@ int potential_cloud_shadow_snow_mask
         /* Tempearture for snow test */
         l_pt = 0.175;
         h_pt = 1.0 - l_pt;
+
         /* 0.175 percentile background temperature (low) */
-        status = prctile (f_temp, index, f_temp_min, f_temp_max, 100.0 * l_pt,
-                          t_templ);
+        status = prctile (f_temp, land_count, f_temp_min, f_temp_max,
+                          100.0 * l_pt, t_templ);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Error calling prctile routine");
             RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
+
         /* 0.825 percentile background temperature (high) */
-        status = prctile (f_temp, index, f_temp_min, f_temp_max, 100.0 * h_pt,
-                          t_temph);
+        status = prctile (f_temp, land_count, f_temp_min, f_temp_max,
+                          100.0 * h_pt, t_temph);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Error calling prctile routine");
             RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
-        status = prctile (f_wtemp, index2, f_wtemp_min, f_wtemp_max,
+
+        status = prctile (f_wtemp, water_count, f_wtemp_min, f_wtemp_max,
                           100.0 * h_pt, &t_wtemp);
         if (status != SUCCESS)
         {
@@ -481,7 +506,7 @@ int potential_cloud_shadow_snow_mask
         *t_temph += (float) t_buffer;
         temp_l = *t_temph - *t_templ;
 
-        /* Relase f_temp memory */
+        /* Release f_temp memory */
         free (f_wtemp);
         free (f_temp);
         f_wtemp = NULL;
@@ -681,42 +706,34 @@ int potential_cloud_shadow_snow_mask
 
         float prob_max = 0.0;
         float prob_min = 0.0;
-        int index3 = 0;
+        land_count = 0;
         for (row = 0; row < nrows; row++)
         {
             for (col = 0; col < ncols; col++)
             {
-                if (clear_mask[row][col] & (1 << CLEAR_LAND_BIT))
+                if (clear_mask[row][col] & land_bit)
                 {
-                    prob[index3] = final_prob[row][col];
-                    if ((prob[index3] - prob_max) > MINSIGMA)
-                        prob_max = prob[index3];
-                    if ((prob_min - prob[index3]) > MINSIGMA)
-                        prob_min = prob[index3];
-                    index3++;
+                    prob[land_count] = final_prob[row][col];
+                    if ((prob[land_count] - prob_max) > MINSIGMA)
+                        prob_max = prob[land_count];
+                    if ((prob_min - prob[land_count]) > MINSIGMA)
+                        prob_min = prob[land_count];
+                    land_count++;
                 }
             }
         }
 
         /* Dynamic threshold for land */
-        if (index3 != 0)
+        status = prctile2 (prob, land_count, prob_min, prob_max,
+                           100.0 * h_pt, &clr_mask);
+        if (status != SUCCESS)
         {
-            status = prctile2 (prob, index3, prob_min, prob_max, 100.0 * h_pt,
-                               &clr_mask);
-            if (status != SUCCESS)
-            {
-                sprintf (errstr, "Error calling prctile2 routine");
-                RETURN_ERROR (errstr, "pcloud", FAILURE);
-            }
-        }
-        else
-        {
-            clr_mask = 27.5; /* no clear land pixel, make clr_mask double of
-                                cloud_prob_threshold */
+            sprintf (errstr, "Error calling prctile2 routine");
+            RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
         clr_mask += cloud_prob_threshold;
 
-        /* Relase memory for prob */
+        /* Release memory for prob */
         free (prob);
         prob = NULL;
 
@@ -730,42 +747,34 @@ int potential_cloud_shadow_snow_mask
 
         float wprob_max = 0.0;
         float wprob_min = 0.0;
-        int index4 = 0;
+        water_count = 0;
         for (row = 0; row < nrows; row++)
         {
             for (col = 0; col < ncols; col++)
             {
-                if (clear_mask[row][col] & (1 << CLEAR_WATER_BIT))
+                if (clear_mask[row][col] & water_bit)
                 {
-                    wprob[index4] = wfinal_prob[row][col];
-                    if ((wprob[index4] - wprob_max) > MINSIGMA)
-                        wprob_max = wprob[index4];
-                    if ((wprob_min - wprob[index4]) > MINSIGMA)
-                        wprob_min = wprob[index4];
-                    index4++;
+                    wprob[water_count] = wfinal_prob[row][col];
+                    if ((wprob[water_count] - wprob_max) > MINSIGMA)
+                        wprob_max = wprob[water_count];
+                    if ((wprob_min - wprob[water_count]) > MINSIGMA)
+                        wprob_min = wprob[water_count];
+                    water_count++;
                 }
             }
         }
 
         /* Dynamic threshold for water */
-        if (index4 != 0)
+        status = prctile2 (wprob, water_count, wprob_min, wprob_max,
+                           100.0 * h_pt, &wclr_mask);
+        if (status != SUCCESS)
         {
-            status =
-                prctile2 (wprob, index4, wprob_min, wprob_max, 100.0 * h_pt,
-                          &wclr_mask);
-            if (status != SUCCESS)
-            {
-                sprintf (errstr, "Error calling prctile2 routine");
-                RETURN_ERROR (errstr, "pcloud", FAILURE);
-            }
-        }
-        else
-        {
-            wclr_mask = 27.5; /* no clear water pixel, make wclr_mask 27.5 */
+            sprintf (errstr, "Error calling prctile2 routine");
+            RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
         wclr_mask += cloud_prob_threshold;
 
-        /* Relase memory for wprob */
+        /* Release memory for wprob */
         free (wprob);
         wprob = NULL;
 
@@ -903,8 +912,8 @@ int potential_cloud_shadow_snow_mask
         int16 nir_min = 0;
         int16 swir_max = 0;
         int16 swir_min = 0;
-        int idx = 0;
-        int idx2 = 0;
+        int nir_count = 0;
+        int swir_count = 0;
         /* Loop through each line in the image */
         for (row = 0; row < nrows; row++)
         {
@@ -946,24 +955,21 @@ int potential_cloud_shadow_snow_mask
                         input->meta.satu_value_max[BI_SWIR_1];
                 }
 
-                if (clear_mask[row][col] & (1 << CLEAR_LAND_BIT))
+                if (clear_mask[row][col] & land_bit)
                 {
-                    nir[idx] = input->buf[BI_NIR][col];
-                    if (nir[idx] > nir_max)
-                        nir_max = nir[idx];
-                    if (nir[idx] < nir_min)
-                        nir_min = nir[idx];
-                    idx++;
-                }
+                    nir[nir_count] = input->buf[BI_NIR][col];
+                    if (nir[nir_count] > nir_max)
+                        nir_max = nir[nir_count];
+                    if (nir[nir_count] < nir_min)
+                        nir_min = nir[nir_count];
+                    nir_count++;
 
-                if (clear_mask[row][col] & (1 << CLEAR_LAND_BIT))
-                {
-                    swir[idx2] = input->buf[BI_SWIR_1][col];
-                    if (swir[idx2] > swir_max)
-                        swir_max = swir[idx2];
-                    if (swir[idx2] < swir_min)
-                        swir_min = swir[idx2];
-                    idx2++;
+                    swir[swir_count] = input->buf[BI_SWIR_1][col];
+                    if (swir[swir_count] > swir_max)
+                        swir_max = swir[swir_count];
+                    if (swir[swir_count] < swir_min)
+                        swir_min = swir[swir_count];
+                    swir_count++;
                 }
             }
 
@@ -1000,16 +1006,15 @@ int potential_cloud_shadow_snow_mask
         }
 
         /* Estimating background (land) Band 4 Ref */
-        status =
-            prctile (nir, idx + 1, nir_min, nir_max, 100.0 * l_pt, &backg_b4);
+        status = prctile (nir, nir_count, nir_min, nir_max,
+                          100.0 * l_pt, &backg_b4);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Calling prctile function\n");
             RETURN_ERROR (errstr, "pcloud", FAILURE);
         }
-        status =
-            prctile (swir, idx2 + 1, swir_min, swir_max, 100.0 * l_pt,
-                     &backg_b5);
+        status = prctile (swir, swir_count, swir_min, swir_max,
+                          100.0 * l_pt, &backg_b5);
         if (status != SUCCESS)
         {
             sprintf (errstr, "Calling prctile function\n");

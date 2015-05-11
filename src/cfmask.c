@@ -59,7 +59,7 @@ main (int argc, char *argv[])
     unsigned char **pixel_mask;   /* pixel mask */
     unsigned char **conf_mask;    /* confidence mask */
     int status;               /* return value from function call */
-    float ptm;                /* percent of clear-sky pixels */
+    float clear_ptm;          /* percent of clear-sky pixels */
     float t_templ = 0.0;      /* percentile of low background temperature */
     float t_temph = 0.0;      /* percentile of high background temperature */
     Output_t *output = NULL;  /* output structure and metadata */
@@ -209,7 +209,7 @@ main (int argc, char *argv[])
         }
 
     /* Build the potential cloud, shadow, snow, water mask */
-    status = potential_cloud_shadow_snow_mask (input, cloud_prob, &ptm,
+    status = potential_cloud_shadow_snow_mask (input, cloud_prob, &clear_ptm,
                                                &t_templ, &t_temph, pixel_mask,
                                                conf_mask, verbose);
     if (status != SUCCESS)
@@ -223,7 +223,7 @@ main (int argc, char *argv[])
     /* Build the final cloud shadow based on geometry matching and
        combine the final cloud, shadow, snow, water masks into fmask
        the pixel_mask is a bit mask as input and a value mask as output */
-    status = object_cloud_shadow_match (input, ptm, t_templ, t_temph,
+    status = object_cloud_shadow_match (input, clear_ptm, t_templ, t_temph,
                                         cldpix, sdpix, max_cloud_pixels,
                                         pixel_mask, verbose);
     if (status != SUCCESS)
