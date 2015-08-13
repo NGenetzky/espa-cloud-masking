@@ -36,8 +36,8 @@ Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
 5/14/2013   Song Guo         Added in Polar Stereographic support
-7/17/2013   Song Guo         Added in Map info 
-8/15/2013   Song Guo         Modified to use TOA reflectance file 
+7/17/2013   Song Guo         Added in Map info
+8/15/2013   Song Guo         Modified to use TOA reflectance file
                              as input instead of metadata file
 Oct/2014    Ron Dilley       Modified to utilize the ESPA internal raw binary
                              file format
@@ -75,7 +75,6 @@ main (int argc, char *argv[])
 
     time_t now;
     time (&now);
-    printf ("CFmask start_time=%s\n", ctime (&now));
 
     /* Read the command-line arguments, including the name of the input
        Landsat TOA reflectance product and the DEM */
@@ -86,6 +85,8 @@ main (int argc, char *argv[])
         sprintf (errstr, "calling get_args");
         CFMASK_ERROR (errstr, "main");
     }
+
+    printf ("CFmask start_time=%s\n", ctime (&now));
 
     /* Validate the input metadata file */
     if (validate_xml_file (xml_name) != SUCCESS)
@@ -401,7 +402,7 @@ HISTORY:
 Date        Programmer       Reason
 --------    ---------------  -------------------------------------
 3/15/2013   Song Guo         Original Development
-8/15/2013   Song Guo         Modified to use TOA reflectance file 
+8/15/2013   Song Guo         Modified to use TOA reflectance file
                              as input instead of metadata file
 Oct/2014    Ron Dilley       Modified to utilize the ESPA internal raw binary
                              file format
@@ -411,6 +412,8 @@ NOTES:
 void
 usage ()
 {
+    version ();
+
     printf ("Fmask identify the cloud, shadow, snow, water and clear pixels"
             " using the input Landsat scene (top of atmosphere (TOA)"
             " reflection and brightness temperature (BT) for band 10) output"
@@ -430,13 +433,15 @@ usage ()
             " L8_SR\n");
 
     printf ("\nwhere the following parameters are optional:\n");
-    printf ("    -prob: cloud_probability, default value is 22.5\n");
+    printf ("    -prob: cloud_probability,"
+            " (default value is 22.5)\n");
     printf ("    -cldpix: cloud_pixel_buffer for image dilate,"
             " (default value is 3)\n");
     printf ("    -sdpix: shadow_pixel_buffer for image dilate,"
             " (default value is 3)\n");
     printf ("    -max_cloud_pixels: maximum_cloud_pixel_number for cloud"
-            " division, (default value is 0)\n");
+            " division,"
+            " (default value is 0)\n");
     printf ("    --use_l8_cirrus: should Landsat 8 QA band cirrus bit info"
             " be used in cirrus cloud detection?"
             " (default is false, meaning Bonston University's dynamic cirrus"
@@ -449,4 +454,18 @@ usage ()
     printf ("\nExample: ./%s --xml=LC80330372013141LGN01.xml"
             " --prob=22.5 --cldpix=3 --sdpix=3"
             " --max_cloud_pixels=5000000 --verbose\n", CFMASK_APP_NAME);
+}
+
+/******************************************************************************
+MODULE:  version
+
+PURPOSE:  Prints the version information for this application.
+
+RETURN VALUE:
+Type = None
+******************************************************************************/
+void
+version ()
+{
+    printf ("%s version %s\n", CFMASK_APP_NAME, CFMASK_VERSION);
 }

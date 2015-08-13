@@ -2,7 +2,7 @@
 #define CFMASK_H
 
 #define CFMASK_APP_NAME "cfmask"
-#define CFMASK_VERSION "1.5.0"
+#define CFMASK_VERSION "1.6.0"
 
 typedef signed short int16;
 
@@ -52,5 +52,6 @@ typedef enum
 } Clear_Bits_t;
 
 void usage ();
+void version ();
 
 #endif

@@ -216,12 +216,13 @@ int get_args
     char errmsg[MAX_STR_LEN];               /* error message */
     char FUNC_NAME[] = "get_args";          /* function name */
     static struct option long_options[] = {
-        {"verbose", no_argument, &verbose_flag, 1},
         {"xml", required_argument, 0, 'i'},
         {"prob", required_argument, 0, 'p'},
         {"cldpix", required_argument, 0, 'c'},
         {"sdpix", required_argument, 0, 's'},
         {"max_cloud_pixels", required_argument, 0, 'x'},
+        {"verbose", no_argument, &verbose_flag, 1},
+        {"version", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
@@ -254,7 +255,12 @@ int get_args
 
         case 'h':              /* help */
             usage ();
-            return FAILURE;
+            exit (SUCCESS);
+            break;
+
+        case 'v':              /* version */
+            version ();
+            exit (SUCCESS);
             break;
 
         case 'i':              /* xml infile */
