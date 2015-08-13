@@ -40,17 +40,17 @@ export ESUN="path_to_EarthSunDistance.txt_file" # included and installed with th
 ```
 git clone https://github.com/USGS-EROS/espa-cloud-masking.git
 ```
-* Change directory to the cloned repository
+* Change to the cloned repository folder
 ```
 cd espa-cloud-masking
 ```
-* Checkout the tag for this version of the software
+* Replace the defaulted version(master) with this version of the software
 ```
 git checkout l4-7_cfmask-version_<version>
 ```
-* Change to the application directory
+* Change to the application folder
 ```
-cd espa-cloud-masking/l4-7_cfmask
+cd l4-7_cfmask
 ```
 * Build and install the software
 ```
