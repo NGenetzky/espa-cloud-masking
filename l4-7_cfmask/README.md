@@ -61,6 +61,15 @@ make install
 ## Usage
 See `cfmask --help` for command line details.
 
+### Input Data Requirements
+This cloud masking product is currently available in the [ESPA](https://espa.cr.usgs.gov) processing system as part of the Surface Reflectance product.
+
+However, if you wish to generate your own...
+
+The following input data can be generated using the [LEDAPS](https://github.com/USGS-EROS/espa-surface-reflectance) software found in our [espa-surface-reflectance](https://github.com/USGS-EROS/espa-surface-reflectance) project.  Or through our ondemand processing system [ESPA](https://espa.cr.usgs.gov), be sure to select the ENVI output format. 
+* Top of Atmosphere Reflectance
+* Brightness Temperature
+
 ## More Information
 This project is provided by the US Geological Survey (USGS) Earth Resources
 Observation and Science (EROS) Land Satellite Data Systems (LSDS) Science
