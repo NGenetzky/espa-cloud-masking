@@ -14,9 +14,9 @@ products.
   version.
 
 ## Release Notes
-Please see the Wiki pages for release notes related to the current versions
-of the applications.  Future versions will contain the release notes in the
-respective README files within the sub-directories.
+Please see the Wiki pages for release notes related to past versions.
+All current versions contain release notes in the respective README files
+within an algorithm sub-directory.
 
 ## Installation Notes
 
