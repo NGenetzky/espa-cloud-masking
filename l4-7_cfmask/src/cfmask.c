@@ -445,11 +445,14 @@ usage ()
     printf ("    -verbose: should intermediate messages be printed?"
             " (default is false)\n");
 
-    printf ("\n./%s --help will print the usage statement\n", CFMASK_APP_NAME);
-
     printf ("\nExample: ./%s --xml=LE70390032010263EDC00.xml"
             " --prob=22.5 --cldpix=3 --sdpix=3"
-            " --max_cloud_pixels=5000000 --verbose\n", CFMASK_APP_NAME);
+            " --max_cloud_pixels=5000000 --verbose\n\n", CFMASK_APP_NAME);
+
+    printf ("%s --version prints the version information"
+            " for this application\n", CFMASK_APP_NAME);
+    printf ("%s --help prints the help information for this application\n",
+            CFMASK_APP_NAME);
 }
 
 /******************************************************************************
