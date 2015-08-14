@@ -1,9 +1,9 @@
-## l4-7_cfmask Version 1.6.0 Release Notes
+## l8_cfmask Version 0.3.0 Release Notes
 
-See git tag [l4-7_cfmask-version_1.6.0]
+See git tag [l8_cfmask-version_0.3.0]
 
-This application produces Cloud Mask products for Landsats 4, 5, and 7 based
-on the CFMASK (Function of Mask Algorithm).
+This application produces Cloud Mask products for Landsat 8 based on the
+CFMASK (Function of Mask Algorithm).
 
 ## Product Descriptions
 See TODO TODO TODO.
@@ -41,17 +41,17 @@ export ESPALIB="path_to_ESPA_PRODUCT_FORMATTER_libraries"
 ```
 git clone https://github.com/USGS-EROS/espa-cloud-masking.git
 cd espa-cloud-masking
-git checkout l4-7_cfmask-version_<version>
+git checkout l8_cfmask-version_<version>
 ```
 * Build and install the software from the application specific folder
 ```
-cd l4-7_cfmask
+cd not-validated-prototype-l8_cfmask
 make
 make install
 ```
 
 ## Usage
-See `cfmask --help` for command line details.
+See `l8cfmask --help` for command line details.
 
 ### Environment Variables
 * ESUN - Points to the EarthSunDistance.txt file which is included with the source and installed into $PREFIX/static_data
@@ -66,7 +66,7 @@ The following input data are required to generate the cloud masking products:
 * Top of Atmosphere Reflectance
 * Brightness Temperature
 
-These products can be generated using the [LEDAPS](https://github.com/USGS-EROS/espa-surface-reflectance) software found in our [espa-surface-reflectance](https://github.com/USGS-EROS/espa-surface-reflectance) project.  Or through our ondemand processing system [ESPA](https://espa.cr.usgs.gov), be sure to select the ENVI output format.
+These products can be generated using the [L8_SR](https://github.com/USGS-EROS/espa-surface-reflectance) software found in our [espa-surface-reflectance](https://github.com/USGS-EROS/espa-surface-reflectance) project.  Or through our ondemand processing system [ESPA](https://espa.cr.usgs.gov), be sure to select the ENVI output format.
 
 This cloud masking product is currently available in the [ESPA](https://espa.cr.usgs.gov) processing system as part of the Surface Reflectance product.
 
