@@ -15,6 +15,7 @@ install: all
 	@for dir in $(SUBDIRS); do \
         echo "make install in $$dir..."; \
         (cd $$dir; $(MAKE) -f Makefile install); done
+	(cd static_data; $(MAKE) -f Makefile install)
 
 clean:
 	@for dir in $(SUBDIRS); do \
