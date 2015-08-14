@@ -15,7 +15,29 @@ set ( CLOUD_MASKING_UNINSTALL_TARGET 1 )
 add_custom_target ( distclean COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/distclean.cmake )
 set ( CLOUD_MASKING_DISTCLEAN_TARGET 1 )
 
-############################## Build Directories #############################
+############################## Build and Install #############################
 add_subdirectory ( l4-7_cfmask )
 add_subdirectory ( not-validated-prototype-l8_cfmask )
+
+#---- Only build and install l4-7_cfmask - Primarily exists for developers
+add_custom_target ( build_l4-7_cfmask )
+add_dependencies ( build_l4-7_cfmask cfmask )
+
+add_custom_target ( install_l4-7_cfmask )
+add_dependencies ( install_l4-7_cfmask cfmask )
+add_custom_command ( TARGET install_l4-7_cfmask
+                     POST_BUILD
+                     WORKING_DIRECTORY l4-7_cfmask
+                     COMMAND ${CMAKE_COMMAND} -P cmake_install.cmake )
+
+#---- Only build and install l8_cfmask - Primarily exists for developers
+add_custom_target ( build_l8_cfmask )
+add_dependencies ( build_l8_cfmask l8cfmask )
+
+add_custom_target ( install_l8_cfmask )
+add_dependencies ( install_l8_cfmask l8cfmask )
+add_custom_command ( TARGET install_l8_cfmask
+                     POST_BUILD
+                     WORKING_DIRECTORY not-validated-prototype-l8_cfmask
+                     COMMAND ${CMAKE_COMMAND} -P cmake_install.cmake )
 
