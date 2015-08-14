@@ -33,10 +33,6 @@ export XML2LIB="path_to_LIBXML2_libraries"
 export ESPAINC="path_to_ESPA_PRODUCT_FORMATTER_include_files"
 export ESPALIB="path_to_ESPA_PRODUCT_FORMATTER_libraries"
 ```
-* Required for execution of this application
-```
-export ESUN="path_to_EarthSunDistance.txt_file" # included and installed with this source
-```
 
 ### Build Steps
 * Clone the repository and replace the defaulted version(master) with this
@@ -55,6 +51,12 @@ make install
 
 ## Usage
 See `cfmask --help` for command line details.
+
+### Environment Variables
+* ESUN - Points to the EarthSunDistance.txt file which is included with the source and installed into $PREFIX/static_data
+```
+export ESUN="path_to_EarthSunDistance.txt_file"
+```
 
 ### Data Processing Requirements
 This version of the CFMASK application requires the input products to be in the ESPA internal file format.
