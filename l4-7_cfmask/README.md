@@ -1,4 +1,6 @@
-## l4-7_cfmask Version 1.6.0
+## l4-7_cfmask Version 1.6.0 Release Notes
+
+See git tag [l4-7_cfmask-version_1.6.0]
 
 This application produces Cloud Mask products for Landsats 4, 5, and 7 based
 on the CFMASK (Function of Mask Algorithm).
@@ -25,6 +27,7 @@ See TODO TODO TODO.
 ### Environment Variables
 * Required for building this software
 ```
+export PREFIX="path_to_Installation_Directory"
 export XML2INC="path_to_LIBXML2_include_files"
 export XML2LIB="path_to_LIBXML2_libraries"
 export ESPAINC="path_to_ESPA_PRODUCT_FORMATTER_include_files"
@@ -36,24 +39,16 @@ export ESUN="path_to_EarthSunDistance.txt_file" # included and installed with th
 ```
 
 ### Build Steps
-* Clone the repository
+* Clone the repository and replace the defaulted version(master) with this
+  version of the software
 ```
 git clone https://github.com/USGS-EROS/espa-cloud-masking.git
-```
-* Change to the cloned repository folder
-```
 cd espa-cloud-masking
-```
-* Replace the defaulted version(master) with this version of the software
-```
 git checkout l4-7_cfmask-version_<version>
 ```
-* Change to the application folder
+* Build and install the software from the application specific folder
 ```
 cd l4-7_cfmask
-```
-* Build and install the software
-```
 make
 make install
 ```
@@ -61,7 +56,9 @@ make install
 ## Usage
 See `cfmask --help` for command line details.
 
-### Input Data Requirements
+### Data Processing Requirements
+This version of the CFMASK application requires the input products to be in the ESPA internal file format.
+
 This cloud masking product is currently available in the [ESPA](https://espa.cr.usgs.gov) processing system as part of the Surface Reflectance product.
 
 However, if you wish to generate your own...
