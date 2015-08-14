@@ -9,6 +9,8 @@ products.
 * Implemented in C and Python
 * This software is based on the Matlab code developed by Zhe Zhu, and
   Curtis E. Woodcock
+  * Zhu, Z. and Woodcock, C. E., Object-based cloud and cloud shadow detection in Landsat imagery, Remote Sensing of Environment (2012), doi:10.1016/j.rse.2011.10.028 
+
 * See folder <b>l4-7_cfmask</b> for the Landsat 4, 5, and 7 version.
 * See folder <b>not-validated-prototype-l8_cfmask</b> for the Landsat 8
   version.
