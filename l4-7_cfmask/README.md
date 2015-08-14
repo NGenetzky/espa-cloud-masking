@@ -59,13 +59,13 @@ See `cfmask --help` for command line details.
 ### Data Processing Requirements
 This version of the CFMASK application requires the input products to be in the ESPA internal file format.
 
-This cloud masking product is currently available in the [ESPA](https://espa.cr.usgs.gov) processing system as part of the Surface Reflectance product.
-
-However, if you wish to generate your own...
-
-The following input data can be generated using the [LEDAPS](https://github.com/USGS-EROS/espa-surface-reflectance) software found in our [espa-surface-reflectance](https://github.com/USGS-EROS/espa-surface-reflectance) project.  Or through our ondemand processing system [ESPA](https://espa.cr.usgs.gov), be sure to select the ENVI output format. 
+The following input data are required to generate the cloud masking products:
 * Top of Atmosphere Reflectance
 * Brightness Temperature
+
+These products can be generated using the [LEDAPS](https://github.com/USGS-EROS/espa-surface-reflectance) software found in our [espa-surface-reflectance](https://github.com/USGS-EROS/espa-surface-reflectance) project.  Or through our ondemand processing system [ESPA](https://espa.cr.usgs.gov), be sure to select the ENVI output format.
+
+This cloud masking product is currently available in the [ESPA](https://espa.cr.usgs.gov) processing system as part of the Surface Reflectance product.
 
 ## More Information
 This project is provided by the US Geological Survey (USGS) Earth Resources
