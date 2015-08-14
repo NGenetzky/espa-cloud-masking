@@ -1,1 +1,1 @@
-cmake .. -DBUILD_STATIC:BOOL=TRUE -DCMAKE_INSTALL_PREFIX=$PREFIX/l8cfmask -DCMAKE_BUILD_TYPE="l8cfmask - C Implementation of FMASK for L8 -- Static"
+cmake .. -DBUILD_STATIC:BOOL=TRUE -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE="l8cfmask - C Implementation of FMASK for L8 -- Static"
