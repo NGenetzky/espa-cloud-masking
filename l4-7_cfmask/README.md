@@ -16,6 +16,7 @@ See TODO TODO TODO.
 * Updated some command line options in the usage to be consistent with orders
 * Fixed so that the --help option exits successfully instead of indicating a failure
 * Other minor changes to comments and logging output
+* Changes to the location and installation of the EarthSunDistance.txt file
 * TODO TODO TODO - Additional changes are in development
 
 ## Installation
