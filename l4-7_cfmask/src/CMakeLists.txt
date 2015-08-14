@@ -31,3 +31,6 @@ target_link_libraries ( cfmask ${LibESPA_LIBRARIES}
 install ( TARGETS cfmask
           DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 
+install ( FILES EarthSunDistance.txt
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/static_data )
+

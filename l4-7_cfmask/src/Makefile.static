@@ -46,6 +46,8 @@ $(EXE): $(OBJ) $(INC)
 install:
 	install -d $(PREFIX)/bin
 	install -m 755 $(EXE) $(PREFIX)/bin
+	install -d $(PREFIX)/etc
+	install -m 644 EarthSunDistance.txt $(PREFIX)/etc
 
 clean:
 	$(RM) *.o $(EXE)
