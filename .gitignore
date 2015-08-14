@@ -1,3 +1,9 @@
+cmake-build/CMakeCache.txt
+cmake-build/CMakeFiles
+cmake-build/Makefile
+cmake-build/cmake_install.cmake
+cmake-build/l4-7_cfmask
+cmake-build/not-validated-prototype-l8_cfmask
 l4-7_cfmask/cmake-build/CMakeCache.txt
 l4-7_cfmask/cmake-build/CMakeFiles
 l4-7_cfmask/cmake-build/Makefile
