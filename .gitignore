@@ -1,10 +1,11 @@
 l4-7_cfmask/cmake-build/CMakeCache.txt
-l4-7_cfmask/cmake-build/CMakeFiles/
+l4-7_cfmask/cmake-build/CMakeFiles
 l4-7_cfmask/cmake-build/Makefile
 l4-7_cfmask/cmake-build/cmake_install.cmake
 l4-7_cfmask/cmake-build/install_manifest.txt
-l4-7_cfmask/cmake-build/scripts/
-l4-7_cfmask/cmake-build/src/
+l4-7_cfmask/cmake-build/scripts
+l4-7_cfmask/cmake-build/src
+l4-7_cfmask/cmake-build/static_data
 not-validated-prototype-l8_cfmask/cmake-build/CMakeCache.txt
 not-validated-prototype-l8_cfmask/cmake-build/CMakeFiles
 not-validated-prototype-l8_cfmask/cmake-build/Makefile
@@ -12,6 +13,7 @@ not-validated-prototype-l8_cfmask/cmake-build/cmake_install.cmake
 not-validated-prototype-l8_cfmask/cmake-build/install_manifest.txt
 not-validated-prototype-l8_cfmask/cmake-build/scripts
 not-validated-prototype-l8_cfmask/cmake-build/src
+not-validated-prototype-l8_cfmask/cmake-build/static_data
 *.o
 l4-7_cfmask/src/cfmask
 not-validated-prototype-l8_cfmask/src/l8cfmask
