@@ -444,7 +444,7 @@ usage ()
             " (default value is 0)\n");
     printf ("    --use_l8_cirrus: should Landsat 8 QA band cirrus bit info"
             " be used in cirrus cloud detection?"
-            " (default is false, meaning Bonston University's dynamic cirrus"
+            " (default is false, meaning Boston University's dynamic cirrus"
             " band static threshold will be used)\n");
     printf ("    -verbose: should intermediate messages be printed?"
             " (default is false)\n");
